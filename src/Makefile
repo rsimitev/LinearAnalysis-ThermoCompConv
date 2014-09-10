@@ -10,22 +10,19 @@ FC:=gfortran
 
 default: lo
 
-attention: 
-	cat 0.README
-
-OBJECTS := lolo.o r.o imsl.o pegasus.o
+OBJECTS := r.o imsl.o pegasus.o losub.o
 
 %.o:%.F
 	$(FC) -c $(FCFLAGS) -o $@ $^
 
 ####### Main program ###############################################
-lo: attention $(OBJECTS)
-	$(FC) -DNMAX=760 $(FCFLAGS) -o $@ $(OBJECTS) $(LDFLAGS) losub.F
+lo: $(OBJECTS)
+	$(FC) -DNMAX=760 $(FCFLAGS) -o $@ $(OBJECTS) $(LDFLAGS) main.f90
 
 lara: lara_estream.o readla.o plms.o input.o
 	$(FC) $(FCFLAGS) -o lara lara_estream.o readla.o plms.o input.o
 
-clean: 
+clean:
 	rm -vf *~ *.o 
 	
 distclean: clean
