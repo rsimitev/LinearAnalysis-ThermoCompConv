@@ -19,35 +19,35 @@ C
          IF(TRI.EQ.'SS ')THEN 
             IF(I*J.EQ.0) THEN
                RINT=0D0
-      	    ELSE             
+             ELSE             
                RINT=1D0/2D0 * (C0(I-J)-C0(I+J))
             ENDIF
          ELSEIF(TRI.EQ.'SC ') THEN
             IF(I.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	       RINT=1D0/2D0 * (S0(I-J)+S0(I+J))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+                RINT=1D0/2D0 * (S0(I-J)+S0(I+J))
+             ENDIF
          ELSEIF(TRI.EQ.'CC ') THEN
             RINT=1D0/2D0 * (C0(I+J)+C0(I-J))
          ELSEIF(TRI.EQ.'SSS') THEN
             IF(I*J*K.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	       RINT=1D0/4D0 * (S0(I-J+K)+S0(I+J-K)-S0(I-J-K)-S0(I+J+K))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+                RINT=1D0/4D0 * (S0(I-J+K)+S0(I+J-K)-S0(I-J-K)-S0(I+J+K))
+             ENDIF
          ELSEIF(TRI.EQ.'SSC') THEN
             IF(I*J.NE.0) THEN
-      	       RINT=1D0/4D0 * (C0(I-J-K)-C0(I+J+K)+C0(I-J+K)-C0(I+J-K))
-      	    ELSE
+                RINT=1D0/4D0 * (C0(I-J-K)-C0(I+J+K)+C0(I-J+K)-C0(I+J-K))
+             ELSE
                RINT=0D0
-      	    ENDIF
+             ENDIF
          ELSEIF(TRI.EQ.'SCC') THEN
             IF(I.EQ.0) THEN
                RINT=0D0
-      	    ELSE
-      	       RINT=1D0/4D0 * (S0(I+J-K)+S0(I+J+K)+S0(I-J+K)+S0(I-J-K))
-      	    ENDIF
+             ELSE
+                RINT=1D0/4D0 * (S0(I+J-K)+S0(I+J+K)+S0(I-J+K)+S0(I-J-K))
+             ENDIF
          ELSEIF(TRI.EQ.'CCC') THEN
             RINT= 1D0/4D0 * (C0(I+J+K)+C0(I+J-K)+C0(I-J+K)+C0(I-J-K))
          ENDIF           
@@ -55,35 +55,35 @@ C
          IF(TRI.EQ.'SS ')THEN 
             IF(I*J.EQ.0) THEN
                RINT=0D0
-      	    ELSE             
+             ELSE             
                RINT=1D0/2D0 * (C1(I-J)-C1(I+J))
             ENDIF
          ELSEIF(TRI.EQ.'SC ') THEN
             IF(I.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	       RINT=1D0/2D0 * (S1(I-J)+S1(I+J))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+                RINT=1D0/2D0 * (S1(I-J)+S1(I+J))
+             ENDIF
          ELSEIF(TRI.EQ.'CC ') THEN
             RINT=1D0/2D0 * (C1(I+J)+C1(I-J))
          ELSEIF(TRI.EQ.'SSS') THEN
             IF(I*J*K.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	       RINT=1D0/4D0 * (S1(I-J+K)+S1(I+J-K)-S1(I-J-K)-S1(I+J+K))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+                RINT=1D0/4D0 * (S1(I-J+K)+S1(I+J-K)-S1(I-J-K)-S1(I+J+K))
+             ENDIF
          ELSEIF(TRI.EQ.'SSC') THEN
             IF(I*J.NE.0) THEN
-      	       RINT=1D0/4D0 * (C1(I-J-K)-C1(I+J+K)+C1(I-J+K)-C1(I+J-K))
-      	    ELSE
+                RINT=1D0/4D0 * (C1(I-J-K)-C1(I+J+K)+C1(I-J+K)-C1(I+J-K))
+             ELSE
                RINT=0D0
-      	    ENDIF
+             ENDIF
          ELSEIF(TRI.EQ.'SCC') THEN
             IF(I.EQ.0) THEN
                RINT=0D0
-      	    ELSE
-      	       RINT=1D0/4D0 * (S1(I+J-K)+S1(I+J+K)+S1(I-J+K)+S1(I-J-K))
-      	    ENDIF
+             ELSE
+                RINT=1D0/4D0 * (S1(I+J-K)+S1(I+J+K)+S1(I-J+K)+S1(I-J-K))
+             ENDIF
          ELSEIF(TRI.EQ.'CCC') THEN
             RINT= 1D0/4D0 * (C1(I+J+K)+C1(I+J-K)+C1(I-J+K)+C1(I-J-K))
          ENDIF
@@ -91,35 +91,35 @@ C
          IF(TRI.EQ.'SS ')THEN 
             IF(I*J.EQ.0) THEN
                RINT=0D0
-      	    ELSE             
+             ELSE             
                RINT=1D0/2D0 * (C2(I-J)-C2(I+J))
             ENDIF
          ELSEIF(TRI.EQ.'SC ') THEN
             IF(I.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	       RINT=1D0/2D0 * (S2(I-J)+S2(I+J))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+                RINT=1D0/2D0 * (S2(I-J)+S2(I+J))
+             ENDIF
          ELSEIF(TRI.EQ.'CC ') THEN
             RINT=1D0/2D0 * (C2(I+J)+C2(I-J))
          ELSEIF(TRI.EQ.'SSS') THEN
             IF(I*J*K.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	       RINT=1D0/4D0 * (S2(I-J+K)+S2(I+J-K)-S2(I-J-K)-S2(I+J+K))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+                RINT=1D0/4D0 * (S2(I-J+K)+S2(I+J-K)-S2(I-J-K)-S2(I+J+K))
+             ENDIF
          ELSEIF(TRI.EQ.'SSC') THEN
             IF(I*J.NE.0) THEN
-      	       RINT=1D0/4D0 * (C2(I-J-K)-C2(I+J+K)+C2(I-J+K)-C2(I+J-K))
-      	    ELSE
+                RINT=1D0/4D0 * (C2(I-J-K)-C2(I+J+K)+C2(I-J+K)-C2(I+J-K))
+             ELSE
                RINT=0D0
-      	    ENDIF
+             ENDIF
          ELSEIF(TRI.EQ.'SCC') THEN
             IF(I.EQ.0) THEN
                RINT=0D0
-      	    ELSE
-      	       RINT=1D0/4D0 * (S2(I+J-K)+S2(I+J+K)+S2(I-J+K)+S2(I-J-K))
-      	    ENDIF
+             ELSE
+                RINT=1D0/4D0 * (S2(I+J-K)+S2(I+J+K)+S2(I-J+K)+S2(I-J-K))
+             ENDIF
          ELSEIF(TRI.EQ.'CCC') THEN
             RINT= 1D0/4D0 * (C2(I+J+K)+C2(I+J-K)+C2(I-J+K)+C2(I-J-K))
          ENDIF           
@@ -127,35 +127,35 @@ C
          IF(TRI.EQ.'SS')THEN 
             IF(I*J.EQ.0) THEN
                RINT=0D0
-      	    ELSE             
+             ELSE             
                RINT=1D0/2D0 * (C3(I-J)-C3(I+J))
             ENDIF
          ELSEIF(TRI.EQ.'SC') THEN
             IF(I.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	       RINT=1D0/2D0 * (S3(I-J)+S3(I+J))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+                RINT=1D0/2D0 * (S3(I-J)+S3(I+J))
+             ENDIF
          ELSEIF(TRI.EQ.'CC') THEN
             RINT=1D0/2D0 * (C3(I+J)+C3(I-J))
          ELSEIF(TRI.EQ.'SSS') THEN
             IF(I*J*K.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	       RINT=1D0/4D0 * (S3(I-J+K)+S3(I+J-K)-S3(I-J-K)-S3(I+J+K))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+                RINT=1D0/4D0 * (S3(I-J+K)+S3(I+J-K)-S3(I-J-K)-S3(I+J+K))
+             ENDIF
          ELSEIF(TRI.EQ.'SSC') THEN
             IF(I*J.NE.0) THEN
-      	       RINT=1D0/4D0 * (C3(I-J-K)-C3(I+J+K)+C3(I-J+K)-C3(I+J-K))
-      	    ELSE
+                RINT=1D0/4D0 * (C3(I-J-K)-C3(I+J+K)+C3(I-J+K)-C3(I+J-K))
+             ELSE
                RINT=0D0
-      	    ENDIF
+             ENDIF
          ELSEIF(TRI.EQ.'SCC') THEN
             IF(I.EQ.0) THEN
                RINT=0D0
-      	    ELSE
-      	       RINT=1D0/4D0 * (S3(I+J-K)+S3(I+J+K)+S3(I-J+K)+S3(I-J-K))
-      	    ENDIF
+             ELSE
+                RINT=1D0/4D0 * (S3(I+J-K)+S3(I+J+K)+S3(I-J+K)+S3(I-J-K))
+             ENDIF
          ELSEIF(TRI.EQ.'CCC') THEN
             RINT= 1D0/4D0 * (C3(I+J+K)+C3(I+J-K)+C3(I-J+K)+C3(I-J-K))
          ENDIF           
@@ -163,35 +163,35 @@ C
          IF(TRI.EQ.'SS')THEN 
             IF(I*J.EQ.0) THEN
                RINT=0D0
-      	    ELSE             
+             ELSE             
                RINT=1D0/2D0 * (C4(I-J)-C4(I+J))
             ENDIF
          ELSEIF(TRI.EQ.'SC') THEN
             IF(I.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	       RINT=1D0/2D0 * (S4(I-J)+S4(I+J))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+                RINT=1D0/2D0 * (S4(I-J)+S4(I+J))
+             ENDIF
          ELSEIF(TRI.EQ.'CC') THEN
             RINT=1D0/2 * (C4(I+J)+C4(I-J))
          ELSEIF(TRI.EQ.'SSS') THEN
             IF(I*J*K.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	       RINT=1D0/4D0 * (S4(I-J+K)+S4(I+J-K)-S4(I-J-K)-S4(I+J+K))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+                RINT=1D0/4D0 * (S4(I-J+K)+S4(I+J-K)-S4(I-J-K)-S4(I+J+K))
+             ENDIF
          ELSEIF(TRI.EQ.'SSC') THEN
             IF(I*J.NE.0) THEN
-      	       RINT=1D0/4D0 * (C4(I-J-K)-C4(I+J+K)+C4(I-J+K)-C4(I+J-K))
-      	    ELSE
+                RINT=1D0/4D0 * (C4(I-J-K)-C4(I+J+K)+C4(I-J+K)-C4(I+J-K))
+             ELSE
                RINT=0D0
-      	    ENDIF
+             ENDIF
          ELSEIF(TRI.EQ.'SCC') THEN
             IF(I.EQ.0) THEN
                RINT=0D0
-      	    ELSE
-      	       RINT=1D0/4D0 * (S4(I+J-K)+S4(I+J+K)+S4(I-J+K)+S4(I-J-K))
-      	    ENDIF
+             ELSE
+                RINT=1D0/4D0 * (S4(I+J-K)+S4(I+J+K)+S4(I-J+K)+S4(I-J-K))
+             ENDIF
          ELSEIF(TRI.EQ.'CCC') THEN
             RINT= 1D0/4D0 * (C4(I+J+K)+C4(I+J-K)+C4(I-J+K)+C4(I-J-K))
          ENDIF           
@@ -199,35 +199,35 @@ C
          IF(TRI.EQ.'SS ') THEN
             IF(I*J.EQ.0) THEN
                RINT=0D0
-      	    ELSE             
+             ELSE             
                RINT=1D0/2D0 * (CM1(I-J)-CM1(I+J))
             ENDIF
          ELSEIF(TRI.EQ.'SC ') THEN
             IF(I.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	       RINT=1D0/2D0 * (SM1(I-J)+SM1(I+J))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+                RINT=1D0/2D0 * (SM1(I-J)+SM1(I+J))
+             ENDIF
          ELSEIF(TRI.EQ.'CC ') THEN
             RINT=1D0/2D0 * (CM1(I+J)+CM1(I-J))
          ELSEIF(TRI.EQ.'SSS') THEN
             IF(I*J*K.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	     RINT=1D0/4D0*(SM1(I-J+K)+SM1(I+J-K)-SM1(I-J-K)-SM1(I+J+K))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+              RINT=1D0/4D0*(SM1(I-J+K)+SM1(I+J-K)-SM1(I-J-K)-SM1(I+J+K))
+             ENDIF
          ELSEIF(TRI.EQ.'SSC') THEN
             IF(I*J.NE.0) THEN
-      	     RINT=1D0/4D0*(CM1(I-J-K)-CM1(I+J+K)+CM1(I-J+K)-CM1(I+J-K))
-      	    ELSE
+              RINT=1D0/4D0*(CM1(I-J-K)-CM1(I+J+K)+CM1(I-J+K)-CM1(I+J-K))
+             ELSE
                RINT=0D0
-      	    ENDIF
+             ENDIF
          ELSEIF(TRI.EQ.'SCC') THEN
             IF(I.EQ.0) THEN
                RINT=0D0
-      	    ELSE
-      	     RINT=1D0/4D0*(SM1(I+J-K)+SM1(I+J+K)+SM1(I-J+K)+SM1(I-J-K))
-      	    ENDIF
+             ELSE
+              RINT=1D0/4D0*(SM1(I+J-K)+SM1(I+J+K)+SM1(I-J+K)+SM1(I-J-K))
+             ENDIF
          ELSEIF(TRI.EQ.'CCC') THEN
            RINT= 1D0/4D0*(CM1(I+J+K)+CM1(I+J-K)+CM1(I-J+K)+CM1(I-J-K))
          ENDIF           
@@ -235,35 +235,35 @@ C
          IF(TRI.EQ.'SS ')THEN 
             IF(I*J.EQ.0) THEN
                RINT=0D0
-      	    ELSE             
+             ELSE             
                RINT=1D0/2D0 * (CM2(I-J)-CM2(I+J))
             ENDIF
          ELSEIF(TRI.EQ.'SC ') THEN
             IF(I.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	       RINT=1D0/2D0 * (SM2(I-J)+SM2(I+J))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+                RINT=1D0/2D0 * (SM2(I-J)+SM2(I+J))
+             ENDIF
          ELSEIF(TRI.EQ.'CC ') THEN
             RINT=1D0/2D0 * (CM2(I+J)+CM2(I-J))
          ELSEIF(TRI.EQ.'SSS') THEN
             IF(I*J*K.EQ.0) THEN
-      	       RINT=0D0
-      	    ELSE
-      	     RINT=1D0/4D0*(SM2(I-J+K)+SM2(I+J-K)-SM2(I-J-K)-SM2(I+J+K))
-      	    ENDIF
+                RINT=0D0
+             ELSE
+              RINT=1D0/4D0*(SM2(I-J+K)+SM2(I+J-K)-SM2(I-J-K)-SM2(I+J+K))
+             ENDIF
          ELSEIF(TRI.EQ.'SSC') THEN
             IF(I*J.NE.0) THEN
-      	     RINT=1D0/4D0*(CM2(I-J-K)-CM2(I+J+K)+CM2(I-J+K)-CM2(I+J-K))
-      	    ELSE
+              RINT=1D0/4D0*(CM2(I-J-K)-CM2(I+J+K)+CM2(I-J+K)-CM2(I+J-K))
+             ELSE
                RINT=0D0
-      	    ENDIF
+             ENDIF
          ELSEIF(TRI.EQ.'SCC') THEN
             IF(I.EQ.0) THEN
                RINT=0D0
-      	    ELSE
-      	     RINT=1D0/4D0*(SM2(I+J-K)+SM2(I+J+K)+SM2(I-J+K)+SM2(I-J-K))
-      	    ENDIF
+             ELSE
+              RINT=1D0/4D0*(SM2(I+J-K)+SM2(I+J+K)+SM2(I-J+K)+SM2(I-J-K))
+             ENDIF
          ELSEIF(TRI.EQ.'CCC') THEN
           RINT= 1D0/4D0*(CM2(I+J+K)+CM2(I+J-K)+CM2(I-J+K)+CM2(I-J-K))
          ENDIF           
@@ -322,7 +322,6 @@ C-----------------------------------------------------------------------
       FUNCTION S0(N)
       IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
-      COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
          S0=0D0
       ELSE
@@ -351,8 +350,8 @@ C-----------------------------------------------------------------------
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
          IF(N.EQ.0) THEN
-      	    S1=0D0
-      	 ELSE
+             S1=0D0
+          ELSE
             S1=-1D0/N/DPI
          ENDIF
       ELSE
@@ -386,7 +385,7 @@ C-----------------------------------------------------------------------
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
-      	 IF(N.EQ.0) THEN
+          IF(N.EQ.0) THEN
             S2=0D0
          ELSE
             S2=-(2*RI+1)/DPI/N
@@ -423,7 +422,7 @@ C-----------------------------------------------------------------------
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
-      	 IF(N.EQ.0) THEN
+          IF(N.EQ.0) THEN
             S3=0D0
          ELSE
             S3=-(1+3*RI+3*RI**2)/DPI/N + 6/DPI**3/N**3
@@ -460,14 +459,14 @@ C-----------------------------------------------------------------------
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
-      	 IF(N.EQ.0) THEN
+          IF(N.EQ.0) THEN
             S4=0D0
          ELSE
             S4=-(1+4*RI+6*RI**2+4*RI**3)/DPI/N+(12+24*RI)/DPI**3/N**3
          ENDIF
       ELSE
          S4=(1+4*RI+6*RI**2+4*RI**3+2*RI**4)/DPI/N - 
-     -	     (12+24*RI+24*RI**2)/DPI**3/N**3 + 48D0/DPI**5/N**5
+     -        (12+24*RI+24*RI**2)/DPI**3/N**3 + 48D0/DPI**5/N**5
       ENDIF
       END
 C-----------------------------------------------------------------------
@@ -535,9 +534,9 @@ C-----------------------------------------------------------------------
          SM2=0D0
       ELSE
       SM2=DCOS(N*RI*DPI)*( DSIN(N*DPI*RI)/RI-DSIN(N*DPI*(RI+1))/(RI+1) +
-     + 			    N*DPI*DIC(RI,RI+1,N*DPI) ) -
+     +              N*DPI*DIC(RI,RI+1,N*DPI) ) -
      -    DSIN(N*RI*DPI)*( DCOS(N*DPI*RI)/RI-DCOS(N*DPI*(RI+1))/(RI+1) -
-     -			    N*DPI*DIS(RI,RI+1,N*DPI) )
+     -             N*DPI*DIS(RI,RI+1,N*DPI) )
       ENDIF
       END
 C-----------------------------------------------------------------------
@@ -553,9 +552,9 @@ C-----------------------------------------------------------------------
          CM2=1D0/RI-1D0/(1+RI)
       ELSE
       CM2=DSIN(N*RI*DPI)*( DSIN(N*DPI*RI)/RI-DSIN(N*DPI*(RI+1))/(RI+1) +
-     + 			    N*DPI*DIC(RI,RI+1,N*DPI) ) +
+     +              N*DPI*DIC(RI,RI+1,N*DPI) ) +
      +    DCOS(N*RI*DPI)*( DCOS(N*DPI*RI)/RI-DCOS(N*DPI*(RI+1))/(RI+1) -
-     -			    N*DPI*DIS(RI,RI+1,N*DPI) )
+     -             N*DPI*DIS(RI,RI+1,N*DPI) )
       ENDIF
       END
 C-----------------------------------------------------------------------
@@ -622,15 +621,15 @@ C
                GOTO 30
             ENDIF
 20       CONTINUE
-30	 JZ=J
+30    JZ=J
          DO 40 J=JN+1,2*I+1
             SISN=SISN*J
             IF(SISN.GT.1D20) THEN
                GOTO 50
             ENDIF
 40       CONTINUE
-50	 JN=J
-	 SISZ=SISZ/SISN
+50    JN=J
+      SISZ=SISZ/SISN
          SISN=1
          IF((JZ.LT.2*I+1).OR.(JN.LT.2*I+1)) GOTO 10
          SISN=2D0*I+1D0
@@ -705,15 +704,15 @@ C
                GOTO 30
             ENDIF
 20       CONTINUE
-30	 JZ=J
+30    JZ=J
          DO 40 J=JN+1,2*I
             CISN=CISN*J
             IF(CISN.GT.1D20) THEN
                GOTO 50
             ENDIF
 40       CONTINUE
-50	 JN=J
-	 CISZ=CISZ/CISN
+50    JN=J
+        CISZ=CISZ/CISN
          CISN=1D0
          IF((JZ.LT.2*I).OR.(JN.LT.2*I)) GOTO 10
 C         
