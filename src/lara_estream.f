@@ -600,7 +600,7 @@ C     ENDIF
 C
 C-- ABINITIALISIERT SCHRIFTEN:
 C     CALL AB
-
+C
 C-- FEHLER NACH 13 SCHREIBEN
       OPEN(13,STATUS='SCRATCH')
 c     CALL SETDEV(13,13)
@@ -1508,7 +1508,7 @@ C
       IF( CC.NE.'T' ) THEN
          NMTHETA=NMY
          DO 100 I=1,NMTHETA
- 100        THETA(I)=DBLE(YMIN+(I-1)*YD)
+100      THETA(I)=DBLE(YMIN+(I-1)*YD)
       ENDIF
 C
 C-- BESTIMMUNG DER PLM(THETA) , ABSPEICHERUNG:
@@ -1593,7 +1593,6 @@ C-------- R,PHI UND THETA SIND DIE KUGELKOORDINATEN:
 1000     CONTINUE
 2000  CONTINUE
 C
-
       ZAMAX=MAX(ABS(ZMIN),ABS(ZMAX))
       ZNULL=1.E-11*ZAMAX
       ZNULLM=1.E-11
@@ -1795,15 +1794,15 @@ c  theta = THETA(J)
             enddo 
          enddo 
       ELSE
-         do i=1,nmx
-            do j=1,nmy
-               write(21,*) z(i,j)
-               write(22,*) xidl(i,j)
-               write(23,*) yidl(i,j)
-            enddo
-         enddo
+      do i=1,nmx
+        do j=1,nmy
+          write(21,*) z(i,j)
+          write(22,*) xidl(i,j)
+          write(23,*) yidl(i,j)
+        enddo
+      enddo
       ENDIF
-      
+
 9999  CONTINUE
       RETURN
       END

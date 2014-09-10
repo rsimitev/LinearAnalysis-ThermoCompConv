@@ -22,9 +22,13 @@ OBJECTS := lolo.o r.o imsl.o pegasus.o
 lo: attention $(OBJECTS)
 	$(FC) -DNMAX=760 $(FCFLAGS) -o $@ $(OBJECTS) $(LDFLAGS) losub.F
 
+lara: lara_estream.o readla.o plms.o input.o
+	$(FC) $(FCFLAGS) -o lara lara_estream.o readla.o plms.o input.o
+
 clean: 
 	rm -vf *~ *.o 
 	
 distclean: clean
-	rm -vf lo lo_in plot.in
+	rm -vf lo lara lo_in plot.in
+	rm -vf idl.x idl.y idl.z idl.batch plot.ps in out
 
