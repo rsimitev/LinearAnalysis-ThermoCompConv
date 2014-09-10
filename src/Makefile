@@ -1,7 +1,7 @@
 ######## Makefile for lo ##################################
 ######## attention: the command must be preceeded by a "tab"
 
-FCFLAGS=-O3 -finit-local-zero -finit-real=zero -finit-integer=0 -g -Wall -pedantic 
+FCFLAGS=-O3 -cpp -finit-local-zero -finit-real=zero -finit-integer=0 -g -Wall -pedantic 
 #FCFLAGS:=-O2 -g -debug full -check all
 LDFLAGS= 
 
