@@ -1,0 +1,49 @@
+#!/bin/csh
+#
+#========================================================== 
+#     input for lara 
+#========================================================== 
+#! LHEAD=0: NHEAD, LHEAD=1: NHEAD WRITTEN,
+#! LNUM: 0 no plotnumbers,  1 numbers with description,
+#!       2 numbers without descr., 3 numbers by ABCNUMI
+#! CFE determins the field to be plotted:
+#! 'VS':STREAMFUNCTION OF VELOCITY        'BS':STREAMFUNCTION OF MAG. FIELD,
+#! 'JS':STREAMFUNCTION OF EL. CURRENT, 
+#! 'VR':RADIAL VELOCITY U_R               'BR':RADIAL MAGNETIC FIELD,
+#! 'TE':TEMPERATURE FIELD THETA,          'ZF':ZONAL FLOW ( MEAN VPHI ),
+#! 'MF':MEAN MERID. FLOW (M=0,PHI=CONST), 'MT':MEAN TOR. MAG. FIELD, PHI=CONST,
+#! 'BT':TOROIDAL MAG. FIELD FOR PHI=CONST,
+#! 'MP':STREAMLINES OF MEAN POL. MAG. FIELD FOR PHI=CONST,
+#! 'MJ':STREAMLINES OF MEAN ELECTRIC CURRENT FOR PHI=CONST, 
+#! 'MC':CONTOUR LINES OF MEAN PHI COMPONENT OF ELECTRIC CURRENT FOR PHI=CONST,
+#! 'TT':Temperature field including basic state
+#! 'UP':Contours of Uphi
+#! 'NU':local nusselt number
+#!
+#RUN LARA
+cat > larai << EOT
+|  INPUTFILE  |  OUTPUTFILE  | DATASETNR  | PLOTDRIFT |
+ 'e04p01Rconc1000L50.tau2155'  'larao.DAT'    1   -138.0D0       
+|LTIM(-2..2)|LHEAD(01)|LNUM0123|LWRT|LGR(012)|LCL(01)|LFR|
+       0        1         1       0    0       1       0
+| NUMBER OF PLOTS | LATITUDE OF POLE | LONGITUDE OF POLE |  
+         1               20.E0              20.E0
+| PLOT |  TIME  | NUMBER OF SUBPLOTS |
+  'SP'    0.0E0             1
+    | SUBPL | PLANE(RPT) | CONST | FIELD |(MAX RAD)/RO|ZD/STEP|PlotNR|
+      'SP'       'T'        90      'VS'     1.E0          9    '000'
+| NOUT 0=Ende, 1=TEK, 2=Plotter, 3=SYS_LASER, 4=NWII_LAS, 5=POSTSCR. |
+1
+EOT
+/home/btpa/btpa19/LinearOnset/plots/lara < larai
+rm larai
+# 
+#======================================================== 
+#  run IDL 
+#======================================================== 
+cat > idl.batch << EOT
+.run /home/btpa/btpa19/LinearOnset/plots/idl_lara.pro
+exit
+EOT
+idl < idl.batch
+#rm idl.batch idl.x idl.y idl.z  larao.DAT   fort.20 koeff.dat 

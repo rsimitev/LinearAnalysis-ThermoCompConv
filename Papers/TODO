@@ -1,0 +1,35 @@
+Maybe the best way to start is to read the Ardes paper 
+http://www.sciencedirect.com/science/article/pii/S0031920196032001#
+to get idea of what the code can do and try to replicate some of the Ardes 
+results. Once you have an idea of how it works, we can apply it to the 
+case of double-diffusive convection. I have done a linear study of 
+double-diffusive convection in ANNULUS geometry, this is 
+http://dx.doi.org/10.1016/j.pepi.2011.04.007.
+Do the similar results hold for a spherical shell? In particular are there 
+ilands of instability etc? Can we find any interesting/relevant linear 
+patterns and target the nonlinear simulations in that regime.
+
+ri-Theta-Gamma_ro-Theta-Gamma : means that the BCs are Dirichlet(value) BC 
+for temperature and concentration at both boundaries. One can also 
+implement Neumann (flux) BC later.
+Instructions:
+
+1) Uncompress.
+
+2) go to
+  cd forLuisSilva/DoubleDiffConv/ri-Theta-Gamma_ro-Theta-Gamma
+
+3) Running the script file
+COM.calc.plot.ArdesFig3
+  sholud compile the code and produce one of the curves in figure 3 of 
+the Ardes paper.
+
+4)  Running the script file
+COM.calc.plot.ArdesFig4c
+  sholud compile the code and produce a part of figure 4c of the Ardes 
+paper.
+
+5) Running the script file
+COM.calc.plot
+is case of double diffusive convection..
+ 
