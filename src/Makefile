@@ -13,6 +13,9 @@ default: lo
 OBJECTS := r.o imsl.o pegasus.o losub.o
 
 %.o:%.F
+	$(FC) -std=legacy -c $(FCFLAGS) -o $@ $^
+
+%.o:%.f90
 	$(FC) -c $(FCFLAGS) -o $@ $^
 
 ####### Main program ###############################################
