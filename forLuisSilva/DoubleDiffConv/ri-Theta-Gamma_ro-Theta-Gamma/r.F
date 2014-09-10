@@ -3,8 +3,8 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     BERECHNET DIE RADIALINTEGRALE FUER DAS DYNAMOPROBLEM
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
-      IMPLICIT COMPLEX*16(Z)
+      IMPLICIT double precision(A-H,O-Y)
+      IMPLICIT complex(8)(Z)
       CHARACTER*3 TRI,TRII
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
@@ -286,7 +286,7 @@ C
 C
 C-----------------------------------------------------------------------
       SUBROUTINE TAUSCH(TRI,I,J,K)
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       CHARACTER*3 TRI
       IF(TRI.EQ.'CS ') THEN
          N=I
@@ -320,7 +320,7 @@ C
 C
 C-----------------------------------------------------------------------
       FUNCTION S0(N)
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
@@ -334,9 +334,7 @@ C
 C
 C-----------------------------------------------------------------------
       FUNCTION C0(N)
-      IMPLICIT REAL*8(A-H,O-Y)
-      PARAMETER(DPI=3.141592653589793D0)
-      COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
+      IMPLICIT double precision(A-H,O-Y)
       IF(N.EQ.0) THEN
          C0=1D0
       ELSE
@@ -348,7 +346,7 @@ C
 C
 C-----------------------------------------------------------------------
       FUNCTION S1(N)
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
@@ -366,7 +364,7 @@ C
 C
 C-----------------------------------------------------------------------
       FUNCTION C1(N)
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
@@ -384,7 +382,7 @@ C
 C
 C-----------------------------------------------------------------------
       FUNCTION S2(N)
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
@@ -403,7 +401,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION C2(N)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
@@ -421,7 +419,7 @@ C
 C
 C-----------------------------------------------------------------------
       FUNCTION S3(N)
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
@@ -440,7 +438,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION C3(N)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
@@ -458,7 +456,7 @@ C
 C
 C-----------------------------------------------------------------------
       FUNCTION S4(N)
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
@@ -478,7 +476,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION C4(N)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(NGU(N).EQ.1) THEN
@@ -498,7 +496,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION SM1(N)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(N.EQ.0) THEN
@@ -514,7 +512,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION CM1(N)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(N.EQ.0) THEN
@@ -566,7 +564,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION DIS(XMIN,XMAX,A)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
 C
       X=DABS(A*XMAX)
       IF(X.LT.1) THEN
@@ -590,7 +588,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION SIA(X)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       DIMENSION AF(4),BF(4),AG(4),BG(4)
       PARAMETER(DPI=3.141592653589793D0)
       DATA AF/38.027264D0,265.187033D0,335.677320D0,38.102495D0/
@@ -609,7 +607,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION SIS(X)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       GENAU=1D-7
 C      
       SISO=X
@@ -651,7 +649,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION DIC(XMIN,XMAX,A)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
 C
       X=DABS(A*XMAX)
       IF(X.LT.1) THEN
@@ -673,7 +671,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION CIA(X)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       DIMENSION AF(4),BF(4),AG(4),BG(4)
       DATA AF/38.027264D0,265.187033D0,335.677320D0,38.102495D0/
      &     BF/40.021433D0,322.624911D0,570.236280D0,157.105423D0/
@@ -691,7 +689,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION CIS(X)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(C=0.5772156649D0)
       GENAU=1D-7
 C      
