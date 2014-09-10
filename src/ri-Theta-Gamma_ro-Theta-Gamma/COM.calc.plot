@@ -51,7 +51,7 @@ EOT
 #  
 # Command
 make lo
-lo $in $out
+./lo $in $out
 rm $in
 
 endif 
