@@ -33,7 +33,7 @@ C
      &                   ACOPY, BCOPY)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, LDA, LDB, LDEVEC
-      COMPLEX    *16 A(LDA,*), B(LDB,*), ALPHA(*), BETA(*),
+      complex(8) A(LDA,*), B(LDB,*), ALPHA(*), BETA(*),
      &           EVEC(LDEVEC,*), ACOPY(N,*), BCOPY(N,*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    I, J
@@ -126,10 +126,10 @@ C
       SUBROUTINE DG2LCG (N, A, LDA, B, LDB, ALPHA, BETA, ACOPY, BCOPY)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, LDA, LDB
-      COMPLEX    *16 A(LDA,*), B(LDB,*), ALPHA(*), BETA(*),
+      complex(8) A(LDA,*), B(LDB,*), ALPHA(*), BETA(*),
      &           ACOPY(N,*), BCOPY(N,*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
-      COMPLEX    *16 EVEC(1,1)
+      complex(8) EVEC(1,1)
 C                                  SPECIFICATIONS FOR SUBROUTINES
       EXTERNAL   E1MES, E1POP, E1PSH, E1STI, DCCGCG, DG3CCG, DG4CCG,
      &           DG5CCG
@@ -213,7 +213,7 @@ C
       SUBROUTINE DCCGCG (N, A, LDA, B, LDB)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, LDA, LDB
-      COMPLEX    *16 A(LDA,*), B(LDB,*)
+      complex(8) A(LDA,*), B(LDB,*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    J
 C                                  SPECIFICATIONS FOR SUBROUTINES
@@ -298,10 +298,10 @@ C
       SUBROUTINE DG3CCG (N, A, B, IJOB, EVEC, LDEVEC)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, IJOB, LDEVEC
-      COMPLEX    *16 A(N,*), B(N,*), EVEC(LDEVEC,*)
+      complex(8) A(N,*), B(N,*), EVEC(LDEVEC,*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    I, II, J
-      COMPLEX    *16 Y, ZDUM
+      complex(8) Y, ZDUM
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  DABS,DIMAG,DBLE
       INTRINSIC  DABS, DIMAG, DBLE
@@ -432,12 +432,12 @@ C                                  SPECIFICATIONS FOR ARGUMENTS
       PARAMETER(NSIGRESTART=80)
 C
       INTEGER    N, LDEVEC, IJOB
-      COMPLEX    *16 A(N,*), B(N,*), EVEC(LDEVEC,*), ALPHA(*), BETA(*)
+      complex(8) A(N,*), B(N,*), EVEC(LDEVEC,*), ALPHA(*), BETA(*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    I, INFER, ITS, J, L, LOR1, M, NN, NNORN
       DOUBLE PRECISION ANI, ANORM, BNI, BNORM, D0, D1, D2, E0, E1,
      &           EPS, EPSA, EPSB, R, SS
-      COMPLEX    *16 ALFM, ANM1M1, ANNM1, BETM, D, DEN, NUM, S, SL, W,
+      complex(8) ALFM, ANM1M1, ANNM1, BETM, D, DEN, NUM, S, SL, W,
      &           Y, ZC, ZDUM, TEMP1
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  DABS,DIMAG,DMAX1,DCMPLX,CDSQRT,DBLE
@@ -451,7 +451,7 @@ C                                  SPECIFICATIONS FOR FUNCTIONS
       EXTERNAL   ende
       INTEGER    IZAMAX
       DOUBLE PRECISION DMACH, DZASUM
-      COMPLEX    *16 ZDOTU
+      complex(8) ZDOTU
       DOUBLE PRECISION CABS1
 C
       CABS1(ZDUM) = DABS(DBLE(ZDUM)) + DABS(DIMAG(ZDUM))
@@ -737,12 +737,12 @@ C
      &                   EVAL)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, NEVEC, LDEVEC
-      COMPLEX    *16 ALPHA(*), BETA(*), EVEC(LDEVEC,*), EVAL(*)
+      complex(8) ALPHA(*), BETA(*), EVEC(LDEVEC,*), EVAL(*)
       LOGICAL    VECTOR
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    I, J
       DOUBLE PRECISION AJ, AJP1, BIG, RJ, RJP1
-      COMPLEX    *16 TEMP
+      complex(8) TEMP
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  DIMAG,DMIN1,CDABS,DCMPLX,DBLE
       INTRINSIC  DIMAG, DMIN1, CDABS, DCMPLX, DBLE
@@ -1209,7 +1209,7 @@ C
       SUBROUTINE ZSCAL (N, ZA, ZX, INCX)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, INCX
-      COMPLEX    *16 ZA, ZX(*)
+      complex(8) ZA, ZX(*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    I, IX
 C
@@ -1518,9 +1518,9 @@ C                                  SPECIFICATIONS FOR COMMON /WORKSP/
       REAL       RWKSP(5000)
       REAL       RDWKSP(5000)
       DOUBLE PRECISION DWKSP(2500)
-      COMPLEX    CWKSP(2500)
-      COMPLEX    CZWKSP(2500)
-      COMPLEX    *16 ZWKSP(1250)
+      complex(8)    CWKSP(2500)
+      complex(8)    CZWKSP(2500)
+      complex(8) ZWKSP(1250)
       INTEGER    IWKSP(5000)
       LOGICAL    LWKSP(5000)
       EQUIVALENCE (DWKSP(1), RWKSP(1))
@@ -2748,9 +2748,9 @@ C                                  SPECIFICATIONS FOR COMMON /WORKSP/
       REAL       RWKSP(5000)
       REAL       RDWKSP(5000)
       DOUBLE PRECISION DWKSP(2500)
-      COMPLEX    CWKSP(2500)
-      COMPLEX    CZWKSP(2500)
-      COMPLEX    *16 ZWKSP(1250)
+      complex(8)    CWKSP(2500)
+      complex(8)    CZWKSP(2500)
+      complex(8) ZWKSP(1250)
       INTEGER    IWKSP(5000)
       LOGICAL    LWKSP(5000)
       EQUIVALENCE (DWKSP(1), RWKSP(1))
@@ -2946,11 +2946,11 @@ C
       INTEGER FUNCTION IZAMAX (N, ZX, INCX)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, INCX
-      COMPLEX    *16 ZX(*)
+      complex(8) ZX(*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    I, IX
       DOUBLE PRECISION SMAX
-      COMPLEX    *16 ZDUM
+      complex(8) ZDUM
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  DABS,DBLE,DIMAG
       INTRINSIC  DABS, DBLE, DIMAG
@@ -3034,7 +3034,7 @@ C
       SUBROUTINE ZCOPY (N, ZX, INCX, ZY, INCY)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, INCX, INCY
-      COMPLEX    *16 ZX(*), ZY(*)
+      complex(8) ZX(*), ZY(*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    I, IX, IY
 C
@@ -3104,10 +3104,10 @@ C
       SUBROUTINE ZSWAP (N, ZX, INCX, ZY, INCY)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, INCX, INCY
-      COMPLEX    *16 ZX(*), ZY(*)
+      complex(8) ZX(*), ZY(*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    I, IX, IY
-      COMPLEX    *16 ZTEMP
+      complex(8) ZTEMP
 C
       IF (N .GT. 0) THEN
          IF (INCX.NE.1 .OR. INCY.NE.1) THEN
@@ -3180,7 +3180,7 @@ C
       SUBROUTINE ZAXPY (N, ZA, ZX, INCX, ZY, INCY)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, INCX, INCY
-      COMPLEX    *16 ZA, ZX(*), ZY(*)
+      complex(8) ZA, ZX(*), ZY(*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    I, IX, IY
       DOUBLE PRECISION ZZABS
@@ -3252,7 +3252,7 @@ C
       SUBROUTINE ZSET (N, ZA, ZX, INCX)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, INCX
-      COMPLEX    *16 ZA, ZX(*)
+      complex(8) ZA, ZX(*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    I, NINCX
 C
@@ -3388,7 +3388,7 @@ C
       DOUBLE PRECISION FUNCTION DZASUM (N, ZX, INCX)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, INCX
-      COMPLEX    *16 ZX(*)
+      complex(8) ZX(*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    I, IX
       DOUBLE PRECISION STEMP
@@ -3463,13 +3463,13 @@ C              is applicable.
 C
 C-----------------------------------------------------------------------
 C
-      COMPLEX *16FUNCTION ZDOTU (N, ZX, INCX, ZY, INCY)
+      complex(8)FUNCTION ZDOTU (N, ZX, INCX, ZY, INCY)
 C                                  SPECIFICATIONS FOR ARGUMENTS
       INTEGER    N, INCX, INCY
-      COMPLEX    *16 ZX(*), ZY(*)
+      complex(8) ZX(*), ZY(*)
 C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    I, IX, IY
-      COMPLEX    *16 ZTEMP
+      complex(8) ZTEMP
 C
       ZDOTU = (0.0D0,0.0D0)
       IF (N .GT. 0) THEN
@@ -3540,9 +3540,9 @@ C                                  SPECIFICATIONS FOR COMMON /WORKSP/
       REAL       RWKSP(5000)
       REAL       RDWKSP(5000)
       DOUBLE PRECISION DWKSP(2500)
-      COMPLEX    CWKSP(2500)
-      COMPLEX    CZWKSP(2500)
-      COMPLEX    *16 ZWKSP(1250)
+      complex(8)    CWKSP(2500)
+      complex(8)    CZWKSP(2500)
+      complex(8) ZWKSP(1250)
       INTEGER    IWKSP(5000)
       LOGICAL    LWKSP(5000)
       EQUIVALENCE (DWKSP(1), RWKSP(1))
