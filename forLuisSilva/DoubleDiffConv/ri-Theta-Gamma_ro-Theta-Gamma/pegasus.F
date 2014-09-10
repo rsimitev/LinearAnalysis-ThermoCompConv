@@ -14,10 +14,10 @@ C--  LN  : on output: 0=convergence, 1:no convergence
 C--  X0  : on output: calculated root
 C--
 C--  PEGASUS calls an external function named
-C--  REAL*8 FUNCTION FN(RA) to determine the function value
+C--  double precision FUNCTION FN(RA) to determine the function value
 C---------------------------------------------------------------------
 C
-      IMPLICIT REAL*8(A-G,O-Z)
+      IMPLICIT double precision(A-G,O-Z)
 C
       IF( ABSE.NE.0.D0 .AND. RELE.NE.0.D0 ) THEN
          WRITE(*,*) 'ABSERR OR RELERR SHOULD BE ZERO.'
@@ -160,7 +160,7 @@ c
 C--  Vertauscht Werte 1 und 2 
 C---------------------------------------------------------------
 C
-      IMPLICIT REAL*8(A-G,O-Z)
+      IMPLICIT double precision(A-G,O-Z)
 C
       XH=X1
       YH=Y1

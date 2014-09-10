@@ -12,7 +12,7 @@ C
 C  Revised:    September 25, 1985
 C
 C  Purpose:    Compute all of the eigenvalues and eigenvectors of a
-C              generalized complex eigensystem A*z = w*B*z.
+C              generalized complex(8) eigensystem A*z = w*B*z.
 C
 C  Usage:      CALL G2CCG (N, A, LDA, B, LDB, ALPHA, BETA, EVEC, LDEVEC,
 C                          ACOPY, BCOPY)
@@ -43,7 +43,7 @@ C                                  SPECIFICATIONS FOR SUBROUTINES
 C                                  SPECIFICATIONS FOR FUNCTIONS
       EXTERNAL   IZAMAX, N1RTY
       INTEGER    IZAMAX, N1RTY
-      INTRINSIC  DIMAG
+c      INTRINSIC  DIMAG
 C
       CALL E1PSH ('DG2CCG ')
 C                                  Check N
@@ -106,7 +106,7 @@ C  Computer:   sgruxs/DOUBLE
 C
 C  Revised:    September 26, 1985
 C
-C  Purpose:    Compute all of the eigenvalues of a generalized complex
+C  Purpose:    Compute all of the eigenvalues of a generalized complex(8)
 C              eigensystem A*z = w*B*z.
 C
 C  Usage:      CALL G2LCG (N, A, LDA, B, LDB, ALPHA, BETA, ACOPY, BCOPY)
@@ -136,7 +136,7 @@ C                                  SPECIFICATIONS FOR SUBROUTINES
 C                                  SPECIFICATIONS FOR FUNCTIONS
       EXTERNAL   N1RTY
       INTEGER    N1RTY
-      INTRINSIC  DIMAG
+c      INTRINSIC  DIMAG
 
 C
       CALL E1PSH ('DG2LCG ')
@@ -184,16 +184,16 @@ C  Computer:   sgruxs/DOUBLE
 C
 C  Revised:    June 5, 1985
 C
-C  Purpose:    Copy a complex general matrix.
+C  Purpose:    Copy a complex(8) general matrix.
 C
 C  Usage:      CALL CCGCG (N, A, LDA, B, LDB)
 C
 C  Arguments:
 C     N      - Order of the matrices A and B.  (Input)
-C     A      - Complex matrix of order N.  (Input)
+C     A      - complex(8) matrix of order N.  (Input)
 C     LDA    - Leading dimension of A exactly as specified in the
 C              dimension statement of the calling program.  (Input)
-C     B      - Complex matrix of order N containing a copy of A.
+C     B      - complex(8) matrix of order N containing a copy of A.
 C              (Output)
 C     LDB    - Leading dimension of B exactly as specified in the
 C              dimension statement of the calling program.  (Input)
@@ -267,20 +267,20 @@ C  Computer:   sgruxs/DOUBLE
 C
 C  Revised:    May 21, 1985
 C
-C  Purpose:    Reduce the complex matrix A to upper Hessenberg form and
-C              the complex matrix B to upper triangular form.
+C  Purpose:    Reduce the complex(8) matrix A to upper Hessenberg form and
+C              the complex(8) matrix B to upper triangular form.
 C
 C  Usage:      CALL G3CCG (N, A, B, IJOB, EVEC, LDEVEC)
 C
 C  Arguments:
 C     N      - Order of the system.  (Input)
-C     A      - Complex matrix of order and leading dimension N.
+C     A      - complex(8) matrix of order and leading dimension N.
 C              (Input/Output)
-C     B      - Complex matrix of order and leading dimension N.
+C     B      - complex(8) matrix of order and leading dimension N.
 C              (Input/Output)
 C     IJOB   - If IJOB = 1 then the transformation is accumulated in
 C              EVEC.  Otherwise EVEC is not used.  (Input)
-C     EVEC   - Complex matrix of order N.  If IJOB = 1 then it contains
+C     EVEC   - complex(8) matrix of order N.  If IJOB = 1 then it contains
 C              the reduction transformation.  (Output)
 C     LDEVEC - Leading dimension of EVEC exactly as specified in the
 C              dimension statement of the calling program.  (Input)
@@ -304,8 +304,8 @@ C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       complex(8) Y, ZDUM
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  DABS,DIMAG,DBLE
-      INTRINSIC  DABS, DIMAG, DBLE
-      DOUBLE PRECISION DABS, DIMAG, DBLE
+c      INTRINSIC  DABS, DIMAG, DBLE
+c      DOUBLE PRECISION DABS, DIMAG, DBLE
 C                                  SPECIFICATIONS FOR SUBROUTINES
       EXTERNAL   ZAXPY, ZSET, ZSWAP
 C                                  SPECIFICATIONS FOR FUNCTIONS
@@ -395,16 +395,16 @@ C
 C  Revised:    May 21, 1985
 C
 C  Purpose:    Compute eigenvalues and eigenvectors of a generalized
-C              complex eigensystem A*z = w*B*z given its reduction to
+C              complex(8) eigensystem A*z = w*B*z given its reduction to
 C              an upper Hessenberg and upper triangular matrix.
 C
 C  Usage:      CALL G4CCG (N, A, B, EVEC, LDEVEC, IJOB, ALPHA, BETA)
 C
 C  Arguments:
 C     N      - Order of the system.  (Input)
-C     A      - Complex upper Hessenberg matrix.  (Input)
-C     B      - Complex upper triangular matrix.  (Input)
-C     EVEC   - Complex matrix of order N.  If IJOB = 1, on input, the
+C     A      - complex(8) upper Hessenberg matrix.  (Input)
+C     B      - complex(8) upper triangular matrix.  (Input)
+C     EVEC   - complex(8) matrix of order N.  If IJOB = 1, on input, the
 C              transformation matrix.  On output, containing the
 C              eigenvectors.   (Input/Output)
 C     LDEVEC - Leading dimension of EVEC exactly as specified in the
@@ -412,9 +412,9 @@ C              dimension statement of the calling program.  (Input)
 C     IJOB   - If IJOB = 0 then only the eigenvalues are computed.  If
 C              IJOB = 1 then the eigenvectors are also computed.
 C              (Input)
-C     ALPHA  - Complex vector of length N containing the numerators of
+C     ALPHA  - complex(8) vector of length N containing the numerators of
 C              the eigenvalues.  (Output)
-C     BETA   - Complex vector of length N containing the demoninators
+C     BETA   - complex(8) vector of length N containing the demoninators
 C              of the eigenvalues.  (Output)
 C
 C  Chapter:    MATH/LIBRARY Eigensystem Analysis
@@ -440,10 +440,10 @@ C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       complex(8) ALFM, ANM1M1, ANNM1, BETM, D, DEN, NUM, S, SL, W,
      &           Y, ZC, ZDUM, TEMP1
 C                                  SPECIFICATIONS FOR INTRINSICS
-C     INTRINSIC  DABS,DIMAG,DMAX1,DCMPLX,CDSQRT,DBLE
-      INTRINSIC  DABS, DIMAG, DMAX1, DCMPLX, CDSQRT, DBLE
-      DOUBLE PRECISION DABS, DIMAG, DMAX1, DBLE
-      COMPLEX    *16 DCMPLX, CDSQRT
+C      INTRINSIC  DABS,DIMAG,DMAX1,DCMPLX,CDSQRT,DBLE
+c      INTRINSIC  DABS, DIMAG, DMAX1, DCMPLX, CDSQRT, DBLE
+c      DOUBLE PRECISION DABS, DIMAG, DMAX1, DBLE
+c      complex(8) DCMPLX, CDSQRT
 C                                  SPECIFICATIONS FOR SUBROUTINES
       EXTERNAL   ZAXPY, ZSWAP, E1MES, E1POP, E1PSH, E1STI
 C                                  SPECIFICATIONS FOR FUNCTIONS
@@ -510,29 +510,25 @@ C
          END IF
       END IF
 C
-      IF (ITS .GE. 30) THEN
+C      IF (ITS .GE. 30) THEN
+C     LACS: increase number of iterations to convergence
+      IF (ITS .GE. 50) THEN
          IF (INFER .EQ. 0) THEN
             INFER = NN
             CALL E1STI (1, NN)
-            IF (IJOB .EQ. 0) THEN
-CC               CALL E1MES (4, 1, 'The iteration for the eigenvalues '//
-CC     &                     'failed to converge.  The first %(I1) '//
-CC     &                     'eigenvalues may be inaccurate.')
+            IF ((IJOB .EQ. 0) .or. (IJOB .EQ. 1)) THEN
                  write(*,*) 'DG4CCG: iteration failed, aborting!'
-                 call ende(NSIGRESTART)
-            ELSE IF (IJOB .EQ. 1) THEN
-CC               CALL E1MES (4, 1, 'The iteration for the eigenvalues '//
-CC     &                     'failed to converge.  The first %(I1) '//
-CC     &                     'eigenvalues may be inaccurate.  All of '//
-CC     &                     'the eigenvectors may be inccurate.')
-                 write(*,*) 'DG4CCG: iteration failed, aborting!'
+                 write(*,*) 'DG4CCG: IJOB  = ', IJOB
+                 Write(*,*) 'DG4CCG: INFER = ', INFER
+                 Write(*,*) 'DG4CCG: ITS   = ', ITS
                  call ende(NSIGRESTART)
             END IF
          END IF
          IF (CABS1(A(NN,NN-1)) .GT. 0.8D0*CABS1(ANNM1)) GO TO 9000
       END IF
 C
-      IF (ITS.EQ.10 .OR. ITS.EQ.20) THEN
+C     LACS: We want to do something every 10 iterations
+      IF (mod(ITS,10).EQ.0) THEN
 C                                  Ad-hoc shift
          NUM = DCMPLX(CABS1(ANNM1),CABS1(A(NN-1,NN-2)))
          DEN = DCMPLX(1.0D0,0.0D0)
@@ -697,8 +693,8 @@ C  Computer:   sgruxs/DOUBLE
 C
 C  Revised:    February 9, 1986
 C
-C  Purpose:    Lexicographical sort on complex eigenvalues and
-C              corresponding eigenvectors of a complex general
+C  Purpose:    Lexicographical sort on complex(8) eigenvalues and
+C              corresponding eigenvectors of a complex(8) general
 C              eigensystem.
 C
 C  Usage:      CALL G5CCG (N, NEVEC, ALPHA, BETA, EVEC, LDEVEC, VECTOR,
@@ -708,19 +704,19 @@ C  Arguments:
 C     N      - Order of the matrix.  (Input)
 C     NEVEC  - Number of eigenvalues (eigenvectors) to be sorted.
 C              (Input)
-C     ALPHA  - Complex vector of length N.  (Input/Output)
-C     BETA   - Complex vector of length N.  (Input/Output)
+C     ALPHA  - complex(8) vector of length N.  (Input/Output)
+C     BETA   - complex(8) vector of length N.  (Input/Output)
 C              The J-th eigenvalue is ALPHA(J)/BETA(J), assuming
 C              BETA(J) is zero then the eigenvalue is to be regarded
 C              as infinite.
-C     EVEC   - Complex matrix of order N.  (Input/Output)
+C     EVEC   - complex(8) matrix of order N.  (Input/Output)
 C              The J-th eigenvector, corresponding to ALPH(J)/BETA(J)
 C              is stored in the J-th column.
 C     LDEVEC - Leading dimension of EVEC exactly as specified in the
 C              dimension statement of the calling program.  (Input)
 C     VECTOR - Logical parameter specifiying if corresponding
 C              eigenvectors to eigenvalues exist.  (Input)
-C     EVAL   - Complex work array of length N.  (Output)
+C     EVAL   - complex(8) work array of length N.  (Output)
 C              Used to store the computed eigenvalues to be sorted.
 C
 C  Chapter:    MATH/LIBRARY Eigensystem Analysis
@@ -745,9 +741,9 @@ C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       complex(8) TEMP
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  DIMAG,DMIN1,CDABS,DCMPLX,DBLE
-      INTRINSIC  DIMAG, DMIN1, CDABS, DCMPLX, DBLE
-      DOUBLE PRECISION DIMAG, DMIN1, CDABS, DBLE
-      COMPLEX    *16 DCMPLX
+c      INTRINSIC  DIMAG, DMIN1, CDABS, DCMPLX, DBLE
+c      DOUBLE PRECISION DIMAG, DMIN1, CDABS, DBLE
+c      complex(8) DCMPLX
 C                                  SPECIFICATIONS FOR SUBROUTINES
       EXTERNAL   ZSWAP
 C                                  SPECIFICATIONS FOR FUNCTIONS
@@ -973,13 +969,13 @@ C     IERCOD - Integer specifying the error code.  (Input)
 C     MSGPKD - A character string containing the message.
 C              (Input)  Within the message, any of following may appear
 C                %(A1),%(A2),...,%(A9) for character arrays
-C                %(C1),%(C2),...,%(C9) for complex numbers
+C                %(C1),%(C2),...,%(C9) for complex(8) numbers
 C                %(D1),%(D2),...,%(D9) for double precision numbers
 C                %(I1),%(I2),...,%(I9) for integer numbers
 C                %(K1),%(K2),...,%(K9) for keywords
 C                %(L1),%(L2),...,%(L9) for literals (strings)
 C                %(R1),%(R2),...,%(R9) for real numbers
-C                %(Z1),%(Z2),...,%(Z9) for double complex numbers
+C                %(Z1),%(Z2),...,%(Z9) for complex(8) numbers
 C              This provides a way to insert character arrays, strings,
 C              numbers, and keywords into the message.  See remarks
 C              below.
@@ -1038,8 +1034,8 @@ C                              SPECIFICATIONS FOR COMMON /ERCOM4/
       SAVE       /ERCOM4/
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  LEN,MIN0
-      INTRINSIC  LEN, MIN0
-      INTEGER    LEN, MIN0
+c      INTRINSIC  LEN, MIN0
+c      INTEGER    LEN, MIN0
 C                                  SPECIFICATIONS FOR SUBROUTINES
       EXTERNAL   C1TCI, E1INIT, E1PRT, E1UCS, M1VE, M1VECH
 C                                  SPECIFICATIONS FOR FUNCTIONS
@@ -1178,14 +1174,14 @@ C
 C  Revised:    August 9, 1986
 C
 C  Purpose:    Multiply a vector by a scalar, y = ay, both double
-C              complex.
+C              complex(8).
 C
 C  Usage:      CALL ZSCAL (N, ZA, ZX, INCX)
 C
 C  Arguments:
 C     N      - Length of vectors X.  (Input)
-C     ZA     - Double complex scalar.  (Input)
-C     ZX     - Double complex vector of length MAX(N*IABS(INCX),1).
+C     ZA     - complex(8) scalar.  (Input)
+C     ZX     - complex(8) vector of length MAX(N*IABS(INCX),1).
 C                 (Input/Output)
 C              ZSCAL replaces X(I) with ZA*X(I) for I = 1,...,N.
 C              X(I) refers to a specific element of ZX.
@@ -1614,8 +1610,8 @@ C                                  SPECIFICATIONS FOR SAVE VARIABLES
       SAVE       BLANK, DIGIT, MINUS
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  IABS
-      INTRINSIC  IABS
-      INTEGER    IABS
+c      INTRINSIC  IABS
+c      INTEGER    IABS
 C                                  SPECIFICATIONS FOR SUBROUTINES
       EXTERNAL   M1VE
 C
@@ -1794,8 +1790,8 @@ C                              SPECIFICATIONS FOR COMMON /ERCOM4/
       SAVE       /ERCOM4/
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  IABS
-      INTRINSIC  IABS
-      INTEGER    IABS
+c      INTRINSIC  IABS
+c      INTEGER    IABS
 C                                  SPECIFICATIONS FOR SUBROUTINES
       EXTERNAL   C1TIC, M1VE
 C
@@ -1934,8 +1930,8 @@ C                              SPECIFICATIONS FOR COMMON /ERCOM9/
      &           UNKNOW
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  MIN0
-      INTRINSIC  MIN0
-      INTEGER    MIN0
+c      INTRINSIC  MIN0
+c      INTEGER    MIN0
 C                                  SPECIFICATIONS FOR SUBROUTINES
       EXTERNAL   C1TIC, M1VE, UMACH
 C                                  SPECIFICATIONS FOR FUNCTIONS
@@ -2182,8 +2178,8 @@ C                              SPECIFICATIONS FOR COMMON /ERCOM4/
       SAVE       /ERCOM4/
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  DMOD
-      INTRINSIC  DMOD
-      DOUBLE PRECISION DMOD
+c      INTRINSIC  DMOD
+c      DOUBLE PRECISION DMOD
 C                                  SPECIFICATIONS FOR SUBROUTINES
       EXTERNAL   S1ANUM
 C                                  SPECIFICATIONS FOR FUNCTIONS
@@ -2399,8 +2395,8 @@ C                                  SPECIFICATIONS FOR SAVE VARIABLES
       SAVE       BLANK
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  MIN0
-      INTRINSIC  MIN0
-      INTEGER    MIN0
+c      INTRINSIC  MIN0
+c      INTEGER    MIN0
 C
       DATA BLANK/' '/
 C                                  CHECK INBEG, INEND, INLEN, IUTBEG,
@@ -2480,8 +2476,8 @@ C                                  SPECIFICATIONS FOR EQUIVALENCE
       EQUIVALENCE (DIGIT, ZERO)
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  INDEX
-      INTRINSIC  INDEX
-      INTEGER    INDEX
+c      INTRINSIC  INDEX
+c     INTEGER    INDEX
 C                                  SPECIFICATIONS FOR FUNCTIONS
       EXTERNAL   IMACH
       INTEGER    IMACH
@@ -2627,8 +2623,8 @@ C                              SPECIFICATIONS FOR COMMON /ERCOM4/
       SAVE       /ERCOM4/
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  IABS,LEN,MIN0
-      INTRINSIC  IABS, LEN, MIN0
-      INTEGER    IABS, LEN, MIN0
+c      INTRINSIC  IABS, LEN, MIN0
+c      INTEGER    IABS, LEN, MIN0
 C                                  SPECIFICATIONS FOR SUBROUTINES
       EXTERNAL   E1INIT, E1INPL
 C
@@ -2916,13 +2912,13 @@ C
 C  Revised:    August 9, 1986
 C
 C  Purpose:    Find the smallest index of the component of a
-C              double-complex vector having maximum magnitude.
+C              double-complex(8) vector having maximum magnitude.
 C
 C  Usage:      IZAMAX(N, ZX, INCX)
 C
 C  Arguments:
 C     N      - Length of vector X.  (Input)
-C     ZX     - Double complex vector of length N*INCX.  (Input)
+C     ZX     - complex(8) vector of length N*INCX.  (Input)
 C     INCX   - Displacement between elements of ZX.  (Input)
 C              X(I) is defined to be ZX(1+(I-1)*INCX). INCX must be
 C              greater than zero.
@@ -2953,8 +2949,8 @@ C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       complex(8) ZDUM
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  DABS,DBLE,DIMAG
-      INTRINSIC  DABS, DBLE, DIMAG
-      DOUBLE PRECISION DABS, DBLE, DIMAG
+c      INTRINSIC  DABS, DBLE, DIMAG
+c      DOUBLE PRECISION DABS, DBLE, DIMAG
       DOUBLE PRECISION ZABS1
 C
       ZABS1(ZDUM) = DABS(DBLE(ZDUM)) + DABS(DIMAG(ZDUM))
@@ -2997,19 +2993,19 @@ C  Computer:   sgruxs/DOUBLE
 C
 C  Revised:    August 9, 1986
 C
-C  Purpose:    Copy a vector X to a vector Y, both double complex.
+C  Purpose:    Copy a vector X to a vector Y, both complex(8).
 C
 C  Usage:      CALL ZCOPY (N, ZX, INCX, ZY, INCY)
 C
 C  Arguments:
 C     N      - Length of vectors X and Y.  (Input)
-C     ZX     - Double complex vector of length MAX(N*IABS(INCX),1).
+C     ZX     - complex(8) vector of length MAX(N*IABS(INCX),1).
 C              (Input)
 C     INCX   - Displacement between elements of ZX.  (Input)
 C              X(I) is defined to be
 C                 ZX(1+(I-1)*INCX) if INCX.GE.0  or
 C                 ZX(1+(I-N)*INCX) if INCX.LT.0.
-C     ZY     - Double complex vector of length MAX(N*IABS(INCY),1).
+C     ZY     - complex(8) vector of length MAX(N*IABS(INCY),1).
 C              (Output)
 C              ZCOPY copies X(I) to Y(I) for I = 1,...N. X(I) and Y(I)
 C              refer to specific elements of ZX and ZY.
@@ -3067,19 +3063,19 @@ C  Computer:   sgruxs/DOUBLE
 C
 C  Revised:    August 9, 1986
 C
-C  Purpose:    Interchange vectors X and Y, both double complex.
+C  Purpose:    Interchange vectors X and Y, both complex(8).
 C
 C  Usage:      CALL ZSWAP (N, ZX, INCX, ZY, INCY)
 C
 C  Arguments:
 C     N      - Length of vectors X and Y.  (Input)
-C     ZX     - Double complex vector of length MAX(N*IABS(INCX),1).
+C     ZX     - complex(8) vector of length MAX(N*IABS(INCX),1).
 C              (Input/Output)
 C     INCX   - Displacement between elements of ZX.  (Input)
 C              X(I) is defined to be
 C                ZX(1+(I-1)*INCX) if INCX.GE.0  or
 C                ZX(1+(I-N)*INCX) if INCX.LT.0.
-C     ZY     - Double complex vector of length MAX(N*IABS(INCY),1).
+C     ZY     - complex(8) vector of length MAX(N*IABS(INCY),1).
 C              (Input/Output)
 C     INCY   - Displacement between elements of ZY.  (Input)
 C              Y(I) is defined to be
@@ -3143,19 +3139,19 @@ C
 C  Revised:    August 9, 1986
 C
 C  Purpose:    Compute the scalar times a vector plus a vector,
-C              y = ax + y, all double complex.
+C              y = ax + y, all complex(8).
 C
 C  Usage:      CALL ZAXPY (N, ZA, ZX, INCX, ZY, INCY)
 C
 C  Arguments:
 C     N      - Length of vectors X and Y.  (Input)
-C     ZA     - Complex scalar.  (Input)
-C     ZX     - Complex vector of length MAX(N*IABS(INCX),1).  (Input)
+C     ZA     - complex(8) scalar.  (Input)
+C     ZX     - complex(8) vector of length MAX(N*IABS(INCX),1).  (Input)
 C     INCX   - Displacement between elements of ZX.  (Input)
 C              X(I) is defined to be
 C                 ZX(1+(I-1)*INCX) if INCX.GE.0  or
 C                 ZX(1+(I-N)*INCX) if INCX.LT.0.
-C     ZY     - Complex vector of length MAX(N*IABS(INCY),1).
+C     ZY     - complex(8) vector of length MAX(N*IABS(INCY),1).
 C                 (Input/Output)
 C              ZAXPY replaces Y(I) with ZA*X(I) + Y(I) for I = 1,...N.
 C              X(I) and Y(I) refer to specific elements of ZX and ZY.
@@ -3186,8 +3182,8 @@ C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       DOUBLE PRECISION ZZABS
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  DABS,DBLE,DIMAG
-      INTRINSIC  DABS, DBLE, DIMAG
-      DOUBLE PRECISION DABS, DBLE, DIMAG
+c      INTRINSIC  DABS, DBLE, DIMAG
+c      DOUBLE PRECISION DABS, DBLE, DIMAG
 C
       IF (N .GT. 0) THEN
          ZZABS = DABS(DBLE(ZA)) + DABS(DIMAG(ZA))
@@ -3222,14 +3218,14 @@ C
 C  Revised:    August 9, 1986
 C
 C  Purpose:    Set the components of a vector to a scalar, all double
-C              complex.
+C              complex(8).
 C
 C  Usage:      CALL ZSET (N, ZA, ZX, INCX)
 C
 C  Arguments:
 C     N      - Length of vector X.  (Input)
-C     ZA     - Double complex scalar.  (Input)
-C     ZX     - Double complex vector of length N*INCX.  (Input/Output)
+C     ZA     - complex(8) scalar.  (Input)
+C     ZX     - complex(8) vector of length N*INCX.  (Input/Output)
 C              ZSET replaces X(I) with ZA for I=1,...,N. X(I) refers to
 C              a specific element of ZX. See INCX argument description.
 C     INCX   - Displacement between elements of ZX.  (Input)
@@ -3356,13 +3352,13 @@ C  Revised:    August 9, 1986
 C
 C  Purpose:    Sum the absolute values of the real part together with
 C              the absolute values of the imaginary part of the
-C              components of a double-complex vector.
+C              components of a double-complex(8) vector.
 C
 C  Usage:      DZASUM(N, ZX, INCX)
 C
 C  Arguments:
 C     N      - Length of vectors X.  (Input)
-C     ZX     - Double complex vector of length N*INCX.  (Input)
+C     ZX     - complex(8) vector of length N*INCX.  (Input)
 C     INCX   - Displacement between elements of ZX.  (Input)
 C              X(I) is defined to be ZX(1+(I-1)*INCX).  INCX must be
 C              greater than 0.
@@ -3394,8 +3390,8 @@ C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       DOUBLE PRECISION STEMP
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  DABS,DBLE,DIMAG
-      INTRINSIC  DABS, DBLE, DIMAG
-      DOUBLE PRECISION DABS, DBLE, DIMAG
+c      INTRINSIC  DABS, DBLE, DIMAG
+c      DOUBLE PRECISION DABS, DBLE, DIMAG
 C
       DZASUM = 0.0D0
       STEMP = 0.0D0
@@ -3426,25 +3422,25 @@ C  Computer:   SGRUXS/DOUBLE
 C
 C  Revised:    August 9, 1986
 C
-C  Purpose:    Compute the double-complex dot product x*y.
+C  Purpose:    Compute the double-complex(8) dot product x*y.
 C
 C  Usage:      ZDOTU(N, ZX, INCX, ZY, INCY)
 C
 C  Arguments:
 C     N      - Length of vectors X and Y.  (Input)
-C     ZX     - Double complex vector of length MAX(N*IABS(INCX),1).
+C     ZX     - complex(8) vector of length MAX(N*IABS(INCX),1).
 C              (Input)
 C     INCX   - Displacement between elements of ZX.  (Input)
 C              X(I) is defined to be
 C                 ZX(1+(I-1)*INCX) if INCX.GE.0  or
 C                 ZX(1+(I-N)*INCX) if INCX.LT.0.
-C     ZY     - Double complex vector of length MAX(N*IABS(INCY),1).
+C     ZY     - complex(8) vector of length MAX(N*IABS(INCY),1).
 C              (Input)
 C     INCY   - Displacement between elements of ZY.  (Input)
 C              Y(I) is defined to be
 C                 ZY(1+(I-1)*INCY) if INCY.GE.0  or
 C                 ZY(1+(I-N)*INCY) if INCY.LT.0.
-C     ZDOTU  - Double complex sum from I=1 to N of X(I)*Y(I).  (Output)
+C     ZDOTU  - complex(8) sum from I=1 to N of X(I)*Y(I).  (Output)
 C              X(I) and Y(I) refer to specific elements of ZX and ZY
 C              respectively.
 C
@@ -3562,8 +3558,8 @@ C                                  SPECIFICATIONS FOR EQUIVALENCE
       EQUIVALENCE (ISIZE(1), IWKSP(11))
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  MAX0
-      INTRINSIC  MAX0
-      INTEGER    MAX0
+c      INTRINSIC  MAX0
+c      INTEGER    MAX0
 C                                  SPECIFICATIONS FOR SUBROUTINES
       EXTERNAL   E1MES, E1STI
 C
@@ -3618,9 +3614,9 @@ C                                  REAL
          ISIZE(3) = 1
 C                                  DOUBLE PRECISION
          ISIZE(4) = 2
-C                                  COMPLEX
+C                                  complex(8)
          ISIZE(5) = 2
-C                                  DOUBLE COMPLEX
+C                                  complex(8)
          ISIZE(6) = 4
 C                                  NUMBER OF WORDS USED FOR BOOKKEEPING
          LBOOK = 16
@@ -3761,8 +3757,8 @@ C                                  SPECIFICATIONS FOR SAVE VARIABLES
       SAVE       UNIT
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  IABS
-      INTRINSIC  IABS
-      INTEGER    IABS
+c      INTRINSIC  IABS
+c      INTEGER    IABS
 C
       DATA UNIT(1)/5/
       DATA UNIT(2)/6/
@@ -4076,8 +4072,8 @@ C
 C                                  SPECIFICATIONS FOR ARGUMENTS
       CHARACTER  CH
 C                                  SPECIFICATIONS FOR FUNCTIONS
-      EXTERNAL   IACHAR
-      INTEGER    IACHAR
+c      EXTERNAL   IACHAR
+c      INTEGER    IACHAR
 C
       ICASE = IACHAR(CH)
       IF (ICASE.GE.97 .AND. ICASE.LE.122) ICASE = ICASE - 32
@@ -4133,8 +4129,8 @@ C                                  SPECIFICATIONS FOR LOCAL VARIABLES
       INTEGER    IC1, IC2, ICB, IS, L, LENM
 C                                  SPECIFICATIONS FOR INTRINSICS
 C     INTRINSIC  ISIGN,MIN0
-      INTRINSIC  ISIGN, MIN0
-      INTEGER    ISIGN, MIN0
+c      INTRINSIC  ISIGN, MIN0
+c      INTEGER    ISIGN, MIN0
 C                                  SPECIFICATIONS FOR FUNCTIONS
       EXTERNAL   ICASE
       INTEGER    ICASE
@@ -4334,10 +4330,10 @@ C              is applicable.
 C
 C-----------------------------------------------------------------------
 C
-      INTEGER FUNCTION IACHAR (CH)
+c      INTEGER FUNCTION IACHAR (CH)
 C                                  SPECIFICATIONS FOR ARGUMENTS
-      CHARACTER  CH
+c      CHARACTER  CH
 C                                  SPECIFICATIONS FOR SAVE VARIABLES
-      IACHAR = ICHAR(CH)
-      RETURN
-      END
+c      IACHAR = ICHAR(CH)
+c      RETURN
+c      END
