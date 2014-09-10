@@ -1,35 +1,30 @@
 ######## Makefile for lo ##################################
 ######## attention: the command must be preceeded by a "tab"
 
-CCFLAGS=-c -O2 -o
+FCFLAGS=-O3 -finit-local-zero -finit-real=zero -finit-integer=0 -g -Wall -pedantic 
+#FCFLAGS:=-O2 -g -debug full -check all
 LDFLAGS= 
 
-FC=gfortran
+FC:=gfortran
+#FC:=ifort
+
+default: lo
 
 attention: 
 	cat 0.README
 
-losub.o: losub.F
-	$(FC) -DNMAX=760 $(CCFLAGS) losub.o losub.F
+OBJECTS := lolo.o r.o imsl.o pegasus.o
 
-lo.o: lolo.F
-	$(FC) $(CCFLAGS) lo.o lolo.F
-
-r.o: r.F
-	$(FC) $(CCFLAGS) r.o r.F
-
-imsl.o: imsl.F
-	$(FC) $(CCFLAGS) imsl.o imsl.F
-
-pegasus.o: pegasus.F
-	$(FC) $(CCFLAGS) pegasus.o pegasus.F
+%.o:%.F
+	$(FC) -c $(FCFLAGS) -o $@ $^
 
 ####### Main program ###############################################
-lo:     attention losub.o lo.o r.o pegasus.o imsl.o 
-	$(FC) $(LDFLAGS) -o lo lo.o losub.o r.o pegasus.o imsl.o 
-	rm *.o
-
+lo: attention $(OBJECTS)
+	$(FC) -DNMAX=760 $(FCFLAGS) -o $@ $(OBJECTS) $(LDFLAGS) losub.F
 
 clean: 
-	rm *~ *.o lo lo_in plot.in
+	rm -vf *~ *.o 
+	
+distclean: clean
+	rm -vf lo lo_in plot.in
 
