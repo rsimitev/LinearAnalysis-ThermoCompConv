@@ -527,7 +527,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION SM2(N)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(N.EQ.0) THEN
@@ -545,7 +545,7 @@ C
 C-----------------------------------------------------------------------
       FUNCTION CM2(N)
 C-----------------------------------------------------------------------
-      IMPLICIT REAL*8(A-H,O-Y)
+      IMPLICIT double precision(A-H,O-Y)
       PARAMETER(DPI=3.141592653589793D0)
       COMMON/PAR/TAU,RA,PR,RI,C,pL,Rconc
       IF(N.EQ.0) THEN
