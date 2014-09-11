@@ -297,20 +297,20 @@
       LMINI (3) = LMIN + 1
       RAC = RA
       DO II = 1, 3
-      M0 = M0I (II)
-      LMIN = LMINI (II)
-      DRA = RA / 10.0D0
-      CALL dimension (LMIN, LD, NT, M0, ND)
-!         Print*, Ra, dRa, abse, rele, nsmax, ll, rac
-!        LL is either 0 for success or 1 for failure
-      CALL PEGASUS (RA, DRA, ABSE, RELE, NSMAX, 1, 0, LL, RAC)
-      GROR = FN (RAC)
-      OMI (II) = C * M0
-      RACI (II) = RAC
-      LLI (II) = LL
-      WRITE ( * , '(1X,1P,4E17.6,I4,A3,2E17.6)') TAU, RAC, OMI (II) ,   &
-      GROR, M0, ' | ', RAC * (1 / (1 - eta) ) **4 * (2 / TAU) , (OMI (  &
-      II) * 2.0 / TAU)
+         M0 = M0I (II)
+         LMIN = LMINI (II)
+         DRA = RA / 10.0D0
+         CALL dimension (LMIN, LD, NT, M0, ND)
+!            Print*, Ra, dRa, abse, rele, nsmax, ll, rac
+!           LL is either 0 for success or 1 for failure
+         CALL PEGASUS (RA, DRA, ABSE, RELE, NSMAX, 1, 0, LL, RAC)
+         GROR = FN (RAC)
+         OMI (II) = C * M0
+         RACI (II) = RAC
+         LLI (II) = LL
+         WRITE ( * , '(1X,1P,4E17.6,I4,A3,2E17.6)') TAU, RAC, OMI (II) ,   &
+         GROR, M0, ' | ', RAC * (1 / (1 - eta) ) **4 * (2 / TAU) , (OMI (  &
+         II) * 2.0 / TAU)
       enddo
 
 !       INDEX = 0
@@ -626,7 +626,7 @@
             DRA = RA / 10.0D0
             CALL PEGASUS (RA, DRA, ABSE, RELE, NSMAX, 1, 0, LL, RAC)
             WRITE (*,*) M0, RAC
-            CALL open_file_at_end (16, outfile)
+            CALL open_file_at_end (16, outputfile)
             WRITE (16,*) M0, RAC
             CLOSE (16)
          enddo
@@ -640,7 +640,7 @@
             CALL PEGASUS (RA, DRA, ABSE, RELE, NSMAX, 1, 0, LL, RAC)
             GROR = FN (RAC)
             WRITE(*,*) pL, RAC, GROR
-            CALL open_file_at_end (16, outfile)
+            CALL open_file_at_end (16, outputfile)
             WRITE(16,'(3D16.8)') pL, RAC, GROR
             CLOSE(16)
          enddo
@@ -1127,3 +1127,4 @@
 !         CALL exit(1)
       END IF
       END SUBROUTINE ende
+! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
