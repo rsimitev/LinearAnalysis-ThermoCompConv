@@ -15,8 +15,8 @@ losub.o: losub.F
 lo.o: main.f90
 	$(FC) $(CCFLAGS) lo.o main.f90
 
-r.o: r.F
-	$(FC) $(CCFLAGS) r.o r.F
+r.o: r.f90
+	$(FC) $(CCFLAGS) r.o r.f90
 
 imsl.o: imsl.F
 	$(FC) $(CCFLAGS) imsl.o imsl.F
