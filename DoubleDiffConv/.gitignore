@@ -1,0 +1,9 @@
+*.o
+*~
+*.mod
+lib
+lo
+losub-lapack.F
+losub-lapack-minimizer-eigen.F
+losub-lapack-minimizer.F
+templates
