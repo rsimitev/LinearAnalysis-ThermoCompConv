@@ -1,35 +1,38 @@
 ######## Makefile for lo ##################################
 ######## attention: the command must be preceeded by a "tab"
-
-CCFLAGS=-c -O2 -o
+ 
+FCFLAGS:=-O3 -finit-local-zero -finit-real=zero -finit-integer=0 -fbounds-check -g -Wall -pedantic 
+FCFLAGS:=-O3 -ffree-line-length-none -finit-local-zero -finit-real=zero -finit-integer=0 -cpp
+#FCFLAGS:=-O2 -g -debug full -check all
+LDFLAGS= 
 LDFLAGS= 
 
 FC=gfortran
 
+default: lo
+
 attention: 
 	cat 0.README
 
-losub.o: losub.F
-	$(FC) -DNMAX=760 $(CCFLAGS) losub.o losub.F
+OBJECTS:=parameters.o growthRate.o minimizer.o
 
-lo.o: main.f90
-	$(FC) $(CCFLAGS) lo.o main.f90
+lapack_OBJS:=$(addprefix lapack/lapack_routine/,disnan.o ieeeck.o zgeqr2.o zlacgv.o zlarf.o ztgevc.o dlabad.o ilaenv.o zgeqrf.o zlacpy.o zlarft.o zung2r.o dladiv.o ilazlc.o zggbak.o zladiv.o zlartg.o zungqr.o dlaisnan.o ilazlr.o zggbal.o zlange.o zlascl.o zunm2r.o dlamch.o iparmq.o zggev.o zlanhs.o zlaset.o zunmqr.o dlapy2.o lsame.o zgghrd.o zlarfb.o zlassq.o dlapy3.o xerbla.o zhgeqz.o zlarfg.o zrot.o)
 
-r.o: r.f90
-	$(FC) $(CCFLAGS) r.o r.f90
+lo.o: 
 
-imsl.o: imsl.F
-	$(FC) $(CCFLAGS) imsl.o imsl.F
+growthRate.o: parameters.o
 
-pegasus.o: pegasus.F
-	$(FC) $(CCFLAGS) pegasus.o pegasus.F
+%.o:%.f90
+	$(FC) $(FCFLAGS) -c -o $@ $<
 
 ####### Main program ###############################################
-lo:     attention losub.o lo.o r.o pegasus.o imsl.o 
-	$(FC) $(LDFLAGS) -o lo lo.o losub.o r.o pegasus.o imsl.o 
-	rm *.o
+lo: main.f90 $(OBJECTS) $(lapack_OBJS)
+	$(FC) $(FCFLAGS) -o $@ $(LDFLAGS) -Llib -lblas $^
 
 
 clean: 
-	rm *~ *.o lo lo_in plot.in
+	rm *~ *.o *.mod
+
+realclean: clean
+	lo
 
