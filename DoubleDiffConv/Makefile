@@ -31,7 +31,7 @@ lo: main.f90 $(OBJECTS) $(lapack_OBJS)
 
 
 clean: 
-	rm *~ *.o *.mod
+	rm *~ *.o *.mod $(lapack_OBJS)
 
 realclean: clean
 	lo
