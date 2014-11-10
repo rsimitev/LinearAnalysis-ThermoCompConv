@@ -46,9 +46,10 @@
 ! Start:    lo inputfilename outputfilename
 !
 #include "losub-inc.h"
-program lolo
+program linearOnset
    use parameters
    use growthRateMod
+   use io
    implicit none
    character*60 infile,outfile
 
@@ -95,60 +96,48 @@ program lolo
    close(16)
 contains
 
-!**********************************************************************
-   subroutine readInputFile(inputfile)
-      use parameters
+   !**********************************************************************
+   SUBROUTINE init(inputfile,outputfile)
       IMPLICIT none
-      CHARACTER(len=*) inputfile
-      OPEN(15,FILE=inputfile,STATUS='OLD',ERR=10)
-      GOTO 11
-10    WRITE(*,*) 'LOSUB.F: Error while reading inputfile!'
-      STOP   NO_INFILE
-11    CONTINUE
-      READ(15,'(A)',END=15) 
-      READ(15,*,END=15) NE,LCALC
-      READ(15,'(A)',END=15) 
-      READ(15,*,END=15) Rt,LowerLimit,Pt,ETA,Le,Rc
-      READ(15,'(A)',END=15) 
-      READ(15,*,END=15) NT,M0
-      READ(15,'(A)',END=15) 
-      READ(15,*,END=15) DRt,ABSE,RELE,NSMAX
-      READ(15,'(A)',END=15) 
-      READ(15,*,END=15) StepSize,UpperLimit
-      CLOSE(15)
-      GOTO 16
-15    WRITE(*,*) 'Error in inputfile ',inputfile
-      STOP ERR_IN_INFILE
-16    CONTINUE
-   end subroutine
+      CHARACTER(len=*) inputfile,outputfile
+      integer:: info
 
-!**********************************************************************
-   subroutine writeOutputHeader(outputfile)
-      use parameters
-      IMPLICIT none
-      CHARACTER(len=*) outputfile
-      IF(LCALC.GT.0 .AND. LCALC.LT.4 .or. LCALC.eq.5.or.LCALC.eq.6) THEN
-         WRITE(16,*)  '### Output of Program lo.f Ver.2.1:        ###'
-         WRITE(16,*)  '### Lin. Onset of Conv. via Galerkinmethod ###'
-         WRITE(16,'(A11,E12.5,A2)') '# P     ', Pt,     '#'
-         WRITE(16,'(A11,E12.5,A2)') '# Lewis ', Le,     '#'
-         WRITE(16,'(A11,E12.5,A2)') '# TAU   ', TAU,    '#'
-         WRITE(16,'(A11,E12.5,A2)') '# R     ', Rt,     '#'
-         WRITE(16,'(A11,E12.5,A2)') '# RC    ', Rc,     '#'
-         WRITE(16,'(A11,E12.5,A2)') '# ETA   ', ETA,    '#'
-         WRITE(16,'(A11,G12.5,A2)') '# m     ', M0,     '#'
-         WRITE(16,'(A11,A12,A2)')   '# cvar  ','TAU',   '#'
-         WRITE(16,'(A11,I12,A2)')   '# NE    ', NE,     '#'
-         WRITE(16,'(A11,E12.5,A2)') '# LowerLimit   ', LowerLimit,    '#'
-         WRITE(16,'(A11,E12.5,A2)') '# UpperLimit   ', UpperLimit,    '#'
-         WRITE(16,'(A11,E12.5,A2)') '# StepSize',StepSize,  '#'
-         WRITE(16,'(A11,I12,A2)')   '# NT    ', NT,     '#'
-         WRITE(16,*)  '# see definition of LCALC for output. LCALC:', LCALC,'   #'
-         WRITE(16,*)  '#                                      #'
+      ! ----Default values:
+      CALL setDefaults()
+      ! ----INPUT:
+      CALL readConfigFile(inputfile)
+
+      ! ---- doesn't work for M=0 !!!!!!
+      IF(M0.LT.1) THEN
+        write(*,*) 'The code does not work for M0<1. ', M0, ' --> 1'
+        M0 = 1
       ENDIF
-   end subroutine
+          
+      ! ----OUTPUT:
+      CALL writeOutputHeader(outputfile)
+ 
+      RI = ETA/(1-ETA)
+      RO = 1.D0 + RI
 
-!**********************************************************************
+      IF(NE.EQ.0) THEN
+         ! - UNDEFINED SYMMETRIE:
+         LMIN=M0
+         LD=1
+      ELSEIF(NE.EQ.1) THEN
+         ! - EQUATORIAL ANTISYMMETRIE (L+M ODD):
+         LMIN=M0+1
+         LD=2
+      ELSEIF(NE.EQ.2) THEN
+         ! - EQUATORIAL SYMMETRIE (L+M EVEN);
+         LMIN=M0
+         LD=2
+      ENDIF
+ 
+      CALL DIMENSION(LMIN,LD,NT,M0,ND)
+      write(*,*) 'DIMENSION OF MATRIX:',ND
+   END subroutine
+
+   !**********************************************************************
    subroutine fixedParEigenValues(outputfile)
       implicit none
       CHARACTER(len=*), intent(in)::outputfile
@@ -241,10 +230,10 @@ contains
       DO II=1, nm0
          M0   = M0I(II)
          LMIN = LMINI(II)
-!        Search for the new Rac in steps of 1/10 of the previous Rac.         
+         ! Search for the new Rac in steps of 1/10 of the previous Rac.         
          DRt = Rt/10.0D0
          CALL dimension(LMIN,LD,NT,M0,ND)
-!        info is either 0 for success or 1 for failure
+         ! Increase the interval, in case we did not find anything.
          do i=1, 3
             RtMin=Rt/(3.0d0**i)
             RtMin=Rt*(3.0d0**i)
@@ -255,18 +244,17 @@ contains
             Write(*,*) 'Failed to find roots: error:', info
             stop 5
          endif
-!        Compute the grouth rate for each case so we can output it for
-!        debug purposes.
+         ! Compute the grouth rate for each case so we can output it for
+         ! debug purposes.
          frequency = MaxGrowthRateCmplx(CriticalRt)
          GRORi(ii) = cmplx(frequency) 
-!        C is set inside MaxGrowthRate 
          OMI(II) = -dble(frequency)
          RACI(II)= CriticalRt
          LLI(II) = info
          write( *,'(1X,1P,4E17.6,I4,A3,2E17.6)') TAU, CriticalRt, OMI(II), GRORi(ii), M0,' | ', CriticalRt*(1/(1-eta))**4*(2/TAU),(OMI(II)*2.0/TAU)
       enddo
 
-!      Let's not allow growth rates that are too high
+      ! Let's not allow growth rates that are too high
       where(grori.gt.1.0d0) lli = 1
       if(any(lli.eq.0)) then
          where(lli.ne.0) RACI = 1.0d100
@@ -408,47 +396,6 @@ contains
       end subroutine
 
 !**********************************************************************
-   SUBROUTINE init(inputfile,outputfile)
-      IMPLICIT none
-      CHARACTER(len=*) inputfile,outputfile
-      integer:: info
-
-      ! ----Default values:
-      CALL setDefaults()
-      ! ----INPUT:
-      CALL readInputFile(inputfile)
-
-      ! ---- doesn't work for M=0 !!!!!!
-      IF(M0.LT.1) THEN
-        write(*,*) 'The code does not work for M0<1. ', M0, ' --> 1'
-        M0 = 1
-      ENDIF
-          
-      ! ----OUTPUT:
-      CALL writeOutputHeader(outputfile)
- 
-      RI = ETA/(1-ETA)
-      RO = 1.D0 + RI
-
-      IF(NE.EQ.0) THEN
-         ! - UNDEFINED SYMMETRIE:
-         LMIN=M0
-         LD=1
-      ELSEIF(NE.EQ.1) THEN
-         ! - EQUATORIAL ANTISYMMETRIE (L+M ODD):
-         LMIN=M0+1
-         LD=2
-      ELSEIF(NE.EQ.2) THEN
-         ! - EQUATORIAL SYMMETRIE (L+M EVEN);
-         LMIN=M0
-         LD=2
-      ENDIF
- 
-      CALL DIMENSION(LMIN,LD,NT,M0,ND)
-      write(*,*) 'DIMENSION OF MATRIX:',ND
-   END subroutine
-
-!**********************************************************************
    subroutine varyTauCriticalRt(outputfile)
       implicit none
       CHARACTER(len=*), intent(in):: outputfile
@@ -458,7 +405,7 @@ contains
       double precision:: Tau0, Tau1, omega, RtMin, RtMax
 
       NTRYCOUNT = 0
-      TAU  = LowerLimit
+      LowerLimit = Tau
       TAU0 = LowerLimit
       TAU1 = LowerLimit
       TA = TAU*TAU
@@ -515,10 +462,9 @@ contains
       double precision:: Tau0, Tau1
       NTRYCOUNT = 0
       Rtold = Rt
-      TAU  = LowerLimit
+      LowerLimit = Tau
       TAU0 = LowerLimit
       TAU1 = LowerLimit
-      TA = TAU*TAU
       do
          TA = TAU*TAU
 !--------searching for zero grothrate by varying Rt and M0: ---------------
@@ -571,7 +517,6 @@ contains
             LD=2
          ENDIF
          CALL dimension(LMIN,LD,NT,M0,ND)
-         DRt = Rt/10.0D0
          CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
          WRITE(*,*) M0,CriticalRt
          WRITE(16,*) M0, CriticalRt
@@ -590,7 +535,6 @@ contains
       niter = (UpperLimit-LeOld)/StepSize
       do i=0, niter
          Le  = LeOld + i*StepSize
-         DRt = Rt/10.0D0
          CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
          GROR = MaxGrowthRate(CriticalRt)
          WRITE(*,*) Le, CriticalRt, GROR
