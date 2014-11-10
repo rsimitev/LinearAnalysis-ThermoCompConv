@@ -1,0 +1,17 @@
+ ### Output of Program lo.f Ver.2.1:        ###
+ ### Lin. Onset of Conv. via Galerkinmethod ###
+ # P        1.0000000000000000      #
+ # Lewis    1.0000000000000000      #
+ # TAU      100.00000000000000      #
+ # R        1200.0000000000000      #
+ # RC        0.0000000000000000      #
+ # ETA     0.40000000000000002      #
+ # m                2    #
+ # cvar     TAU     #
+ # NE               2    #
+ # TTA      100.00000000000000      #
+ # TTF      100000.00000000000      #
+ # TTSTEP    100.00000000000000      #
+ # NT               5    #
+ # see definition of LCALC for output. LCALC:           1    #
+ #                                      #
