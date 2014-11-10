@@ -1,23 +1,23 @@
-      PROGRAM lolo 
-      IMPLICIT none 
-      CHARACTER(60) infile, outfile 
-                                                                        
-!---------------------------------------------------------              
-!     arg #1 - filename or usage ?                                      
-      CALL getarg (1, infile) 
-      IF (infile.eq.' ') then 
-         PRINT * , 'Usage : ' 
-         PRINT * , 'lo <in file> <out file>' 
-         STOP 
-      ENDIF 
-      IF (infile.eq.'-h') then 
-         PRINT * , 'Usage : ' 
-         PRINT * , 'lo <in file> <out file>' 
-         STOP 
-      ENDIF 
-                                                                        
-      CALL getarg (2, outfile) 
-      PRINT * , trim (infile) , ' - ', trim (outfile) 
-!     call losub('in','out')                                            
-      CALL losub (trim (infile), trim (outfile) ) 
-      END PROGRAM lolo                              
+      program lolo
+      implicit none
+      character*60 infile,outfile
+
+c---------------------------------------------------------
+c     arg #1 - filename or usage ? 
+      call getarg(1,infile)
+      if (infile.eq.' ') then
+         print*, 'Usage : '
+         print*, 'lo <in file> <out file>'
+         stop
+      endif
+      if (infile.eq.'-h') then
+         print*, 'Usage : '
+         print*, 'lo <in file> <out file>'
+         stop
+      endif
+
+      call getarg(2,outfile)
+      print*,  trim(infile),' - ',trim(outfile)
+c     call losub('in','out')
+      call losub(trim(infile),trim(outfile))
+      end program
