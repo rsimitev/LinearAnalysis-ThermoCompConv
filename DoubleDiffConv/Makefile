@@ -12,8 +12,8 @@ attention:
 losub.o: losub.F
 	$(FC) -DNMAX=760 $(CCFLAGS) losub.o losub.F
 
-lo.o: lolo.F
-	$(FC) $(CCFLAGS) lo.o lolo.F
+lo.o: main.f90
+	$(FC) $(CCFLAGS) lo.o main.f90
 
 r.o: r.F
 	$(FC) $(CCFLAGS) r.o r.F
