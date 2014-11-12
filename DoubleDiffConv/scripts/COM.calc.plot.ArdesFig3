@@ -3,7 +3,7 @@
 setenv tau 
 setenv in plot.in 
 setenv out m3e04p01t12000Rconc1000Le
-rm $in 
+# rm $in 
 
 set calc=true
 set plot=false
@@ -44,14 +44,14 @@ cat > $in << EOT
  |   NTRUNC (>=1) | MODE |
             5         2
  |   DRA   | ABSERR  |  RELERR  | NMAX |
-   300.00     1.00000E-06 0.0D0  1000 
+   300.00   1.00E-06    1.0D-6   1000 
  |   incr_STEP | incr_END
        100.0        100000.                                             
 EOT
 #  
 # Command
-make lo
-lo $in $out
+# make lo
+./lo $in $out
 rm $in
 
 endif 
