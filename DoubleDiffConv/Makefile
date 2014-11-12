@@ -2,7 +2,7 @@
 ######## attention: the command must be preceeded by a "tab"
  
 FCFLAGS:=-O3 -finit-local-zero -finit-real=zero -finit-integer=0 -fbounds-check -g -Wall -pedantic 
-FCFLAGS:=-O3 -ffree-line-length-none -finit-local-zero -finit-real=zero -finit-integer=0 -cpp
+FCFLAGS:=-O0 -g -Wall -ffree-line-length-none -finit-local-zero -finit-real=zero -finit-integer=0 -cpp
 #FCFLAGS:=-O2 -g -debug full -check all
 LDFLAGS:= 
 
@@ -16,7 +16,7 @@ attention:
 include src/include.mk
 
 %.o:%.f90
-	$(FC) $(FCFLAGS) -c -o $@ $<
+	$(FC) -DNMAX=900 $(FCFLAGS) -c -o $@ $<
 
 
 clean: 

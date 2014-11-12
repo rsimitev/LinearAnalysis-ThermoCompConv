@@ -52,6 +52,7 @@ program linearOnset
    use io
    implicit none
    character*60 infile,outfile
+   integer, parameter:: unitOut=16
 
 !---------------------------------------------------------
 !  arg #1 - filename or usage ? 
@@ -70,37 +71,35 @@ program linearOnset
    call getarg(2,outfile)
    print*,  trim(infile),' - ',trim(outfile)
 
-   OPEN(16,FILE=trim(outfile),STATUS='UNKNOWN')
    call init(trim(infile),trim(outfile))
 
    select case(LCALC)
       case(-1)! most basic case: find the most unstable growth rate at all parameters fixed
-         CALL fixedParGrowthRate(trim(outfile))
+         CALL fixedParGrowthRate()
       case(0)! Critical Rt, for constant other parameters
-         CALL fixedParCriticalRa(trim(outfile))
+         CALL fixedParCriticalRa()
       case(1) ! eigenvalues determined for all parameters fixed.
-         call fixedParEigenValues(trim(outfile))
+         call fixedParEigenValues()
       case(2)
-         call varyTauCriticalRt(trim(outfile))
+         call varyTauCriticalRt()
       case(3) 
-        call varyTauCriticalState(trim(outfile))
+        call varyTauCriticalState()
       case(4) ! calculate the critical eigenvector. Print for plotting.
-        CALL fixedParCriticalEigenVector(trim(outfile))
+        CALL fixedParCriticalEigenVector()
       case(5) ! vary m and calculate critical R at fixed P, tau, eta.
-         call varyMCriticalRt(trim(outfile))
+         call varyMCriticalRt()
       case(6) ! vary Le and calculate critical R at fixed P, tau, eta, M
-         call varyLeCriticalRt(trim(outfile))
+         call varyLeCriticalRt()
       case default
          Write(*,*) 'Unknown computation type:', LCALC
    end select
-   close(16)
+   close(unitOut)
 contains
 
    !**********************************************************************
    SUBROUTINE init(inputfile,outputfile)
       IMPLICIT none
       CHARACTER(len=*) inputfile,outputfile
-      integer:: info
 
       ! ----Default values:
       CALL setDefaults()
@@ -114,10 +113,11 @@ contains
       ENDIF
           
       ! ----OUTPUT:
-      CALL writeOutputHeader(outputfile)
+      OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
+      CALL writeOutputHeader(unitOut)
  
-      RI = ETA/(1-ETA)
-      RO = 1.D0 + RI
+      RI = ETA/(1.0d0-ETA)
+      RO = 1.0D0 + RI
 
       IF(NE.EQ.0) THEN
          ! - UNDEFINED SYMMETRIE:
@@ -138,23 +138,22 @@ contains
    END subroutine
 
    !**********************************************************************
-   subroutine fixedParEigenValues(outputfile)
+   subroutine fixedParEigenValues()
       implicit none
-      CHARACTER(len=*), intent(in)::outputfile
       double complex:: ZEW(NMAX)
       integer:: i
-      call computeGrowthRateModes(sort=.true., zew=zew)
+      call computeGrowthRateModes(.true., zew)
       write(*,*) 'n     Frequ.(exp(+iwt))   -Grothrate  '
+      write(unitOut,*) 'n     Frequ.(exp(+iwt))   -Grothrate  '
       do i=1, ND
          WRITE(*,'(I4,2D16.6)') I,ZEW(I)     
-         WRITE(16,'(I4,2D16.6)') I,ZEW(I)
+         WRITE(unitOut,'(I4,2D16.6)') I,ZEW(I)
       enddo
    end subroutine
 
 !**********************************************************************
-   subroutine fixedParGrowthRate(outputfile)
+   subroutine fixedParGrowthRate()
       implicit none
-      CHARACTER(len=*), intent(in)::outputfile
       INTEGER:: aux, factor
       double precision:: Rt0, GroR
    
@@ -175,7 +174,7 @@ contains
          Rt   = Rt + StepSize
          GROR = MaxGrowthRate(Rt)
          WRITE(*,*) Rt, GROR
-         Write(16, *) Rt, GroR
+         Write(unitOut, *) Rt, GroR
       enddo
    
       WRITE(*,*) 'R=',Rt,' TAU=',TAU,' P=',Pt,' M0=',M0,' eta=',ETA
@@ -184,9 +183,8 @@ contains
    end subroutine
 
 !**********************************************************************
-   subroutine fixedParCriticalRa(outputfile)
+   subroutine fixedParCriticalRa()
       IMPLICIT none
-      CHARACTER(len=*), intent(in):: outputfile
       double Complex:: frequency
       double precision:: CriticalRt, Omega, GroR
       integer:: info
@@ -194,7 +192,7 @@ contains
       frequency = MaxGrowthRateCmplx(CriticalRt)
       GROR  = cmplx(frequency) 
       OMEGA = -dble(frequency)
-      Write(16,*) CriticalRt, Omega, GroR
+      Write(unitOut,*) CriticalRt, Omega, GroR
       WRITE(*,*) 'TAU=',TAU,' Pt=',Pt,' M0=',M0,' eta=',ETA
       WRITE(*,*) 'Lewis=',Le,' Rc=',Rc
       WRITE(*,*) 'R_crit=',CriticalRt, '  (growth rate =',GROR,')'
@@ -202,21 +200,22 @@ contains
 
 
 !**********************************************************************
-      subroutine fixedParCriticalRaAndM0(outputfile, CriticalRt, NTRYCOUNT)
+      subroutine fixedParCriticalRaAndM0(CriticalRt)
       IMPLICIT none
-      CHARACTER(len=*) outputfile
-      double precision:: GroR, Omega, Ta
-      double precision CriticalRt
+      double precision, intent(out):: CriticalRt
+      double precision:: Omega, Ta
       integer, parameter::nm0=3
       double precision:: RACI(nm0),OMI(nm0),GRORi(nm0)
       double precision:: RtMin, RtMax
       double Complex:: frequency
-      INTEGER M0I(nm0),LLI(nm0),LMINI(nm0)
-      INTEGER NTRYCOUNT
-      integer first_m0, first_lmin, i, ii
-      integer:: info, index
+      INTEGER:: M0I(nm0),LLI(nm0),LMINI(nm0)
+      INTEGER, save:: NTRYCOUNT=0
+      integer:: first_m0, first_lmin, i, ii
+      integer:: info, idx
 
-      TA = TAU*TAU
+      info=0
+      TA = TAU*TAU 
+      CriticalRt = Rt
       do i=0, nm0/2
          first_m0   = m0 - i
          first_lmin = lmin-i
@@ -230,13 +229,12 @@ contains
       DO II=1, nm0
          M0   = M0I(II)
          LMIN = LMINI(II)
-         ! Search for the new Rac in steps of 1/10 of the previous Rac.         
-         DRt = Rt/10.0D0
          CALL dimension(LMIN,LD,NT,M0,ND)
          ! Increase the interval, in case we did not find anything.
          do i=1, 3
-            RtMin=Rt/(3.0d0**i)
-            RtMin=Rt*(3.0d0**i)
+            RtMin=Rt/(3.0d0**dble(i))
+            RtMax=Rt*(3.0d0**dble(i))
+            Write(*,*)  i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX
             CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, CriticalRt, info)
             if (info.ne.2) exit
          enddo
@@ -255,25 +253,24 @@ contains
       enddo
 
       ! Let's not allow growth rates that are too high
-      where(grori.gt.1.0d0) lli = 1
       if(any(lli.eq.0)) then
          where(lli.ne.0) RACI = 1.0d100
-         index = minloc(RACI,1)
+         idx = minloc(RACI,1)
       else
-         index = 0
+         idx = 0
       endif
 
-      IF( INDEX.GT.0 ) THEN
-         CriticalRt   = RACI(INDEX)
-         OMEGA = OMI(INDEX)
-         M0    = M0I(INDEX)
-         LMIN  = LMINI(INDEX)
-         write( 16,'(1P,3E17.6,I4)') TAU, CriticalRt, OMEGA, M0
+      IF( idx.GT.0 ) THEN
+         CriticalRt   = RACI(idx)
+         OMEGA = OMI(idx)
+         M0    = M0I(idx)
+         LMIN  = LMINI(idx)
+         write( unitOut,'(1P,3E17.6,I4)') TAU, CriticalRt, OMEGA, M0
          write( *,'(">",1P,3E17.6,I4,A3,2E17.6)') TAU,CriticalRt,OMEGA, M0,' | ', CriticalRt*(1/(1-eta))**4*(2/TAU),(OMEGA*2.0/TAU)
          write(*,*)
          NTRYCOUNT = 0
       ELSE IF(NTRYCOUNT.GE.3) THEN
-         WRITE(16,*) 'NO CRITICAL RAYLEIGH NUMBER FOUND.'
+         WRITE(unitOut,*) 'NO CRITICAL RAYLEIGH NUMBER FOUND.'
          STOP NO_RA_FOUND
       ELSE
          write(*,*) 'NO CRIT. RAYLEIGH NUMBER FOUND. Trying again.'
@@ -282,19 +279,18 @@ contains
    end subroutine
 
 !**********************************************************************
-   subroutine fixedParCriticalEigenVector(outputfile)
+   subroutine fixedParCriticalEigenVector()
       IMPLICIT none
-      CHARACTER(len=*) outputfile
       double precision:: GroR, Omega, Ta
-      double complex:: frequency
       complex(8):: ZEVEC(NMAX), zew(NMAX), ZEVAL(NMAX,NMAX)
       integer:: info, i, ni, li, lti, lpi
       integer:: NTH, KTV, KTH, LTV, LTH, lst, NUC
       double precision:: GRR, GRI, Pm, C0,CriticalRt, OMM
-      integer:: imin, nuds, nuom, MF, LMAX, NIMAX
+      integer:: nuds, nuom, MF, LMAX, NIMAX
 
       TA = TAU*TAU
       ! find the zero grothrate:
+      CriticalRt = Rt
       CALL minimizer(MaxGrowthRate, Rt/10, Rt*10, RELE ,ABSE, NSMAX, CriticalRt, info)
       Rt = CriticalRt
       call computeGrowthRateModes(.TRUE.,zew,zeval)
@@ -309,7 +305,7 @@ contains
          ! LST=1 formatted Hirsching
          ! LST=3 unformatted
           LST=0
-          WRITE(16,'(2I2,'' LINEAR ONSET '')')  LST,LCALC
+          WRITE(unitOut,'(2I2,'' LINEAR ONSET '')')  LST,LCALC
           NTH=0
           KTV=0
           KTH=0
@@ -317,16 +313,16 @@ contains
           LTH=0
           GRR=0.D0
           GRI=0.D0
-          WRITE(16,'(I2,7I3,2D16.8,'' M0,TRUNC,LD,GROTH,DRIFT'')')  M0,NT,NTH,KTV,KTH,LTV,LTH,LD,GRR,GRI
+          WRITE(unitOut,'(I2,7I3,2D16.8,'' M0,TRUNC,LD,GROTH,DRIFT'')')  M0,NT,NTH,KTV,KTH,LTV,LTH,LD,GRR,GRI
           NUDS=1
           PM=0.D0
-          WRITE(16, '(I5,2D14.6,D9.2,D13.6,D9.2,'' I,TA,Rt,Pt,PM,E'')') NUDS,TA,CriticalRt,Pt,PM,ETA
+          WRITE(unitOut, '(I5,2D14.6,D9.2,D13.6,D9.2,'' I,TA,Rt,Pt,PM,E'')') NUDS,TA,CriticalRt,Pt,PM,ETA
           C0 = OMEGA/M0
           OMM=0.D0
           NUC=0
           NUOM=0
           MF=0
-          WRITE(16,9100) C0,OMM,NUC,NUOM,MF
+          WRITE(unitOut,9100) C0,OMM,NUC,NUOM,MF
 9100      FORMAT(2D17.10,3I4,'    C,OM, WHERE?,FLOQUET')
 
           LMAX=2*NT+M0-1
@@ -337,9 +333,9 @@ contains
             NIMAX=DINT( DBLE(2*NT+1-LI+M0)/2 )
             DO 3000 NI=1,NIMAX
               IF( LST.EQ.0 ) THEN
-               WRITE(16,9200) 'V',LPI,M0,NI,0, DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),0.D0,0.D0
+               WRITE(unitOut,9200) 'V',LPI,M0,NI,0, DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),0.D0,0.D0
               ELSEIF(LST.EQ.3) THEN
-               WRITE(16,'(A,4I3,A,2F11.7,A)') ' ''V ''',LPI,M0,NI,0,' ', DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),' .0D+00 .0D+00 '
+               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''V ''',LPI,M0,NI,0,' ', DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),' .0D+00 .0D+00 '
               ENDIF
              I=I+4
 3000      CONTINUE
@@ -357,9 +353,9 @@ contains
             NIMAX=DINT( DBLE(2*NT+1-LI+M0)/2 )
             DO 3200 NI=1,NIMAX
               IF( LST.EQ.0 ) THEN
-               WRITE(16,9200) 'W',LTI,M0,NI,0, DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),0.D0,0.D0
+               WRITE(unitOut,9200) 'W',LTI,M0,NI,0, DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),0.D0,0.D0
               ELSEIF(LST.EQ.3) THEN
-               WRITE(16,'(A,4I3,A,2F11.7,A)') ' ''W ''',LTI,M0,NI,0,' ', DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),' .0D+00 .0D+00 '
+               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''W ''',LTI,M0,NI,0,' ', DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),' .0D+00 .0D+00 '
               ENDIF
               I=I+4
 3200      CONTINUE
@@ -369,9 +365,9 @@ contains
             NIMAX=DINT( DBLE(2*NT+1-LI+M0)/2 )
             DO 3400 NI=1,NIMAX
               IF( LST.EQ.0 ) THEN
-               WRITE(16,9200) 'T',LI,M0,NI,0, DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),0.D0,0.D0
+               WRITE(unitOut,9200) 'T',LI,M0,NI,0, DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),0.D0,0.D0
               ELSEIF(LST.EQ.3) THEN
-               WRITE(16,'(A,4I3,A,2F11.7,A)') ' ''T ''',LI,M0,NI,0,' ', DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),' .0D+00 .0D+00 '
+               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''T ''',LI,M0,NI,0,' ', DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),' .0D+00 .0D+00 '
               ENDIF
              I=I+4
 3400      CONTINUE
@@ -381,24 +377,23 @@ contains
             NIMAX=DINT( DBLE(2*NT+1-LI+M0)/2 )
             DO 3600 NI=1,NIMAX
               IF( LST.EQ.0 ) THEN
-               WRITE(16,9200) 'G',LI,M0,NI,0, DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),0.D0,0.D0
+               WRITE(unitOut,9200) 'G',LI,M0,NI,0, DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),0.D0,0.D0
               ELSEIF(LST.EQ.3) THEN
-               WRITE(16,'(A,4I3,A,2F11.7,A)') ' ''G ''',LI,M0,NI,0,' ', DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),' .0D+00 .0D+00 '
+               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''G ''',LI,M0,NI,0,' ', DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),' .0D+00 .0D+00 '
               ENDIF
              I=I+4
 3600      CONTINUE
 !         
 9200            FORMAT(1X,A1,4I3,4D16.8)
          ELSE
-          WRITE(16,*) 'NO CRITICAL RAYLEIGH NUMBER FOUND.'
+          WRITE(unitOut,*) 'NO CRITICAL RAYLEIGH NUMBER FOUND.'
           STOP NO_RA_FOUND
        ENDIF
       end subroutine
 
 !**********************************************************************
-   subroutine varyTauCriticalRt(outputfile)
+   subroutine varyTauCriticalRt()
       implicit none
-      CHARACTER(len=*), intent(in):: outputfile
       integer:: NTRYCOUNT, info
       double complex:: frequency
       double precision:: Ta, CriticalRt, GroR, RtOld
@@ -415,12 +410,12 @@ contains
          RtMin = Rt/5.0
          RtMax = Rt*5
          RtOld = Rt
-         CALL minimizer(MaxGrowthRate,RtMin, RtMax,RELE,ABSE,50,CriticalRt, info)
+         CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE, ABSE, 50, CriticalRt, info)
          frequency = MaxGrowthRateCmplx(CriticalRt)
          GROR  = cmplx(frequency) 
          OMEGA = -dble(frequency)
          IF(info.EQ.0) THEN
-            WRITE(16,'(1P,3E17.6,I4)') TAU,CriticalRt,OMEGA,M0
+            WRITE(unitOut,'(1P,3E17.6,I4)') TAU,CriticalRt,OMEGA,M0
             WRITE( *,'(1P,3E17.6,I4)') TAU,CriticalRt,OMEGA,M0
             NTRYCOUNT = 0
          ELSE
@@ -454,21 +449,17 @@ contains
       enddo !--         End of tau Loop
    end subroutine
 
-   subroutine varyTauCriticalState(outputfile)
+   subroutine varyTauCriticalState()
       implicit none
-      CHARACTER(len=*), intent(in):: outputfile
-      integer:: NTRYCOUNT
-      double precision:: Ta, CriticalRt, RtOld
+      double precision:: CriticalRt, RtOld
       double precision:: Tau0, Tau1
-      NTRYCOUNT = 0
       Rtold = Rt
       LowerLimit = Tau
       TAU0 = LowerLimit
       TAU1 = LowerLimit
       do
-         TA = TAU*TAU
 !--------searching for zero grothrate by varying Rt and M0: ---------------
-         CALL fixedParCriticalRaAndM0(outputfile, CriticalRt, NTRYCOUNT)
+         CALL fixedParCriticalRaAndM0(CriticalRt)
 !--      increment TAU:
          TAU0 = TAU1
          TAU1 = TAU
@@ -486,22 +477,21 @@ contains
          ENDIF
          RtOld = CriticalRt
        
-!--      endvalue of TAU reached?
-         IF ( ((TAU.GT.UpperLimit).AND.(UpperLimit.GT.LowerLimit)).OR. ((TAU.LT.UpperLimit).AND.(UpperLimit.LT.LowerLimit)) )  THEN
-!         WRITE(*,*) 'LOSUB.F: finished at ',fdate()
-            exit
-         ENDIF
-!--      End of tau Loop
+         ! end value of TAU reached?
+         if(UpperLimit.GT.LowerLimit) then
+            if (TAU.GT.UpperLimit) exit
+         else
+            if (TAU.LT.UpperLimit) exit
+         endif
       enddo
    end subroutine
 
-   subroutine varyMCriticalRt(outputfile)
+   subroutine varyMCriticalRt()
       implicit none
-      CHARACTER(len=*), intent(in):: outputfile
-      double precision:: LeOld
       double precision:: CriticalRt
-      integer:: niter, m0Min, info
+      integer:: m0Min, info
       M0Min=M0
+      CriticalRt=Rt
       do M0=M0Min, int(UpperLimit), INT(StepSize)
          IF(NE.EQ.0) THEN
 ! -   UNDEFINED SYMMETRIE:
@@ -519,15 +509,14 @@ contains
          CALL dimension(LMIN,LD,NT,M0,ND)
          CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
          WRITE(*,*) M0,CriticalRt
-         WRITE(16,*) M0, CriticalRt
+         WRITE(unitOut,*) M0, CriticalRt
       enddo
    end subroutine
 
    !> Varies the Lewis number and computes the critical
    !! thermal Rayleigh number for fixed other parameters.
-   subroutine varyLeCriticalRt(outputfile)
+   subroutine varyLeCriticalRt()
       implicit none
-      CHARACTER(len=*), intent(in):: outputfile
       double precision:: LeOld, GroR
       double precision:: CriticalRt
       integer:: niter, i, info
@@ -538,7 +527,7 @@ contains
          CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
          GROR = MaxGrowthRate(CriticalRt)
          WRITE(*,*) Le, CriticalRt, GROR
-         WRITE(16,'(3D16.8)') Le, CriticalRt, GROR
+         WRITE(unitOut,'(3D16.8)') Le, CriticalRt, GROR
       enddo
    end subroutine
 

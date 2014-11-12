@@ -30,28 +30,28 @@ contains
    end subroutine
 
 !**********************************************************************
-   subroutine writeOutputHeader(outputfile)
+   subroutine writeOutputHeader(unitOut)
       use parameters
       IMPLICIT none
-      CHARACTER(len=*) outputfile
+      integer, intent(in):: unitOut
       IF(LCALC.GT.0 .AND. LCALC.LT.4 .or. LCALC.eq.5.or.LCALC.eq.6) THEN
-         WRITE(16,*)  '### Output of Program lo.f Ver.2.1:        ###'
-         WRITE(16,*)  '### Lin. Onset of Conv. via Galerkinmethod ###'
-         WRITE(16,'(A11,E12.5,A2)') '# P     ', Pt,     '#'
-         WRITE(16,'(A11,E12.5,A2)') '# Lewis ', Le,     '#'
-         WRITE(16,'(A11,E12.5,A2)') '# TAU   ', TAU,    '#'
-         WRITE(16,'(A11,E12.5,A2)') '# R     ', Rt,     '#'
-         WRITE(16,'(A11,E12.5,A2)') '# RC    ', Rc,     '#'
-         WRITE(16,'(A11,E12.5,A2)') '# ETA   ', ETA,    '#'
-         WRITE(16,'(A11,G12.5,A2)') '# m     ', M0,     '#'
-         WRITE(16,'(A11,A12,A2)')   '# cvar  ','TAU',   '#'
-         WRITE(16,'(A11,I12,A2)')   '# NE    ', NE,     '#'
-         WRITE(16,'(A11,E12.5,A2)') '# LowerLimit   ', LowerLimit,    '#'
-         WRITE(16,'(A11,E12.5,A2)') '# UpperLimit   ', UpperLimit,    '#'
-         WRITE(16,'(A11,E12.5,A2)') '# StepSize',StepSize,  '#'
-         WRITE(16,'(A11,I12,A2)')   '# NT    ', NT,     '#'
-         WRITE(16,*)  '# see definition of LCALC for output. LCALC:', LCALC,'   #'
-         WRITE(16,*)  '#                                      #'
+         WRITE(unitOut,*)  '### Output of Program lo.f Ver.2.1:        ###'
+         WRITE(unitOut,*)  '### Lin. Onset of Conv. via Galerkinmethod ###'
+         WRITE(unitOut,'(A11,E12.5,A2)') '# P     ', Pt,     '#'
+         WRITE(unitOut,'(A11,E12.5,A2)') '# Lewis ', Le,     '#'
+         WRITE(unitOut,'(A11,E12.5,A2)') '# TAU   ', TAU,    '#'
+         WRITE(unitOut,'(A11,E12.5,A2)') '# R     ', Rt,     '#'
+         WRITE(unitOut,'(A11,E12.5,A2)') '# RC    ', Rc,     '#'
+         WRITE(unitOut,'(A11,E12.5,A2)') '# ETA   ', ETA,    '#'
+         WRITE(unitOut,'(A11,G12.5,A2)') '# m     ', M0,     '#'
+         WRITE(unitOut,'(A11,A12,A2)')   '# cvar  ','TAU',   '#'
+         WRITE(unitOut,'(A11,I12,A2)')   '# NE    ', NE,     '#'
+         WRITE(unitOut,'(A11,E12.5,A2)') '# LowerLimit   ', LowerLimit,    '#'
+         WRITE(unitOut,'(A11,E12.5,A2)') '# UpperLimit   ', UpperLimit,    '#'
+         WRITE(unitOut,'(A11,E12.5,A2)') '# StepSize',StepSize,  '#'
+         WRITE(unitOut,'(A11,I12,A2)')   '# NT    ', NT,     '#'
+         WRITE(unitOut,*)  '# see definition of LCALC for output. LCALC:', LCALC,'   #'
+         WRITE(unitOut,*)  '#                                      #'
       ENDIF
    end subroutine
 
@@ -59,14 +59,14 @@ contains
 !     opens file <filename> and puts the filepointer at EOF
       subroutine open_file_at_end(NHANDLE,filename)
          implicit none
-      INTEGER:: NHANDLE
-      CHARACTER(len=*):: filename
-
-      OPEN(NHANDLE,FILE=trim(filename),STATUS='OLD', POSITION='APPEND',ERR=990)
-      GOTO 999
-990   WRITE(*,*) 'Error reading ',filename
-      STOP ERR_WRT_OUTFILE
-999   CONTINUE
+         INTEGER, intent(in):: NHANDLE
+         CHARACTER(len=*):: filename
+         
+         OPEN(NHANDLE,FILE=trim(filename),STATUS='OLD', POSITION='APPEND',ERR=990)
+         GOTO 999
+990      WRITE(*,*) 'Error reading ',filename
+         STOP ERR_WRT_OUTFILE
+999      CONTINUE
       END subroutine
 
 ! *************************************************************************

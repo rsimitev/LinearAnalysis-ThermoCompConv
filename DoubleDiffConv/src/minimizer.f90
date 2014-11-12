@@ -4,14 +4,14 @@
 !--  Xmax   : max of interval                                             
 !    rdx    : relative error in x
 !--  df     : absolute error limit in f
-!--  NMAX   : max. count of steps                                          
+!--  stepMax   : max. count of steps                                          
 !--  X0     : on output: calculated root                                   
 !--  info   : on output: 0: convergence; 1: no convergence; 
 !                     2: abserr or relerr should be zero;
-      SUBROUTINE minimizer (fn, Xmin, xmax, rdx, df, NMAX, X0, info) 
+      SUBROUTINE minimizer (fn, Xmin, xmax, rdx, df, stepMax, X0, info) 
       IMPLICIT none
       double precision, intent(in):: xmin, xmax, rdx, df
-      integer, intent(in):: nmax
+      integer, intent(in):: stepMax
       integer, intent(out):: info
       double precision, intent(out):: x0
       double precision:: x1, x2, x3
@@ -87,8 +87,8 @@
             info = 0 
             exit
          endif
-         ! If we have gone over NMAX iterations, exit
-         IF (N.GT.NMAX) THEN 
+         ! If we have gone over stepMax iterations, exit
+         IF (N.GT.stepMax) THEN 
             info = 1 
             x0 = xmin
             exit
