@@ -330,7 +330,7 @@ contains
 !-----------------------------------------------------------------------
       IMPLICIT double precision (A - H, O - Y)
       IMPLICIT complex (8) (Z)
-      CHARACTER(3) TRI, TRII
+      CHARACTER(3):: TRI, TRII
       integer:: i,j,k,NEI, ii, ji, ki
 !
       TRI = TRII

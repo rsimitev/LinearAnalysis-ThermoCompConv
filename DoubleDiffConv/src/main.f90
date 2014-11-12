@@ -25,11 +25,11 @@
 ! LCALC=2 : Onset determined for constant wavenumber M
 !           (by searching root of grothrate in R, using pegasus.f).
 ! LCALC=3 : Onset determined by variing Rayleighnumber R and
-!           wavenumber M. 
+!           wavenumber M.
 ! LCALC=4 : Eigenvector determined for one set of parameters
 !           at onset
 !
-! LO.F calculates R (crit. Rayleighn.) and Omega (and M) in the 
+! LO.F calculates R (crit. Rayleighn.) and Omega (and M) in the
 ! range TAU=LowerLimit to TAU=UpperLimit.
 ! It only calculates the mode with minimal value of R.
 !
@@ -45,7 +45,7 @@ program linearOnset
    integer, parameter:: unitOut=16
 
 !---------------------------------------------------------
-!  arg #1 - filename or usage ? 
+!  arg #1 - filename or usage ?
    call getarg(1,infile)
    if (infile.eq.' ') then
       print*, 'Usage : '
@@ -72,7 +72,7 @@ program linearOnset
          call fixedParEigenValues()
       case(2)
          call varyTauCriticalRt()
-      case(3) 
+      case(3)
         call varyTauCriticalState()
       case(4) ! calculate the critical eigenvector. Print for plotting.
         CALL fixedParCriticalEigenVector()
@@ -102,11 +102,11 @@ contains
         write(*,*) 'The code does not work for M0<1. ', M0, ' --> 1'
         M0 = 1
       ENDIF
-          
+
       ! ----OUTPUT:
       OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
       CALL writeOutputHeader(unitOut)
- 
+
       RI = ETA/(1.0d0-ETA)
       RO = 1.0D0 + RI
 
@@ -123,7 +123,7 @@ contains
          LMIN=M0
          LD=2
       ENDIF
- 
+
       CALL DIMENSION(LMIN,LD,NT,M0,ND)
       write(*,*) 'DIMENSION OF MATRIX:',ND
    END subroutine
@@ -137,7 +137,7 @@ contains
       write(*,*) 'n     Frequ.(exp(+iwt))   -Grothrate  '
       write(unitOut,*) 'n     Frequ.(exp(+iwt))   -Grothrate  '
       do i=1, ND
-         WRITE(*,'(I4,2D16.6)') I,ZEW(I)     
+         WRITE(*,'(I4,2D16.6)') I,ZEW(I)
          WRITE(unitOut,'(I4,2D16.6)') I,ZEW(I)
       enddo
    end subroutine
@@ -147,9 +147,9 @@ contains
       implicit none
       INTEGER:: aux
       double precision:: Rt0, GroR, factor
-   
+
       Rt0=Rt
-   
+
       if (Rt.gt.UpperLimit) then
          factor = -1.0d0
       else
@@ -167,7 +167,7 @@ contains
          WRITE(*,*) Rt, GROR
          Write(unitOut, *) Rt, GroR
       enddo
-   
+
       WRITE(*,*) 'R=',Rt,' TAU=',TAU,' P=',Pt,' M0=',M0,' eta=',ETA
       WRITE(*,*) 'Most unstable growth rate', GROR
       WRITE(*,*) 'If growth rate < 0 then above onset'
@@ -205,7 +205,7 @@ contains
       integer:: info, idx
 
       info=0
-      TA = TAU*TAU 
+      TA = TAU*TAU
       CriticalRt = Rt
       do i=0, nm0/2
          first_m0   = m0 - i
@@ -225,7 +225,7 @@ contains
          do i=1, 3
             RtMin=Rt/(3.0d0**dble(i))
             RtMax=Rt*(3.0d0**dble(i))
-            Write(*,*)  i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX
+            ! Write(*,*)  i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX
             CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, CriticalRt, info)
             if (info.ne.2) exit
          enddo
@@ -330,7 +330,7 @@ contains
               ENDIF
              I=I+4
 3000      CONTINUE
-!         
+!
           I=0
           DO 3200 LI=LMIN,LMAX,LD
 !           L for toroidal (w) field:
@@ -350,7 +350,7 @@ contains
               ENDIF
               I=I+4
 3200      CONTINUE
-!         
+!
           I=0
           DO 3400 LI=LMIN,LMAX,LD
             NIMAX=INT( DBLE(2*NT+1-LI+M0)/2 )
@@ -362,7 +362,7 @@ contains
               ENDIF
              I=I+4
 3400      CONTINUE
-!         
+!
           I=0
           DO 3600 LI=LMIN,LMAX,LD
             NIMAX=INT( DBLE(2*NT+1-LI+M0)/2 )
@@ -374,7 +374,7 @@ contains
               ENDIF
              I=I+4
 3600      CONTINUE
-!         
+!
 9200            FORMAT(1X,A1,4I3,4D16.8)
          ELSE
           WRITE(unitOut,*) 'NO CRITICAL RAYLEIGH NUMBER FOUND.'
@@ -421,15 +421,15 @@ contains
                TAU = TAU1 + StepSize
             ELSE
                TAU = TAU1 + 10.0d0**(int(log10(abs(tau1)))-1)*StepSize/dabs(StepSize)
-            ENDIF 
+            ENDIF
 !--         interpolate new startingvalue for Rt:
-!           Assume CriticalRt grows with tau**(4/3)               
+!           Assume CriticalRt grows with tau**(4/3)
             Rt = CriticalRt + (4.0/3.0)*Tau1**(1.0/3.0)*(TAU-TAU1)
             RtOld = CriticalRt
          ELSE
             Rt = CriticalRt
          ENDIF
-       
+
          if (NTRYCOUNT==3) exit
          ! end value of TAU reached?
          if(UpperLimit.GT.LowerLimit) then
@@ -458,16 +458,16 @@ contains
             TAU = TAU1 + StepSize
          ELSE
             TAU = TAU1 + 10.0d0**(int(log10(abs(tau1)))-1)*StepSize/dabs(StepSize)
-         ENDIF 
+         ENDIF
 !--      interpolate new startingvalue for Rt:
-         IF(TAU1.NE.TAU0) THEN
-!          Assume Rac grows with Ta**(4/3)               
+         IF(dabs(TAU1-TAU0).le.1.0d-10) THEN
+!          Assume Rac grows with Ta**(4/3)
            Rt = CriticalRt + (4.0/3.0)*Tau1**(1.0/3.0)*(TAU-TAU1)
          ELSE
-           Rt = 2.0D0*CriticalRt - RtOld 
+           Rt = 2.0D0*CriticalRt - RtOld
          ENDIF
          RtOld = CriticalRt
-       
+
          ! end value of TAU reached?
          if(UpperLimit.GT.LowerLimit) then
             if (TAU.GT.UpperLimit) exit
