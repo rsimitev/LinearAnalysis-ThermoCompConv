@@ -5,6 +5,13 @@ module GrowthRateMod
    double precision, private:: ZACOPY(NMAX,NMAX),ZBCOPY(NMAX,NMAX)
    double precision, parameter, private:: DPI=3.141592653589793D0
 contains
+
+   subroutine GrowthRate_init()
+      implicit none
+      ZACOPY = 0.0d0
+      ZBCOPY = 0.0d0
+   end subroutine
+
    !***********************************************************************
    !> Computes the maximum imaginary part of the frequency,
    !! that is, the maximum growth rate for all eigen modes.
@@ -292,7 +299,7 @@ contains
    end function
 
    !***************************************************************************
-      SUBROUTINE DIMENSION(LMIN,LD,NT,M0,ND)
+   SUBROUTINE DIMENSION(LMIN,LD,NT,M0,ND)
    !***************************************************************************
       implicit none
       integer:: NT,M0,ND,LMIN,LD
@@ -306,12 +313,12 @@ contains
    !         print*, L, 1, "...", INT( DBLE(2*NT+1-L+M0)/2 )
    ! cccccccc18    ND=ND+3*DINT( DBLE(2*NT+1-L+M0)/2 )
          ND = ND + 4*DINT( DBLE(2*NT+1-L+M0)/2 )
-   endDO
+      endDO
 
       IF(ND.GT.NMAX) THEN
          WRITE(*,*) 'DIMENSION OF MATRIX TOO SMALL:',ND,'>',NMAX
          STOP DIM_TO_SMALL
-   endIF
+      endIF
    end subroutine
 
 !-----------------------------------------------------------------------
@@ -319,7 +326,7 @@ contains
 !-----------------------------------------------------------------------
 !     BERECHNET DIE RADIALINTEGRALE FUER DAS DYNAMOPROBLEM
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       IMPLICIT complex (8) (Z)
       CHARACTER(3) TRI, TRII
       integer:: i,j,k,NEI, ii, ji, ki
@@ -613,23 +620,25 @@ contains
       ENDIF
       R = RINT
 !      WRITE(12,'(I4,A3,3I4,D14.4)') NE,TRI,I,J,K,R
-      END FUNCTION R
+   END FUNCTION R
 !-----------------------------------------------------------------------
 !     END OF RI
 !-----------------------------------------------------------------------
 !
 !
 !-----------------------------------------------------------------------
-   double precision function NGU (N)
-         integer:: n
-      NGU = - 1
-      IF (MOD (N, 2) .EQ.0) NGU = 1
-      END FUNCTION NGU
+   integer function NGU (N)
+        implicit none
+        integer:: n
+        NGU = - 1
+        IF (MOD (N, 2) .EQ.0) NGU = 1
+   END FUNCTION NGU
 !-----------------------------------------------------------------------
 !
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE TAUSCH (TRI, I, J, K)
+   SUBROUTINE TAUSCH (TRI, I, J, K)
+      implicit none
       CHARACTER(3) TRI
       integer:: i, j, k, N
       IF (TRI.EQ.'CS ') THEN
@@ -664,7 +673,7 @@ contains
 !
 !-----------------------------------------------------------------------
    double precision function S0 (N)
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (NGU (N) .EQ.1) THEN
          S0 = 0D0
@@ -677,7 +686,7 @@ contains
 !
 !-----------------------------------------------------------------------
    double precision function C0 (N)
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (N.EQ.0) THEN
          C0 = 1D0
@@ -690,7 +699,7 @@ contains
 !
 !-----------------------------------------------------------------------
    double precision function S1 (N)
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
@@ -707,7 +716,7 @@ contains
 !
 !-----------------------------------------------------------------------
    double precision function C1 (N)
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
@@ -724,7 +733,7 @@ contains
 !
 !-----------------------------------------------------------------------
    double precision function S2 (N)
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
@@ -742,7 +751,7 @@ contains
 !-----------------------------------------------------------------------
    double precision function C2 (N)
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
@@ -759,7 +768,7 @@ contains
 !
 !-----------------------------------------------------------------------
    double precision function S3 (N)
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
@@ -777,7 +786,7 @@ contains
 !-----------------------------------------------------------------------
    double precision function C3 (N)
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
@@ -794,7 +803,7 @@ contains
 !
 !-----------------------------------------------------------------------
    double precision function S4 (N)
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
@@ -813,7 +822,7 @@ contains
 !-----------------------------------------------------------------------
    double precision function C4 (N)
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
@@ -833,7 +842,7 @@ contains
 !-----------------------------------------------------------------------
    double precision function SM1 (N)
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (N.EQ.0) THEN
          SM1 = 0D0
@@ -848,7 +857,7 @@ contains
 !-----------------------------------------------------------------------
    double precision function CM1 (N)
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (N.EQ.0) THEN
          CM1 = DLOG ( (RI + 1) / RI)
@@ -863,7 +872,7 @@ contains
 !-----------------------------------------------------------------------
    double precision function SM2 (N)
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (N.EQ.0) THEN
          SM2 = 0D0
@@ -881,7 +890,7 @@ contains
 !-----------------------------------------------------------------------
    double precision function CM2 (N)
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: N
       IF (N.EQ.0) THEN
          CM2 = 1D0 / RI - 1D0 / (1 + RI)
@@ -899,7 +908,7 @@ contains
 !-----------------------------------------------------------------------
    double precision function DIS (XMIN, XMAX, A)
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
 !
       X = DABS (A * XMAX)
       IF (X.LT.1) THEN
@@ -923,7 +932,7 @@ contains
 !-----------------------------------------------------------------------
    double precision function SIA (X)
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       DIMENSION AF (4), BF (4), AG (4), BG (4)
       PARAMETER (DPI = 3.141592653589793D0)
       DATA AF / 38.027264D0, 265.187033D0, 335.677320D0, 38.102495D0 /  &
@@ -944,7 +953,7 @@ contains
 !-----------------------------------------------------------------------
    double precision function SIS (X)
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       integer:: Jz, Jn, i, j
       GENAU = 1D-7
 !
@@ -1009,7 +1018,7 @@ contains
 !-----------------------------------------------------------------------
    double precision function CIA (X)
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       DIMENSION AF (4), BF (4), AG (4), BG (4)
       DATA AF / 38.027264D0, 265.187033D0, 335.677320D0, 38.102495D0 /  &
       BF / 40.021433D0, 322.624911D0, 570.236280D0, 157.105423D0 / AG / &
@@ -1029,7 +1038,7 @@ contains
 !-----------------------------------------------------------------------
    double precision function CIS (X)
 !-----------------------------------------------------------------------
-      IMPLICIT doubleprecision (A - H, O - Y)
+      IMPLICIT double precision (A - H, O - Y)
       PARAMETER (C = 0.5772156649D0)
       integer:: Jz, Jn, i, j
       GENAU = 1D-7
@@ -1066,3 +1075,4 @@ contains
   200 END DO
   300 END FUNCTION CIS
 end module
+! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab

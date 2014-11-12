@@ -88,3 +88,4 @@ contains
          CLOSE(99)
       end subroutine writeConfigFile
 end module io
+! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab

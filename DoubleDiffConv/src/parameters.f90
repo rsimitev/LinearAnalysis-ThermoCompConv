@@ -28,3 +28,4 @@ contains
       NSMAX = 100
    end subroutine
 end module parameters
+! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab

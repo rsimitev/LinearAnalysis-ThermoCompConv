@@ -33,17 +33,7 @@
 ! range TAU=LowerLimit to TAU=UpperLimit.
 ! It only calculates the mode with minimal value of R.
 !
-! Main prg:    'lo.c'
-! Subroutines: from modules
-!              'losub.f'
-!              'r.f'
-!              'pegasus.f'
-!              'imsl.f'   (some routines of the IMSL-Library)
-!
-! Compile and link:
-!           make lo   (uses "makefile")
-!
-! Start:    lo inputfilename outputfilename
+! Start:    glo inputfilename outputfilename
 !
 #include "losub-inc.h"
 program linearOnset
@@ -59,12 +49,12 @@ program linearOnset
    call getarg(1,infile)
    if (infile.eq.' ') then
       print*, 'Usage : '
-      print*, 'lo <in file> <out file>'
+      print*, 'glo <in file> <out file>'
       stop
    endif
    if (infile.eq.'-h') then
       print*, 'Usage : '
-      print*, 'lo <in file> <out file>'
+      print*, 'glo <in file> <out file>'
       stop
    endif
 
@@ -106,6 +96,7 @@ contains
       ! ----INPUT:
       CALL readConfigFile(inputfile)
 
+      call GrowthRate_init()
       ! ---- doesn't work for M=0 !!!!!!
       IF(M0.LT.1) THEN
         write(*,*) 'The code does not work for M0<1. ', M0, ' --> 1'
@@ -154,8 +145,8 @@ contains
 !**********************************************************************
    subroutine fixedParGrowthRate()
       implicit none
-      INTEGER:: aux, factor
-      double precision:: Rt0, GroR
+      INTEGER:: aux
+      double precision:: Rt0, GroR, factor
    
       Rt0=Rt
    
@@ -412,7 +403,7 @@ contains
          RtOld = Rt
          CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE, ABSE, 50, CriticalRt, info)
          frequency = MaxGrowthRateCmplx(CriticalRt)
-         GROR  = cmplx(frequency) 
+         GROR  = dcmplx(frequency) 
          OMEGA = -dble(frequency)
          IF(info.EQ.0) THEN
             WRITE(unitOut,'(1P,3E17.6,I4)') TAU,CriticalRt,OMEGA,M0
@@ -521,7 +512,7 @@ contains
       double precision:: CriticalRt
       integer:: niter, i, info
       LeOld = Le
-      niter = (UpperLimit-LeOld)/StepSize
+      niter = int((UpperLimit-LeOld)/StepSize)
       do i=0, niter
          Le  = LeOld + i*StepSize
          CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
@@ -533,3 +524,4 @@ contains
 
 
 end program
+! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
