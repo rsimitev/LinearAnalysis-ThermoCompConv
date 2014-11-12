@@ -181,7 +181,7 @@ contains
       integer:: info
       CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
       frequency = MaxGrowthRateCmplx(CriticalRt)
-      GROR  = cmplx(frequency) 
+      GROR  = dimag(frequency)
       OMEGA = -dble(frequency)
       Write(unitOut,*) CriticalRt, Omega, GroR
       WRITE(*,*) 'TAU=',TAU,' Pt=',Pt,' M0=',M0,' eta=',ETA
@@ -236,7 +236,7 @@ contains
          ! Compute the grouth rate for each case so we can output it for
          ! debug purposes.
          frequency = MaxGrowthRateCmplx(CriticalRt)
-         GRORi(ii) = cmplx(frequency) 
+         GRORi(ii) = dimag(frequency)
          OMI(II) = -dble(frequency)
          RACI(II)= CriticalRt
          LLI(II) = info
@@ -285,7 +285,7 @@ contains
       CALL minimizer(MaxGrowthRate, Rt/10, Rt*10, RELE ,ABSE, NSMAX, CriticalRt, info)
       Rt = CriticalRt
       call computeGrowthRateModes(.TRUE.,zew,zeval)
-      GROR  = cmplx(zew(1)) 
+      GROR  = DIMAG(zew(1))
       Omega = -dble(zew(1))
       zevec(:) = zeval(:,1)
 
@@ -321,7 +321,7 @@ contains
           DO 3000 LI=LMIN,LMAX,LD
 !           L for poloidal (v) field:
             LPI = LI
-            NIMAX=DINT( DBLE(2*NT+1-LI+M0)/2 )
+            NIMAX=INT( DBLE(2*NT+1-LI+M0)/2 )
             DO 3000 NI=1,NIMAX
               IF( LST.EQ.0 ) THEN
                WRITE(unitOut,9200) 'V',LPI,M0,NI,0, DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),0.D0,0.D0
@@ -341,7 +341,7 @@ contains
             ELSEIF( NE.EQ.0 ) THEN
              LTI=LI
             ENDIF
-            NIMAX=DINT( DBLE(2*NT+1-LI+M0)/2 )
+            NIMAX=INT( DBLE(2*NT+1-LI+M0)/2 )
             DO 3200 NI=1,NIMAX
               IF( LST.EQ.0 ) THEN
                WRITE(unitOut,9200) 'W',LTI,M0,NI,0, DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),0.D0,0.D0
@@ -353,7 +353,7 @@ contains
 !         
           I=0
           DO 3400 LI=LMIN,LMAX,LD
-            NIMAX=DINT( DBLE(2*NT+1-LI+M0)/2 )
+            NIMAX=INT( DBLE(2*NT+1-LI+M0)/2 )
             DO 3400 NI=1,NIMAX
               IF( LST.EQ.0 ) THEN
                WRITE(unitOut,9200) 'T',LI,M0,NI,0, DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),0.D0,0.D0
@@ -365,7 +365,7 @@ contains
 !         
           I=0
           DO 3600 LI=LMIN,LMAX,LD
-            NIMAX=DINT( DBLE(2*NT+1-LI+M0)/2 )
+            NIMAX=INT( DBLE(2*NT+1-LI+M0)/2 )
             DO 3600 NI=1,NIMAX
               IF( LST.EQ.0 ) THEN
                WRITE(unitOut,9200) 'G',LI,M0,NI,0, DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),0.D0,0.D0
@@ -403,7 +403,7 @@ contains
          RtOld = Rt
          CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE, ABSE, 50, CriticalRt, info)
          frequency = MaxGrowthRateCmplx(CriticalRt)
-         GROR  = dcmplx(frequency) 
+         GROR  = dimag(frequency)
          OMEGA = -dble(frequency)
          IF(info.EQ.0) THEN
             WRITE(unitOut,'(1P,3E17.6,I4)') TAU,CriticalRt,OMEGA,M0

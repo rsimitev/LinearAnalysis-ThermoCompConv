@@ -8,8 +8,8 @@ contains
 
    subroutine GrowthRate_init()
       implicit none
-      ZACOPY = 0.0d0
-      ZBCOPY = 0.0d0
+      ZACOPY = dcmplx(0.0d0,0.0d0)
+      ZBCOPY = dcmplx(0.0d0,0.0d0)
    end subroutine
 
    !***********************************************************************
@@ -23,9 +23,10 @@ contains
 
       RtOld = Rt
       Rt    = Ra
+      Zew = dcmplx(0.0d0,0.0d0)
       call computeGrowthRateModes(.false., zew)
       ! search for lowest imaginary part:
-      MaxGrowthRate = minval(DIMAG(ZEW))
+      MaxGrowthRate = minval(DIMAG(ZEW),1)
       Rt=RtOld
    end function
 
@@ -39,7 +40,8 @@ contains
 
       RtOld = Rt
       Rt    = Ra
-      call computeGrowthRateModes(sort=.false., zew=zew)
+      Zew = dcmplx(0.0d0,0.0d0)
+      call computeGrowthRateModes(.false., zew)
       ! search for lowest imaginary part:
       IMIN = minloc(DIMAG(ZEW),1)
       MaxGrowthRateCmplx = ZEW(IMIN)
@@ -121,7 +123,7 @@ contains
             LTI=LI
          endIF
 
-         NIMAX=DINT( DBLE(2*NT+1-LI+M0)/2 )
+         NIMAX=INT( DBLE(2*NT+1-LI+M0)/2 )
          DO 3000 NI=1,NIMAX
             J=0
             DO 2000 LJ=LMIN,LMAX,LD
@@ -133,7 +135,7 @@ contains
                ELSEIF( NE.EQ.0 ) THEN
                   LTJ=LJ
                endIF
-               NJMAX=DINT( DBLE(2*NT+1-LJ+M0)/2 )
+               NJMAX=INT( DBLE(2*NT+1-LJ+M0)/2 )
 
    !  ******************** I: Equation (Line) ******************
    !  ******************** J: Variable (Column) ****************
@@ -312,7 +314,7 @@ contains
       DO L = LMIN, 2*NT+M0-1, LD
    !         print*, L, 1, "...", INT( DBLE(2*NT+1-L+M0)/2 )
    ! cccccccc18    ND=ND+3*DINT( DBLE(2*NT+1-L+M0)/2 )
-         ND = ND + 4*DINT( DBLE(2*NT+1-L+M0)/2 )
+         ND = ND + 4*INT( DBLE(2*NT+1-L+M0)/2 )
       endDO
 
       IF(ND.GT.NMAX) THEN
