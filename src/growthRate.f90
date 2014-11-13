@@ -2,7 +2,9 @@ module GrowthRateMod
 #include "losub-inc.h"
    use parameters
    implicit none
-   double precision, parameter, private:: DPI=3.141592653589793D0
+   private
+   double precision, parameter:: DPI=3.141592653589793D0
+   public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes, dimension
 contains
 
    !***********************************************************************
