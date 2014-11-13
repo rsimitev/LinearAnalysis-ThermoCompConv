@@ -6,7 +6,7 @@ setenv out m3e04p01t12000Rconc1000Le
 rm $in 
 
 set calc=true
-set plot=true
+set plot=false
 
 if ( $calc == "true" ) then
 
@@ -44,7 +44,7 @@ cat > $in << EOT
  |   NTRUNC (>=1) | MODE |
             6          3
  |   DRA   | ABSERR  |  RELERR  | NMAX |
-  3000.00     1.00000E-06 0.0000E+00  10000
+  3000.00     1.00000E-05 0.0000E+00  10000
  |   incr_STEP | incr_END
        1.0        5000                                             
 EOT
