@@ -9,7 +9,7 @@
 !--  info   : on output: 0: convergence; 1: no convergence;
 !                     2: abserr or relerr should be zero;
    SUBROUTINE minimizer (fn, Xmin, xmax, rdx, df, stepMax, X0, info)
-      IMPLICIT none
+      implicit none
       double precision, intent(in):: xmin, xmax, rdx, df
       integer, intent(in):: stepMax
       integer, intent(out):: info
@@ -19,8 +19,9 @@
       integer:: n
 
       interface
-         double precision function fn(x)
-            double precision, intent(in)::x
+         function fn(x)
+            double precision:: fn
+            double precision:: x
          end function
       end interface
 

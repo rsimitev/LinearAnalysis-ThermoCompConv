@@ -14,10 +14,10 @@
 !***********************************************************************
 ! Parameters:
 ! Rt=RAYLEIGH NUMBER, TA= TAYLOR NUMBER, Pt= PRANTEL NUMBER,
-! ETA=RATIO OF RADII, NT= TRUNCATION, M0=WAVE NUMBER,
+! ETA=RATIO OF RADII, Truncation= TRUNCATION, M0=WAVE NUMBER,
 ! Le = Lewis number,  CriticalRt=Rayleigh number due to concentration
-! NE= SYMMETRIE PARAMETER, NE=0 : UNDEFINED SYMMETRIE,
-! NE=2 : EQUATORIAL SYMMETRIE, NE=1 : EQUATORIAL ANTISYMMETRIE.
+! Simmetry= SYMMETRIE PARAMETER, Simmetry=0 : UNDEFINED SYMMETRIE,
+! Simmetry=2 : EQUATORIAL SYMMETRIE, Simmetry=1 : EQUATORIAL ANTISYMMETRIE.
 ! DRIFT C IS DEFINED LIKE (PHI+C*T).
 ! Rev. 2.2: Drift is now def. as (phi-c*t).
 !
@@ -71,14 +71,18 @@ program linearOnset
       case(1) ! eigenvalues determined for all parameters fixed.
          call fixedParEigenValues()
       case(2)
+         LowerLimit = tau
          call varyTauCriticalRt()
       case(3)
-        call varyTauCriticalState()
+         LowerLimit = tau
+         call varyTauCriticalState()
       case(4) ! calculate the critical eigenvector. Print for plotting.
-        CALL fixedParCriticalEigenVector()
+         CALL fixedParCriticalEigenVector()
       case(5) ! vary m and calculate critical R at fixed P, tau, eta.
+         LowerLimit = m0
          call varyMCriticalRt()
       case(6) ! vary Le and calculate critical R at fixed P, tau, eta, M
+         LowerLimit = Le
          call varyLeCriticalRt()
       case default
          Write(*,*) 'Unknown computation type:', LCALC
@@ -88,7 +92,7 @@ contains
 
    !**********************************************************************
    SUBROUTINE init(inputfile,outputfile)
-      IMPLICIT none
+      implicit none
       CHARACTER(len=*) inputfile,outputfile
 
       ! ----Default values:
@@ -96,7 +100,6 @@ contains
       ! ----INPUT:
       CALL readConfigFile(inputfile)
 
-      call GrowthRate_init()
       ! ---- doesn't work for M=0 !!!!!!
       IF(M0.LT.1) THEN
         write(*,*) 'The code does not work for M0<1. ', M0, ' --> 1'
@@ -110,22 +113,22 @@ contains
       RI = ETA/(1.0d0-ETA)
       RO = 1.0D0 + RI
 
-      IF(NE.EQ.0) THEN
+      IF(Simmetry.EQ.0) THEN
          ! - UNDEFINED SYMMETRIE:
          LMIN=M0
          LD=1
-      ELSEIF(NE.EQ.1) THEN
+      ELSEIF(Simmetry.EQ.1) THEN
          ! - EQUATORIAL ANTISYMMETRIE (L+M ODD):
          LMIN=M0+1
          LD=2
-      ELSEIF(NE.EQ.2) THEN
+      ELSEIF(Simmetry.EQ.2) THEN
          ! - EQUATORIAL SYMMETRIE (L+M EVEN);
          LMIN=M0
          LD=2
       ENDIF
 
-      CALL DIMENSION(LMIN,LD,NT,M0,ND)
-      write(*,*) 'DIMENSION OF MATRIX:',ND
+      CALL DIMENSION(LMIN,LD,Truncation,M0,NEigenmodes)
+      write(*,*) 'DIMENSION OF MATRIX:',NEigenmodes
    END subroutine
 
    !**********************************************************************
@@ -136,7 +139,7 @@ contains
       call computeGrowthRateModes(.true., zew)
       write(*,*) 'n     Frequ.(exp(+iwt))   -Grothrate  '
       write(unitOut,*) 'n     Frequ.(exp(+iwt))   -Grothrate  '
-      do i=1, ND
+      do i=1, NEigenmodes
          WRITE(*,'(I4,2D16.6)') I,ZEW(I)
          WRITE(unitOut,'(I4,2D16.6)') I,ZEW(I)
       enddo
@@ -175,7 +178,7 @@ contains
 
 !**********************************************************************
    subroutine fixedParCriticalRa()
-      IMPLICIT none
+      implicit none
       double Complex:: frequency
       double precision:: CriticalRt, Omega, GroR
       integer:: info
@@ -192,10 +195,10 @@ contains
 
 !**********************************************************************
       subroutine fixedParCriticalRaAndM0(CriticalRt)
-      IMPLICIT none
+      implicit none
       double precision, intent(out):: CriticalRt
-      double precision:: Omega, Ta
       integer, parameter::nm0=3
+      double precision:: Omega
       double precision:: RACI(nm0),OMI(nm0),GRORi(nm0)
       double precision:: RtMin, RtMax
       double Complex:: frequency
@@ -205,7 +208,6 @@ contains
       integer:: info, idx
 
       info=0
-      TA = TAU*TAU
       CriticalRt = Rt
       do i=0, nm0/2
          first_m0   = m0 - i
@@ -220,16 +222,16 @@ contains
       DO II=1, nm0
          M0   = M0I(II)
          LMIN = LMINI(II)
-         CALL dimension(LMIN,LD,NT,M0,ND)
+         CALL dimension(LMIN,LD,Truncation,M0,NEigenmodes)
          ! Increase the interval, in case we did not find anything.
          do i=1, 3
-            RtMin=Rt/(3.0d0**dble(i))
-            RtMax=Rt*(3.0d0**dble(i))
+            RtMin=Rt/(2.0d0**dble(i))
+            RtMax=Rt*(2.0d0**dble(i))
             ! Write(*,*)  i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX
             CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, CriticalRt, info)
-            if (info.ne.2) exit
+            if (info.NE.2) exit
          enddo
-         if(info.ne.0) then
+         if(info.NE.0) then
             Write(*,*) 'Failed to find roots: error:', info
             stop 5
          endif
@@ -245,7 +247,7 @@ contains
 
       ! Let's not allow growth rates that are too high
       if(any(lli.eq.0)) then
-         where(lli.ne.0) RACI = 1.0d100
+         where(lli.NE.0) RACI = 1.0d100
          idx = minloc(RACI,1)
       else
          idx = 0
@@ -271,7 +273,7 @@ contains
 
 !**********************************************************************
    subroutine fixedParCriticalEigenVector()
-      IMPLICIT none
+      implicit none
       double precision:: GroR, Omega, Ta
       complex(8):: ZEVEC(NMAX), zew(NMAX), ZEVAL(NMAX,NMAX)
       integer:: info, i, ni, li, lti, lpi
@@ -304,7 +306,7 @@ contains
           LTH=0
           GRR=0.D0
           GRI=0.D0
-          WRITE(unitOut,'(I2,7I3,2D16.8,'' M0,TRUNC,LD,GROTH,DRIFT'')')  M0,NT,NTH,KTV,KTH,LTV,LTH,LD,GRR,GRI
+          WRITE(unitOut,'(I2,7I3,2D16.8,'' M0,TRUNC,LD,GROTH,DRIFT'')')  M0,Truncation,NTH,KTV,KTH,LTV,LTH,LD,GRR,GRI
           NUDS=1
           PM=0.D0
           WRITE(unitOut, '(I5,2D14.6,D9.2,D13.6,D9.2,'' I,TA,Rt,Pt,PM,E'')') NUDS,TA,CriticalRt,Pt,PM,ETA
@@ -316,12 +318,12 @@ contains
           WRITE(unitOut,9100) C0,OMM,NUC,NUOM,MF
 9100      FORMAT(2D17.10,3I4,'    C,OM, WHERE?,FLOQUET')
 
-          LMAX=2*NT+M0-1
+          LMAX=2*Truncation+M0-1
           I=0
           DO 3000 LI=LMIN,LMAX,LD
 !           L for poloidal (v) field:
             LPI = LI
-            NIMAX=INT( DBLE(2*NT+1-LI+M0)/2 )
+            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
             DO 3000 NI=1,NIMAX
               IF( LST.EQ.0 ) THEN
                WRITE(unitOut,9200) 'V',LPI,M0,NI,0, DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),0.D0,0.D0
@@ -334,14 +336,14 @@ contains
           I=0
           DO 3200 LI=LMIN,LMAX,LD
 !           L for toroidal (w) field:
-            IF( NE.EQ.2 ) THEN
+            IF( Simmetry.EQ.2 ) THEN
              LTI=LI+1
-            ELSEIF( NE.EQ.1 ) THEN
+            ELSEIF( Simmetry.EQ.1 ) THEN
              LTI=LI-1
-            ELSEIF( NE.EQ.0 ) THEN
+            ELSEIF( Simmetry.EQ.0 ) THEN
              LTI=LI
             ENDIF
-            NIMAX=INT( DBLE(2*NT+1-LI+M0)/2 )
+            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
             DO 3200 NI=1,NIMAX
               IF( LST.EQ.0 ) THEN
                WRITE(unitOut,9200) 'W',LTI,M0,NI,0, DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),0.D0,0.D0
@@ -353,7 +355,7 @@ contains
 !
           I=0
           DO 3400 LI=LMIN,LMAX,LD
-            NIMAX=INT( DBLE(2*NT+1-LI+M0)/2 )
+            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
             DO 3400 NI=1,NIMAX
               IF( LST.EQ.0 ) THEN
                WRITE(unitOut,9200) 'T',LI,M0,NI,0, DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),0.D0,0.D0
@@ -365,7 +367,7 @@ contains
 !
           I=0
           DO 3600 LI=LMIN,LMAX,LD
-            NIMAX=INT( DBLE(2*NT+1-LI+M0)/2 )
+            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
             DO 3600 NI=1,NIMAX
               IF( LST.EQ.0 ) THEN
                WRITE(unitOut,9200) 'G',LI,M0,NI,0, DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),0.D0,0.D0
@@ -480,24 +482,23 @@ contains
    subroutine varyMCriticalRt()
       implicit none
       double precision:: CriticalRt
-      integer:: m0Min, info
-      M0Min=M0
+      integer:: info
       CriticalRt=Rt
-      do M0=M0Min, int(UpperLimit), INT(StepSize)
-         IF(NE.EQ.0) THEN
+      do M0=int(LowerLimit), int(UpperLimit), INT(StepSize)
+         IF(Simmetry.EQ.0) THEN
 ! -   UNDEFINED SYMMETRIE:
             LMIN=M0
             LD=1
-         ELSEIF(NE.EQ.1) THEN
+         ELSEIF(Simmetry.EQ.1) THEN
 ! -   EQUATORIAL ANTISYMMETRIE (L+M ODD):
             LMIN=M0+1
             LD=2
-         ELSEIF(NE.EQ.2) THEN
+         ELSEIF(Simmetry.EQ.2) THEN
 ! -   EQUATORIAL SYMMETRIE (L+M EVEN);
             LMIN=M0
             LD=2
          ENDIF
-         CALL dimension(LMIN,LD,NT,M0,ND)
+         CALL dimension(LMIN,LD,Truncation,M0,NEigenmodes)
          CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
          WRITE(*,*) M0,CriticalRt
          WRITE(unitOut,*) M0, CriticalRt
