@@ -13,7 +13,7 @@ contains
       STOP   NO_INFILE
 11    CONTINUE
       READ(15,'(A)',END=15) 
-      READ(15,*,END=15) Simmetry,LCALC
+      READ(15,*,END=15) Symmetry,LCALC
       READ(15,'(A)',END=15) 
       READ(15,*,END=15) Rt,Tau,Pt,ETA,Le,Rc
       READ(15,'(A)',END=15) 
@@ -44,7 +44,7 @@ contains
          WRITE(unitOut,'(A11,E12.5,A2)') '# RC    ', Rc,     '#'
          WRITE(unitOut,'(A11,E12.5,A2)') '# ETA   ', ETA,    '#'
          WRITE(unitOut,'(A11,G12.5,A2)') '# m     ', M0,     '#'
-         WRITE(unitOut,'(A11,I12,A2)')   '# Simmetry     ', Simmetry,   '#'
+         WRITE(unitOut,'(A11,I12,A2)')   '# Symmetry     ', Symmetry,   '#'
          WRITE(unitOut,'(A11,E12.5,A2)') '# LowerLimit   ', LowerLimit, '#'
          WRITE(unitOut,'(A11,E12.5,A2)') '# UpperLimit   ', UpperLimit, '#'
          WRITE(unitOut,'(A11,E12.5,A2)') '# StepSize     ', StepSize,   '#'
@@ -74,8 +74,8 @@ contains
          CHARACTER(len=*), intent(in):: outputfile
 
          OPEN(99,FILE=outputfile,STATUS='UNKNOWN')
-         WRITE(99,*) ' Simmetry (0/1/2) | LCALC (1/2/3/4) |'
-         WRITE(99,'(A,2I12)') ' ',Simmetry, LCALC
+         WRITE(99,*) ' Symmetry (0/1/2) | LCALC (1/2/3/4) |'
+         WRITE(99,'(A,2I12)') ' ',Symmetry, LCALC
          WRITE(99,*) '|  RAYLEIGH  |  TAU     |  PRANTEL  |  ETA  | Lewis |   Rconc   |'
          WRITE(99,'(1P,E17.6,5(A,E17.6))') Rt,' ',TAU,' ',Pt,' ',ETA,' ',Le,' ',Rc
          WRITE(99,*) '|   NTRUNC (>=1) | MODE |'

@@ -16,8 +16,8 @@
 ! Rt=RAYLEIGH NUMBER, TA= TAYLOR NUMBER, Pt= PRANTEL NUMBER,
 ! ETA=RATIO OF RADII, Truncation= TRUNCATION, M0=WAVE NUMBER,
 ! Le = Lewis number,  CriticalRt=Rayleigh number due to concentration
-! Simmetry= SYMMETRIE PARAMETER, Simmetry=0 : UNDEFINED SYMMETRIE,
-! Simmetry=2 : EQUATORIAL SYMMETRIE, Simmetry=1 : EQUATORIAL ANTISYMMETRIE.
+! Symmetry= SYMMETRIE PARAMETER, Symmetry=0 : UNDEFINED SYMMETRIE,
+! Symmetry=2 : EQUATORIAL SYMMETRIE, Symmetry=1 : EQUATORIAL ANTISYMMETRIE.
 ! DRIFT C IS DEFINED LIKE (PHI+C*T).
 ! Rev. 2.2: Drift is now def. as (phi-c*t).
 !
@@ -113,15 +113,15 @@ contains
       RI = ETA/(1.0d0-ETA)
       RO = 1.0D0 + RI
 
-      IF(Simmetry.EQ.0) THEN
+      IF(Symmetry.EQ.0) THEN
          ! - UNDEFINED SYMMETRIE:
          LMIN=M0
          LD=1
-      ELSEIF(Simmetry.EQ.1) THEN
+      ELSEIF(Symmetry.EQ.1) THEN
          ! - EQUATORIAL ANTISYMMETRIE (L+M ODD):
          LMIN=M0+1
          LD=2
-      ELSEIF(Simmetry.EQ.2) THEN
+      ELSEIF(Symmetry.EQ.2) THEN
          ! - EQUATORIAL SYMMETRIE (L+M EVEN);
          LMIN=M0
          LD=2
@@ -336,11 +336,11 @@ contains
           I=0
           DO 3200 LI=LMIN,LMAX,LD
 !           L for toroidal (w) field:
-            IF( Simmetry.EQ.2 ) THEN
+            IF( Symmetry.EQ.2 ) THEN
              LTI=LI+1
-            ELSEIF( Simmetry.EQ.1 ) THEN
+            ELSEIF( Symmetry.EQ.1 ) THEN
              LTI=LI-1
-            ELSEIF( Simmetry.EQ.0 ) THEN
+            ELSEIF( Symmetry.EQ.0 ) THEN
              LTI=LI
             ENDIF
             NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
@@ -485,15 +485,15 @@ contains
       integer:: info
       CriticalRt=Rt
       do M0=int(LowerLimit), int(UpperLimit), INT(StepSize)
-         IF(Simmetry.EQ.0) THEN
+         IF(Symmetry.EQ.0) THEN
 ! -   UNDEFINED SYMMETRIE:
             LMIN=M0
             LD=1
-         ELSEIF(Simmetry.EQ.1) THEN
+         ELSEIF(Symmetry.EQ.1) THEN
 ! -   EQUATORIAL ANTISYMMETRIE (L+M ODD):
             LMIN=M0+1
             LD=2
-         ELSEIF(Simmetry.EQ.2) THEN
+         ELSEIF(Symmetry.EQ.2) THEN
 ! -   EQUATORIAL SYMMETRIE (L+M EVEN);
             LMIN=M0
             LD=2

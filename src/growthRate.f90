@@ -119,11 +119,11 @@ contains
       DO LI=LMIN,LMAX,LD
          LPI=LI
          ! Determine L for toroidal (w) field:
-         IF( Simmetry.EQ.2 ) THEN
+         IF( Symmetry.EQ.2 ) THEN
             LTI=LI+1
-         ELSEIF( Simmetry.EQ.1 ) THEN
+         ELSEIF( Symmetry.EQ.1 ) THEN
             LTI=LI-1
-         ELSEIF( Simmetry.EQ.0 ) THEN
+         ELSEIF( Symmetry.EQ.0 ) THEN
             LTI=LI
          endIF
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
@@ -131,11 +131,11 @@ contains
             J=0
             DO LJ=LMIN,LMAX,LD
                LPJ=LJ
-               IF( Simmetry.EQ.2 ) THEN
+               IF( Symmetry.EQ.2 ) THEN
                   LTJ=LJ+1
-               ELSEIF( Simmetry.EQ.1 ) THEN
+               ELSEIF( Symmetry.EQ.1 ) THEN
                   LTJ=LJ-1
-               ELSEIF( Simmetry.EQ.0 ) THEN
+               ELSEIF( Symmetry.EQ.0 ) THEN
                   LTJ=LJ
                endIF
                NJMAX=INT( DBLE(2*Truncation+1-LJ+M0)/2 )
@@ -329,22 +329,21 @@ contains
    end subroutine
 
 !-----------------------------------------------------------------------
-   double precision function R (TRII, NEI, II, JI, KI)
+   double precision function R (TRII, Symmetry_i, II, JI, KI)
 !-----------------------------------------------------------------------
 !     BERECHNET DIE RADIALINTEGRALE FUER DAS DYNAMOPROBLEM
 !-----------------------------------------------------------------------
       implicit none
       CHARACTER(3):: TRI, TRII
-      integer:: i,j,k,NEI, ii, ji, ki
+      integer:: i,j,k, Symmetry_i, ii, ji, ki
       double precision:: Rint
 !
       TRI = TRII
-      Simmetry = NEI
       I = II
       J = JI
       K = KI
       CALL TAUSCH (TRI, I, J, K)
-      IF (Simmetry.EQ.0) THEN
+      IF (Symmetry_i.EQ.0) THEN
          IF (TRI.EQ.'SS ') THEN
             IF (I*J.EQ.0) THEN
                RINT = 0D0
@@ -384,7 +383,7 @@ contains
             RINT = 1D0 / 4D0*(C0 (I+J+K)+C0 (I+J - K)+C0 (I &
             - J+K)+C0 (I - J - K) )
          ENDIF
-      ELSEIF (Simmetry.EQ.1) THEN
+      ELSEIF (Symmetry_i.EQ.1) THEN
          IF (TRI.EQ.'SS ') THEN
             IF (I*J.EQ.0) THEN
                RINT = 0D0
@@ -424,7 +423,7 @@ contains
             RINT = 1D0 / 4D0*(C1 (I+J+K)+C1 (I+J - K)+C1 (I &
             - J+K)+C1 (I - J - K) )
          ENDIF
-      ELSEIF (Simmetry.EQ.2) THEN
+      ELSEIF (Symmetry_i.EQ.2) THEN
          IF (TRI.EQ.'SS ') THEN
             IF (I*J.EQ.0) THEN
                RINT = 0D0
@@ -464,7 +463,7 @@ contains
             RINT = 1D0 / 4D0*(C2 (I+J+K)+C2 (I+J - K)+C2 (I &
             - J+K)+C2 (I - J - K) )
          ENDIF
-      ELSEIF (Simmetry.EQ.3) THEN
+      ELSEIF (Symmetry_i.EQ.3) THEN
          IF (TRI.EQ.'SS') THEN
             IF (I*J.EQ.0) THEN
                RINT = 0D0
@@ -504,7 +503,7 @@ contains
             RINT = 1D0 / 4D0*(C3 (I+J+K)+C3 (I+J - K)+C3 (I &
             - J+K)+C3 (I - J - K) )
          ENDIF
-      ELSEIF (Simmetry.EQ.4) THEN
+      ELSEIF (Symmetry_i.EQ.4) THEN
          IF (TRI.EQ.'SS') THEN
             IF (I*J.EQ.0) THEN
                RINT = 0D0
@@ -544,7 +543,7 @@ contains
             RINT = 1D0 / 4D0*(C4 (I+J+K)+C4 (I+J - K)+C4 (I &
             - J+K)+C4 (I - J - K) )
          ENDIF
-      ELSEIF (Simmetry.EQ. - 1) THEN
+      ELSEIF (Symmetry_i.EQ. - 1) THEN
          IF (TRI.EQ.'SS ') THEN
             IF (I*J.EQ.0) THEN
                RINT = 0D0
@@ -584,7 +583,7 @@ contains
             RINT = 1D0 / 4D0*(CM1 (I+J+K)+CM1 (I+J - K)       &
            +CM1 (I - J+K)+CM1 (I - J - K) )
          ENDIF
-      ELSEIF (Simmetry.EQ. - 2) THEN
+      ELSEIF (Symmetry_i.EQ. - 2) THEN
          IF (TRI.EQ.'SS ') THEN
             IF (I*J.EQ.0) THEN
                RINT = 0D0

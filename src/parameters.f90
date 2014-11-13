@@ -4,12 +4,12 @@ module parameters
   double precision:: TAU,Rt,Pt,C,Le,Rc,eta
   double precision:: ri, ro
   ! Dimensions
-  integer::Truncation,M0,NEigenmodes,LMIN,LD,Simmetry, NSMAX, LCALC
+  integer::Truncation,M0,NEigenmodes,LMIN,LD,Symmetry, NSMAX, LCALC
   double precision:: LowerLimit,UpperLimit,StepSize,DRt,ABSE,RELE, DRc
 contains
    subroutine setDefaults()
       implicit none
-      Simmetry = 2
+      Symmetry = 2
       LCALC = 2
       Rt   = 4.D3
       DRt  = Rt*0.1d0
