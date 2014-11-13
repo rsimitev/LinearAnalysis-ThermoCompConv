@@ -81,7 +81,7 @@ contains
          WRITE(99,*) '|   NTRUNC (>=1) | MODE |'
          WRITE(99,'(A,2I12)') ' ',Truncation, M0
          WRITE(99,*) '|   DRA   | ABSERR  |  RELERR  | NMAX |'
-         WRITE(99,'(1PG12.6,A,1PG11.5,A,1PG11.5,A,I4)') DRt,' ',ABSE,' ',RELE,' ',NSMAX
+         WRITE(99,'(1PG13.6,A,1PG12.5,A,1PG12.5,A,I4)') DRt,' ',ABSE,' ',RELE,' ',NSMAX
          WRITE(99,*) '|  StepSize  | UpperLimit'
          WRITE(99,'(1P,2G11.4)') StepSize, UpperLimit
          CLOSE(99)
