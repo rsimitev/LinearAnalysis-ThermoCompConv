@@ -191,7 +191,7 @@ contains
    ! ---- HEAT EQUATION , DISSIPATION
       implicit none
       integer:: N1, N2, l1
-      DI2=N2**2*DPI**2*R('SS ',2,N1,N2,0) - 2*N2*DPI*R('SC ',1,N1,N2,0)+DL(L1)*R('SS ',0,N1,N2,0)
+      DI2=N2**2*DPI**2*R('SS ',2,N1,N2,0) - 2*N2*DPI*R('SC ',1,N1,N2,0) + DL(L1)*R('SS ',0,N1,N2,0)
    end function
 
    double precision function DI3(N1,N2,L1)
@@ -290,9 +290,9 @@ contains
    !**************************************************************************
    !-- SUBROUTINES:
    !**************************************************************************
-   double precision function DL(L)
+   pure double precision function DL(L)
       implicit none
-      integer:: l
+      integer, intent(in):: l
       DL = DBLE(L*(L+1))
    end function
 
@@ -320,13 +320,16 @@ contains
    end subroutine
 
 !-----------------------------------------------------------------------
-   double precision function R (TRII, Symmetry_i, II, JI, KI)
+   pure double precision function R (TRII, Symmetry_i, II, JI, KI)
 !-----------------------------------------------------------------------
 !     BERECHNET DIE RADIALINTEGRALE FUER DAS DYNAMOPROBLEM
 !-----------------------------------------------------------------------
       implicit none
-      CHARACTER(3):: TRI, TRII
-      integer:: i,j,k, Symmetry_i, ii, ji, ki
+      CHARACTER(3), intent(in):: TRII
+      integer, intent(in):: Symmetry_i, ii, ji, ki
+
+      CHARACTER(3):: TRI
+      integer:: i,j,k
       double precision:: Rint
 !
       TRI = TRII
@@ -623,9 +626,9 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   integer function NGU (N)
+   pure integer function NGU (N)
         implicit none
-        integer:: n
+        integer, intent(in):: n
         NGU = - 1
         IF (MOD (N, 2) .EQ.0) NGU = 1
    END FUNCTION NGU
@@ -633,7 +636,7 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   SUBROUTINE TAUSCH (TRI, I, J, K)
+   pure SUBROUTINE TAUSCH (TRI, I, J, K)
       implicit none
       CHARACTER(len=3), intent(inout):: TRI
       integer, intent(inout):: i, j, k
@@ -669,35 +672,35 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function S0 (N)
+   pure double precision function S0 (N)
       implicit none
-      integer:: N
+      integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          S0 = 0D0
       ELSE
          S0 = 2D0 / N / DPI
       ENDIF
-      END FUNCTION S0
+   END FUNCTION S0
 !-----------------------------------------------------------------------
 !
 !
 !-----------------------------------------------------------------------
-   double precision function C0 (N)
+   pure double precision function C0 (N)
       implicit none
-      integer:: N
+      integer, intent(in):: N
       IF (N.EQ.0) THEN
          C0 = 1D0
       ELSE
          C0 = 0D0
       ENDIF
-      END FUNCTION C0
+   END FUNCTION C0
 !-----------------------------------------------------------------------
 !
 !
 !-----------------------------------------------------------------------
-   double precision function S1 (N)
+   pure double precision function S1 (N)
       implicit none
-      integer:: N
+      integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             S1 = 0D0
@@ -712,9 +715,9 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function C1 (N)
+   pure double precision function C1 (N)
       implicit none
-      integer:: N
+      integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             C1 = RI+1D0 / 2
@@ -729,9 +732,9 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function S2 (N)
+   pure double precision function S2 (N)
       implicit none
-      integer:: N
+      integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             S2 = 0D0
@@ -746,10 +749,10 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function C2 (N)
+   pure double precision function C2 (N)
 !-----------------------------------------------------------------------
       implicit none
-      integer:: N
+      integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             C2 = RI*(RI+1)+1D0 / 3
@@ -764,9 +767,9 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function S3 (N)
-      implicit double precision (A - H, O - Y)
-      integer:: N
+   pure double precision function S3 (N)
+      implicit none
+      integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             S3 = 0D0
@@ -781,10 +784,10 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function C3 (N)
+   pure double precision function C3 (N)
 !-----------------------------------------------------------------------
-      implicit double precision (A - H, O - Y)
-      integer:: N
+      implicit none
+      integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             C3 = 1D0 / 4+RI+3D0 / 2*RI**2+RI**3
@@ -799,9 +802,9 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function S4 (N)
-      implicit double precision (A - H, O - Y)
-      integer:: N
+   pure double precision function S4 (N)
+      implicit none
+      integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             S4 = 0D0
@@ -817,10 +820,10 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function C4 (N)
+   pure double precision function C4 (N)
 !-----------------------------------------------------------------------
-      implicit double precision (A - H, O - Y)
-      integer:: N
+      implicit none
+      integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             C4 = 1D0 / 5+RI+2*RI**2+2*RI**3+RI**4
@@ -837,10 +840,10 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function SM1 (N)
+   pure double precision function SM1 (N)
 !-----------------------------------------------------------------------
       implicit none
-      integer:: N
+      integer, intent(in):: N
       IF (N.EQ.0) THEN
          SM1 = 0D0
       ELSE
@@ -852,10 +855,10 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function CM1 (N)
+   pure double precision function CM1 (N)
 !-----------------------------------------------------------------------
       implicit none
-      integer:: N
+      integer, intent(in):: N
       IF (N.EQ.0) THEN
          CM1 = DLOG ( (RI+1) / RI)
       ELSE
@@ -867,10 +870,10 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function SM2 (N)
+   pure double precision function SM2 (N)
 !-----------------------------------------------------------------------
       implicit none
-      integer:: N
+      integer, intent(in):: N
       IF (N.EQ.0) THEN
          SM2 = 0D0
       ELSE
@@ -885,10 +888,10 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function CM2 (N)
+   pure double precision function CM2 (N)
 !-----------------------------------------------------------------------
       implicit none
-      integer:: N
+      integer, intent(in):: N
       IF (N.EQ.0) THEN
          CM2 = 1D0 / RI - 1D0 / (1+RI)
       ELSE
@@ -903,10 +906,10 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function DIS (XMIN, XMAX, A)
+   pure double precision function DIS (XMIN, XMAX, A)
 !-----------------------------------------------------------------------
       implicit none
-      double precision:: XMIN, XMAX, A
+      double precision, intent(in):: XMIN, XMAX, A
       double precision:: X, dismin, dismax
 !
       X = DABS (A*XMAX)
@@ -929,15 +932,15 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function SIA (X)
+   pure double precision function SIA (X)
 !-----------------------------------------------------------------------
-      implicit double precision (A - H, O - Y)
-      DIMENSION AF (4), BF (4), AG (4), BG (4)
-      PARAMETER (DPI = 3.141592653589793D0)
-      DATA AF / 38.027264D0, 265.187033D0, 335.677320D0, 38.102495D0 /  &
-      BF / 40.021433D0, 322.624911D0, 570.236280D0, 157.105423D0 / AG / &
-      42.242855D0, 302.757865D0, 352.018498D0, 21.821899D0 / BG /       &
-      48.196927D0, 482.485984D0, 1114.978885D0, 449.690326D0 /
+      implicit none
+      double precision, intent(in):: x
+      double precision, parameter, DIMENSION(4):: AF=(/ 38.027264D0, 265.187033D0, 335.677320D0, 38.102495D0 /)
+      double precision, parameter, DIMENSION(4):: BF=(/ 40.021433D0, 322.624911D0, 570.236280D0, 157.105423D0 /)
+      double precision, parameter, DIMENSION(4):: AG=(/ 42.242855D0, 302.757865D0, 352.018498D0, 21.821899D0 /)
+      double precision, parameter, DIMENSION(4):: BG=(/ 48.196927D0, 482.485984D0, 1114.978885D0, 449.690326D0 /)
+      double precision:: F,G
       F = (X**8+AF (1)*X**6+AF (2)*X**4+AF (3)*X**2+AF (4)&
       ) / (X**8+BF (1)*X**6+BF (2)*X**4+BF (3)*X**2+BF (4)&
       ) / X
@@ -945,16 +948,17 @@ contains
       ) / (X**8+BG (1)*X**6+BG (2)*X**4+BG (3)*X**2+BG (4)&
       ) / X**2
       SIA = DPI / 2D0 - F*DCOS (X) - G*DSIN (X)
-      END FUNCTION SIA
+   END FUNCTION SIA
 !-----------------------------------------------------------------------
 !
 !
 !-----------------------------------------------------------------------
-   double precision function SIS (X)
+   pure double precision function SIS (X)
 !-----------------------------------------------------------------------
       implicit none
+      double precision, intent(in):: x
       integer:: Jz, Jn, i, j
-      double precision:: GENAU, SISO, X, SISN, SISZ
+      double precision:: GENAU, SISO,SISN, SISZ
       GENAU = 1D-7
 
       SISO = X
@@ -990,10 +994,10 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function DIC (XMIN, XMAX, A)
+   pure double precision function DIC (XMIN, XMAX, A)
 !-----------------------------------------------------------------------
       implicit none
-      double precision:: xmin, xmax, a
+      double precision, intent(in):: xmin, xmax, a
       double precision:: DICMAX, DICMIN, x
 !
       X = DABS (A*XMAX)
@@ -1014,32 +1018,31 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   double precision function CIA (X)
+   pure double precision function CIA (X)
 !-----------------------------------------------------------------------
-      implicit double precision (A - H, O - Y)
-      DIMENSION AF (4), BF (4), AG (4), BG (4)
-      DATA AF / 38.027264D0, 265.187033D0, 335.677320D0, 38.102495D0 /  &
-      BF / 40.021433D0, 322.624911D0, 570.236280D0, 157.105423D0 / AG / &
-      42.242855D0, 302.757865D0, 352.018498D0, 21.821899D0 / BG /       &
-      48.196927D0, 482.485984D0, 1114.978885D0, 449.690326D0 /
-      F = (X**8+AF (1)*X**6+AF (2)*X**4+AF (3)*X**2+AF (4)&
-      ) / (X**8+BF (1)*X**6+BF (2)*X**4+BF (3)*X**2+BF (4)&
-      ) / X
-      G = (X**8+AG (1)*X**6+AG (2)*X**4+AG (3)*X**2+AG (4)&
-      ) / (X**8+BG (1)*X**6+BG (2)*X**4+BG (3)*X**2+BG (4)&
-      ) / X**2
+      implicit none
+      double precision, intent(in):: x
+      double precision:: F, G
+      double precision, parameter, dimension(4):: AF=(/ 38.027264D0, 265.187033D0, 335.677320D0, 38.102495D0 /)
+      double precision, parameter, dimension(4):: BF=(/ 40.021433D0, 322.624911D0, 570.236280D0, 157.105423D0 /)
+      double precision, parameter, dimension(4):: AG=(/ 42.242855D0, 302.757865D0, 352.018498D0, 21.821899D0 /)
+      double precision, parameter, dimension(4):: BG=(/ 48.196927D0, 482.485984D0, 1114.978885D0, 449.690326D0 /)
+      F = ( X**8 + AF(1)*X**6 + AF(2)*X**4 + AF(3)*X**2 + AF(4) ) / &
+          ( X**8 + BF(1)*X**6 + BF(2)*X**4 + BF(3)*X**2 + BF(4) ) / X                                              
+      G = ( X**8 + AG(1)*X**6 + AG(2)*X**4 + AG(3)*X**2 + AG(4) ) / &
+          ( X**8 + BG(1)*X**6 + BG(2)*X**4 + BG(3)*X**2 + BG(4) ) / X**2
       CIA = F*DSIN (X) - G*DCOS (X)
       END FUNCTION CIA
 !-----------------------------------------------------------------------
 !
 !
 !-----------------------------------------------------------------------
-   double precision function CIS (X)
+   pure double precision function CIS (X)
 !-----------------------------------------------------------------------
       implicit none
       double precision, PARAMETER:: C = 0.5772156649D0
       integer:: Jz, Jn, i, j
-      double precision:: x
+      double precision, intent(in):: x
       double precision:: GENAU, CISN, CISO, CISZ
       GENAU = 1D-7
 !
