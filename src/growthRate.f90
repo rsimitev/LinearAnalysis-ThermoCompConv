@@ -55,17 +55,7 @@ contains
       integer:: i, j, k, info
 
       ! - MAT SETS THE complex(8) MATRICES ZA AND ZB SETTING OF MATRIX:
-!      Write(98,*) Rt, Rc, Le, Pt
-!      Write(99,*) Rt, Rc, Le, Pt
       CALL MAT(Rt, Rc, Le, ZA,ZB,NMAX)
-!      DO I=1,NEigenmodes
-!         DO J=1,NEigenmodes
-!            Write(98,*) i, j, ZA(i,j)
-!            Write(99,*) i, j, ZB(i,j)
-!         enddo
-!      enddo
-!      stop 1000
-
 
 !       SUBROUTINE zGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
 !     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
@@ -127,6 +117,7 @@ contains
             LTI=LI
          endIF
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
+
          DO NI=1,NIMAX
             J=0
             DO LJ=LMIN,LMAX,LD
@@ -625,7 +616,6 @@ contains
          ENDIF
       ENDIF
       R = RINT
-!      WRITE(12,'(I4,A3,3I4,D14.4)') Simmetry,TRI,I,J,K,R
    END FUNCTION R
 !-----------------------------------------------------------------------
 !     END OF RI
