@@ -17,11 +17,11 @@ get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 
 if (Fortran_COMPILER_NAME MATCHES "gfortran.*")
   # gfortran
-  set (CMAKE_Fortran_FLAGS_RELEASE "-cpp -ffree-line-length-none -funroll-all-loops -fno-f2c -O3 -march=native")
+  set (CMAKE_Fortran_FLAGS_RELEASE "-cpp -ffree-line-length-none -fno-f2c -O2")
   set (CMAKE_Fortran_FLAGS_DEBUG   "-cpp -ffree-line-length-none -fno-f2c -O0 -g -Wall -Wextra -fcheck=all -finit-real=inf")
-  set (CMAKE_Fortran_FLAGS_PROFILE   "-cpp -ffree-line-length-none -fno-f2c -O2 -g -pg -Wall -Wextra -fcheck=all -finit-real=inf")
+  set (CMAKE_Fortran_FLAGS_PROFILE "-cpp -ffree-line-length-none -fno-f2c -O0 -g -pg -Wall -Wextra")
 elseif (Fortran_COMPILER_NAME MATCHES "ifort.*")
-  set (CMAKE_Fortran_FLAGS_RELEASE "-O3 -fpp -free -heap-arrays")
+  set (CMAKE_Fortran_FLAGS_RELEASE "-O2 -fpp -free -heap-arrays")
   set (CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -fpp -free -warn all -check bounds -traceback  -fp-stack-check -heap-arrays")
 else (Fortran_COMPILER_NAME MATCHES "gfortran.*")
   message ("CMAKE_Fortran_COMPILER full path: " ${CMAKE_Fortran_COMPILER})
@@ -31,26 +31,11 @@ else (Fortran_COMPILER_NAME MATCHES "gfortran.*")
   set (CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g")
 endif (Fortran_COMPILER_NAME MATCHES "gfortran.*")
 
-# make sure that the default is a RELEASE
-if (NOT CMAKE_BUILD_TYPE)
-  set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
-      "Choose the type of build, options are: None Debug Release."
-      FORCE)
-endif (NOT CMAKE_BUILD_TYPE)
-
-string ( TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE)
-if (BUILD_TYPE STREQUAL "debug")
-   add_definitions(-DDEBUG)
-endif(BUILD_TYPE STREQUAL "debug")
-
-# default installation
-set (CMAKE_INSTALL_PREFIX ${GLO_SOURCE_DIR} CACHE STRING
-       "Choose the installation directory.")
-
 set (GLO_VERSION_STRING "${GLO_VERSION}(${FEATURES}) - ${CMAKE_BUILD_TYPE}")
 
 include_directories(${GLO_BINARY_DIR})
 
+set(BLA_STATIC ON)
 find_package(LAPACK REQUIRED)
 
 add_subdirectory(src)
