@@ -6,4 +6,7 @@ lo
 losub-lapack.F
 losub-lapack-minimizer-eigen.F
 losub-lapack-minimizer.F
-templates
+lo6*
+build
+BUILD
+bin
