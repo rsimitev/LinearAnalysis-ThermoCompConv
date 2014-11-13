@@ -1,16 +1,5 @@
 !***********************************************************************
-!
 ! Program to calc. lin. onset of conv. in rotating spherical shell.
-!
-! Rev 1.0 05/94                                               J.W.
-! Rev 1.1 05/94 added loop for increment auf TAU              M.A.
-! Rev 2.0 07/94 added loop for calcul. of minimal wavenumber
-!              M (LCALC=3)                                    M.A.
-! Rev 2.1 07/94 added part for calcul. of the eigenvector
-!              at onset (LCALC=4)                             M.A.
-! Rev 2.2 12/04/94 changed sign of drift c for consistency
-!                 with LC.F                                   M.A.
-! Rev 3.0 29/03/07  - double diffusive convection             R.S.
 !***********************************************************************
 ! Parameters:
 ! Rt=RAYLEIGH NUMBER, TA= TAYLOR NUMBER, Pt= PRANTEL NUMBER,
