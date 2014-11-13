@@ -9,12 +9,6 @@ set(GLO_SRCS
    )
 
 add_executable(glo ${GLO_SRCS})
-target_link_libraries(glo ${LAPACK_LIBRARIES})
-set_target_properties(glo PROPERTIES LINK_FLAGS "${LAPACK_LINKER_FLAGS}")
+target_link_libraries(glo mylapack ${BLAS_LIBRARIES})
+set_target_properties(glo PROPERTIES LINK_FLAGS "${BLAS_LINKER_FLAGS}")
 install(TARGETS glo RUNTIME DESTINATION bin)
-
-
-add_executable(glo-mylapack ${GLO_SRCS})
-target_link_libraries(glo-mylapack mylapack ${BLAS_LIBRARIES})
-set_target_properties(glo-mylapack PROPERTIES LINK_FLAGS "${BLAS_LINKER_FLAGS}")
-install(TARGETS glo-mylapack RUNTIME DESTINATION bin)
