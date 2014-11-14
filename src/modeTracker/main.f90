@@ -4,13 +4,16 @@
 program modeTracker
    implicit none
    integer, parameter:: unitOut=16, unitIn=15
-   character(len=128):: listFileName, fileToRead, line
-   double precision, allocatable:: modes(:,:), modesCoeffs(:,:)
-   double precision:: par(3)
-   double precision, pointer:: modesPtr(:), parPtr(3)
+   character(len=128):: listFileName, fileToRead
+   character(len=256):: line
+   double precision, target:: par(3)
+   double precision, allocatable, target:: modes(:,:)
+   double precision:: newPar, projectedModeVal
+   double precision, pointer:: newModeSet(:)
+   double precision, pointer:: modesPtr(:), parPtr
    integer:: nModes !< the number of modes to be read from each file
    integer:: nFile !< The index of the modes file read
-   integer:: info
+   integer:: info, i, j
 
 
    call init(info)
@@ -19,7 +22,9 @@ program modeTracker
    do
       call readLineOfFilesToRead(unitIn, line, info)
       if(info.ne.0) exit
+      Write(*,*) line
       nFile = nFile + 1
+      ! Shift the parameter and mode pointers to the next value
       parPtr => par(mod(nFile,3)+1)
       modesPtr => modes(:,mod(nFile,3)+1)
       read(line,*) newPar, fileToRead
@@ -38,6 +43,10 @@ program modeTracker
             endif
          enddo
       enddo
+      ! Now that things are in proper order, we need to save the new set of modes to file
+      call saveReorderedModeSet(newModeSet)
+      ! and then add it to the modes that are going to be used for interpolation 
+      ! in the next iteration.
       parPtr   = newPar
       modesPtr = newModeSet
    enddo
@@ -53,32 +62,37 @@ contains
       integer:: info
 
       call getarg(1,listFileName)
-      if (infile.eq.' ' .or. infile.eq.'-h') then
+      if (listFileName.eq.' ' .or. listFileName.eq.'-h') then
          print*, 'Usage : '
          print*, 'modeTracker <list file>'
          stop
       endif
 
       open(unit=unitIn, file=trim(listFileName), status='OLD', iostat=info)
-      if (info.ne.0) call abort(info)
+      if (info.ne.0) call MTabort(info)
 
       ! Read the number of modes
       read(unitIn,*) nModes
 
-      allocate(modes(nModes,3),modesCoeffs(nModes,3))
+      allocate(modes(nModes,3),newModeSet(nModes))
       modes = 0.0d0
+      par = 3.0d0
+      par(1)=5.0
 
       ! Read three files so we can make the first quadratic fit.
       nFile = 0
       do
          call readLineOfFilesToRead(unitIn, line, info)
          if(info.ne.0) exit
+         Write(*,*) line
          ! Read one file at a time
          nFile = nFile + 1
          parPtr => par(nFile)
          modesPtr => modes(:,nFile)
          read(line,*) parPtr, fileToRead
+         Write(*,*) nFile, parPtr, fileToRead
          call readModesFile(fileToRead, modesPtr)
+         call saveReorderedModeSet(modesPtr)
          if (nFile==3) exit
       enddo
    end subroutine
@@ -87,14 +101,14 @@ contains
    !> Reads a file one line at a time until it finds one that
    !! does not start with a '#'.
    !**********************************************************************
-   subroutine readLineOfFilesToRead(unitIn,line)
+   subroutine readLineOfFilesToRead(unitIn,line, info)
       implicit none
       character(len=*), intent(out):: line
       integer, intent(in):: unitIn
       integer, intent(out):: info
       info=0
       do
-         read(unitIn,*, iostat=info) line
+         read(unitIn,'(A)', iostat=info) line
          if (info.ne.0) exit
          line = adjustl(line)
          if (line(1:1).ne.'#') exit
@@ -107,7 +121,7 @@ contains
    subroutine readModesFile(fileToRead, modes)
       implicit none
       character(len=*), intent(in):: fileToRead
-      double precision, intent(out):: modes(:)
+      double precision, pointer, intent(out):: modes(:)
       character(len=128):: line
       double precision:: modeVal, modeFreq
       integer:: n, readStatus
@@ -117,7 +131,7 @@ contains
 
       do
          ! Read one line at a time
-         read(20,*, iostat=readStatus) line
+         read(20,'(A)', iostat=readStatus) line
          ! Exit on error
          if(readStatus.ne.0) exit
          ! Check if this is a comment and cycle if it is.
@@ -134,7 +148,7 @@ contains
    !**********************************************************************
    !> Given three points of coordinates xOld, yOld, extimate the next point at x.
    !**********************************************************************
-   function nextPoint(xOld,yOld,x), result(y)
+   function nextPoint(xOld,yOld,x) result(y)
       implicit none
       double precision:: y
       double precision, intent(in):: xOld(3), yOld(3), x
@@ -165,6 +179,20 @@ contains
       a=b
       b=c
    end subroutine
+   
+   !**********************************************************************
+   !> 
+   !**********************************************************************
+   subroutine saveReorderedModeSet(modeSet)
+      implicit none
+      double precision, intent(in):: modeSet(:)
+      integer:: i
+      open(unit=33, file=trim(fileToRead)//'-sorted', status='NEW')
+      do i=1, nModes
+         Write(33,*) i, modeSet(i)
+      enddo
+      close(unit=33)
+   end subroutine
 
    !**********************************************************************
    !> Save, cleanup and shut down.
@@ -177,7 +205,7 @@ contains
    !**********************************************************************
    !> Cleanly aborts operations Writing an error message.
    !**********************************************************************
-   subroutine abort(info)
+   subroutine MTabort(info)
       implicit none
       integer, intent(in):: info
       Write(*,*) "Aborting: error = ", info
