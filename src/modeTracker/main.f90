@@ -6,11 +6,10 @@ program modeTracker
    integer, parameter:: unitOut=16, unitIn=15
    character(len=128):: listFileName, fileToRead
    character(len=256):: line
-   double precision, target:: par(3)
-   double precision, allocatable, target:: modes(:,:)
+   double precision:: par(3)
+   double precision, allocatable:: modes(:,:)
    double precision:: newPar, projectedModeVal
-   double precision, pointer:: newModeSet(:)
-   double precision, pointer:: modesPtr(:), parPtr
+   double precision, allocatable:: newModeSet(:)
    integer:: nModes !< the number of modes to be read from each file
    integer:: nFile !< The index of the modes file read
    integer:: info, i, j
@@ -22,11 +21,8 @@ program modeTracker
    do
       call readLineOfFilesToRead(unitIn, line, info)
       if(info.ne.0) exit
-      Write(*,*) line
       nFile = nFile + 1
       ! Shift the parameter and mode pointers to the next value
-      parPtr => par(mod(nFile,3)+1)
-      modesPtr => modes(:,mod(nFile,3)+1)
       read(line,*) newPar, fileToRead
       ! Read one file at a time
       call readModesFile(trim(fileToRead), newModeSet)
@@ -34,10 +30,11 @@ program modeTracker
       ! next set of modes, we reorder it.
       do i=1, nModes-1
          ! For each mode, we compute the projected mode value
-         projectedModeVal = nextPoint(par,modes(i,:),newPar)
+         projectedModeVal = nextPoint(par,modes(i,1:3),newPar)
          ! Reorder the newly read mode set according to the distance to the
          ! projected value
-         do j=i+1, nModes
+         do j=1, nModes
+            if (j==i) cycle
             if(abs(projectedModeVal-newModeSet(j)).lt.abs(projectedModeVal-newModeSet(i))) then
                call swap(newModeSet(i),newModeSet(j))
             endif
@@ -47,8 +44,8 @@ program modeTracker
       call saveReorderedModeSet(newModeSet)
       ! and then add it to the modes that are going to be used for interpolation 
       ! in the next iteration.
-      parPtr   = newPar
-      modesPtr = newModeSet
+      par(mod(nFile-1,3)+1)     = newPar
+      modes(:,mod(nFile-1,3)+1) = newModeSet
    enddo
 
    call cleanup()
@@ -76,8 +73,6 @@ contains
 
       allocate(modes(nModes,3),newModeSet(nModes))
       modes = 0.0d0
-      par = 3.0d0
-      par(1)=5.0
 
       ! Read three files so we can make the first quadratic fit.
       nFile = 0
@@ -87,12 +82,9 @@ contains
          Write(*,*) line
          ! Read one file at a time
          nFile = nFile + 1
-         parPtr => par(nFile)
-         modesPtr => modes(:,nFile)
-         read(line,*) parPtr, fileToRead
-         Write(*,*) nFile, parPtr, fileToRead
-         call readModesFile(fileToRead, modesPtr)
-         call saveReorderedModeSet(modesPtr)
+         read(line,*) par(nFile), fileToRead
+         call readModesFile(fileToRead, modes(:,nFile))
+         call saveReorderedModeSet(modes(:,nFile))
          if (nFile==3) exit
       enddo
    end subroutine
@@ -121,7 +113,7 @@ contains
    subroutine readModesFile(fileToRead, modes)
       implicit none
       character(len=*), intent(in):: fileToRead
-      double precision, pointer, intent(out):: modes(:)
+      double precision, intent(out):: modes(:)
       character(len=128):: line
       double precision:: modeVal, modeFreq
       integer:: n, readStatus
@@ -139,6 +131,7 @@ contains
          if (line(1:1).eq.'#') cycle
          ! Read the mode index and the value
          read(line,*) n, modeFreq, modeVal
+         if (n.gt.nModes) exit
          modes(n) = modeVal
       enddo
 
