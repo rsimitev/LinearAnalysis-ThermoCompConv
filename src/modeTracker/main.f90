@@ -3,12 +3,12 @@
 !! one file per line.
 program modeTracker
    implicit none
-   integer, parameter:: unitFileList=15, degree=4
+   integer, parameter:: unitFileList=15, nPoints=3
    character(len=128):: listFileName, fileToRead
    character(len=256):: line
-   double precision:: par(degree)
-   double precision, allocatable:: modes(:,:)
-   double precision:: newPar, projectedModeVal, projectedModeValJ
+   double precision:: par(nPoints)
+   double precision, allocatable:: modes(:,:), projectedModeVals(:)
+   double precision:: newPar
    double precision, allocatable:: newModeSet(:)
    integer:: nModes !< the number of modes to be read from each file
    integer:: nFile !< The index of the modes file read
@@ -26,24 +26,47 @@ program modeTracker
       read(line,*) newPar, fileToRead
       ! Read one file at a time
       call readModesFile(trim(fileToRead), newModeSet)
+      ! For each mode, we compute the projected mode value
+      do i=1, nModes
+         projectedModeVals(i) = nextPoint3(par, modes(i,:), newPar)
+      enddo
       ! Now that we have the next parameter value and the
       ! next set of modes, we reorder it.
-      do i=1, nModes-1
-         ! For each mode, we compute the projected mode value
-         projectedModeVal = nextPoint3(par, modes(i,:), newPar)
+      do i=1, nModes
          ! Reorder the newly read mode set according to the distance to the
-         ! projected value
+         ! projected value.
          do j=1, nModes
-            if(abs(projectedModeVal-newModeSet(j)).lt.abs(projectedModeVal-newModeSet(i))) then
-               projectedModeValJ = nextPoint3(par, modes(j,:), newPar)
-               if(abs(projectedModeValJ-newModeSet(i)).lt.abs(projectedModeValJ-newModeSet(j))) then
+            if(abs(projectedModeVals(i)-newModeSet(j)).lt. &
+               abs(projectedModeVals(i)-newModeSet(i))) then
+               ! if j>i always swap
+               if (j>i) then
                   call swap(newModeSet(i),newModeSet(j))
+               else !if j<i swap only when it makes a difference to both.
+                  if(abs(projectedModeVals(j)-newModeSet(i)).lt. &
+                     abs(projectedModeVals(j)-newModeSet(j))) then
+                     call swap(newModeSet(i),newModeSet(j))
+                  endif
+               endif
+            endif
+         enddo
+         ! Take a second pass?
+         do j=1, nModes
+            if(abs(projectedModeVals(i)-newModeSet(j)).lt. &
+               abs(projectedModeVals(i)-newModeSet(i))) then
+               ! if j>i always swap
+               if (j>i) then
+                  call swap(newModeSet(i),newModeSet(j))
+               else !if j<i swap only when it makes a difference to both.
+                  if(abs(projectedModeVals(j)-newModeSet(i)).lt. &
+                     abs(projectedModeVals(j)-newModeSet(j))) then
+                     call swap(newModeSet(i),newModeSet(j))
+                  endif
                endif
             endif
          enddo
       enddo
-      par(mod(nFile-1,degree)+1)     = newPar
-      modes(:,mod(nFile-1,degree)+1) = newModeSet(:)
+      par(mod(nFile-1,nPoints)+1)     = newPar
+      modes(:,mod(nFile-1,nPoints)+1) = newModeSet(:)
       ! Now that things are in proper order, we need to save the new set of modes to file
       call saveReorderedModeSet(newModeSet, nModes)
       ! and then add it to the modes that are going to be used for interpolation
@@ -73,7 +96,8 @@ contains
       ! Read the number of modes
       read(unitFileList,*) nModes
 
-      allocate(modes(nModes,degree),newModeSet(nModes))
+      allocate(modes(nModes,nPoints),newModeSet(nModes))
+      allocate(projectedModeVals(nModes))
       modes = 0.0d0
 
       ! Read three files so we can make the first quadratic fit.
@@ -87,7 +111,7 @@ contains
          read(line,*) par(nFile), fileToRead
          call readModesFile(fileToRead, modes(:,nFile))
          call saveReorderedModeSet(modes(:,nFile), nModes)
-         if (nFile==degree) exit
+         if (nFile==nPoints) exit
       enddo
    end subroutine
 
@@ -147,7 +171,7 @@ contains
    function nextPoint3(xOld,yOld,x) result(y)
       implicit none
       double precision:: y
-      double precision, intent(in):: xOld(degree), yOld(degree), x
+      double precision, intent(in):: xOld(nPoints), yOld(nPoints), x
       double precision:: a,b,c,d, x1, x2, x3, y1, y2, y3
 
       x1 = xOld(1)
@@ -165,13 +189,14 @@ contains
       y = a*x**2 + b*x + c
    end function
 
+#ifdef CUBIC
    !**********************************************************************
    !> Given four points of coordinates xOld, yOld, extimate the next point at x.
    !**********************************************************************
    function nextPoint4(xOld,yOld,x) result(y)
       implicit none
       double precision:: y
-      double precision, intent(in):: xOld(degree), yOld(degree), x
+      double precision, intent(in):: xOld(nPoints), yOld(nPoints), x
       double precision:: a,b,c,d, x1, x2, x3, x4, y1, y2, y3, y4
 
       x1 = xOld(1)
@@ -224,6 +249,7 @@ contains
              (x1**3*x2**2-x1**2*x2**3) *x3)
       y = a*x**3 + b*x**2 + c*x + d
    end function
+#endif
 
    !**********************************************************************
    !> Swap a with b
