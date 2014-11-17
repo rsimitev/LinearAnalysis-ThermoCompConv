@@ -1,14 +1,14 @@
-!> Reads a file with the number of modes and a list of files 
-!! containing said modes for different parameters, 
+!> Reads a file with the number of modes and a list of files
+!! containing said modes for different parameters,
 !! one file per line.
 program modeTracker
    implicit none
-   integer, parameter:: unitOut=16, unitIn=15
+   integer, parameter:: unitFileList=15, degree=4
    character(len=128):: listFileName, fileToRead
    character(len=256):: line
-   double precision:: par(3)
+   double precision:: par(degree)
    double precision, allocatable:: modes(:,:)
-   double precision:: newPar, projectedModeVal
+   double precision:: newPar, projectedModeVal, projectedModeValJ
    double precision, allocatable:: newModeSet(:)
    integer:: nModes !< the number of modes to be read from each file
    integer:: nFile !< The index of the modes file read
@@ -19,7 +19,7 @@ program modeTracker
 
    ! We need to read one file at a time and recompute the fit.
    do
-      call readLineOfFilesToRead(unitIn, line, info)
+      call readLineOfFilesToRead(unitFileList, line, info)
       if(info.ne.0) exit
       nFile = nFile + 1
       ! Shift the parameter and mode pointers to the next value
@@ -30,22 +30,24 @@ program modeTracker
       ! next set of modes, we reorder it.
       do i=1, nModes-1
          ! For each mode, we compute the projected mode value
-         projectedModeVal = nextPoint(par,modes(i,1:3),newPar)
+         projectedModeVal = nextPoint3(par, modes(i,:), newPar)
          ! Reorder the newly read mode set according to the distance to the
          ! projected value
          do j=1, nModes
-            if (j==i) cycle
             if(abs(projectedModeVal-newModeSet(j)).lt.abs(projectedModeVal-newModeSet(i))) then
-               call swap(newModeSet(i),newModeSet(j))
+               projectedModeValJ = nextPoint3(par, modes(j,:), newPar)
+               if(abs(projectedModeValJ-newModeSet(i)).lt.abs(projectedModeValJ-newModeSet(j))) then
+                  call swap(newModeSet(i),newModeSet(j))
+               endif
             endif
          enddo
       enddo
+      par(mod(nFile-1,degree)+1)     = newPar
+      modes(:,mod(nFile-1,degree)+1) = newModeSet(:)
       ! Now that things are in proper order, we need to save the new set of modes to file
-      call saveReorderedModeSet(newModeSet)
-      ! and then add it to the modes that are going to be used for interpolation 
+      call saveReorderedModeSet(newModeSet, nModes)
+      ! and then add it to the modes that are going to be used for interpolation
       ! in the next iteration.
-      par(mod(nFile-1,3)+1)     = newPar
-      modes(:,mod(nFile-1,3)+1) = newModeSet
    enddo
 
    call cleanup()
@@ -65,27 +67,27 @@ contains
          stop
       endif
 
-      open(unit=unitIn, file=trim(listFileName), status='OLD', iostat=info)
+      open(unit=unitFileList, file=trim(listFileName), status='OLD', iostat=info)
       if (info.ne.0) call MTabort(info)
 
       ! Read the number of modes
-      read(unitIn,*) nModes
+      read(unitFileList,*) nModes
 
-      allocate(modes(nModes,3),newModeSet(nModes))
+      allocate(modes(nModes,degree),newModeSet(nModes))
       modes = 0.0d0
 
       ! Read three files so we can make the first quadratic fit.
       nFile = 0
       do
-         call readLineOfFilesToRead(unitIn, line, info)
+         call readLineOfFilesToRead(unitFileList, line, info)
          if(info.ne.0) exit
          Write(*,*) line
          ! Read one file at a time
          nFile = nFile + 1
          read(line,*) par(nFile), fileToRead
          call readModesFile(fileToRead, modes(:,nFile))
-         call saveReorderedModeSet(modes(:,nFile))
-         if (nFile==3) exit
+         call saveReorderedModeSet(modes(:,nFile), nModes)
+         if (nFile==degree) exit
       enddo
    end subroutine
 
@@ -93,14 +95,14 @@ contains
    !> Reads a file one line at a time until it finds one that
    !! does not start with a '#'.
    !**********************************************************************
-   subroutine readLineOfFilesToRead(unitIn,line, info)
+   subroutine readLineOfFilesToRead(unitFileList,line, info)
       implicit none
       character(len=*), intent(out):: line
-      integer, intent(in):: unitIn
+      integer, intent(in):: unitFileList
       integer, intent(out):: info
       info=0
       do
-         read(unitIn,'(A)', iostat=info) line
+         read(unitFileList,'(A)', iostat=info) line
          if (info.ne.0) exit
          line = adjustl(line)
          if (line(1:1).ne.'#') exit
@@ -119,6 +121,7 @@ contains
       integer:: n, readStatus
 
       readStatus = 0
+      modes = 0.0d0
       open(unit=20, file=fileToRead, status='OLD')
 
       do
@@ -141,11 +144,11 @@ contains
    !**********************************************************************
    !> Given three points of coordinates xOld, yOld, extimate the next point at x.
    !**********************************************************************
-   function nextPoint(xOld,yOld,x) result(y)
+   function nextPoint3(xOld,yOld,x) result(y)
       implicit none
       double precision:: y
-      double precision, intent(in):: xOld(3), yOld(3), x
-      double precision:: a,b,c, x1, x2, x3, y1, y2, y3
+      double precision, intent(in):: xOld(degree), yOld(degree), x
+      double precision:: a,b,c,d, x1, x2, x3, y1, y2, y3
 
       x1 = xOld(1)
       x2 = xOld(2)
@@ -154,11 +157,72 @@ contains
       y2 = yOld(2)
       y3 = yOld(3)
 
-      A = ((Y2-Y1)*(X1-X3) + (Y3-Y1)*(X2-X1))/((X1-X3)*(X2**2-X1**2) + (X2-X1)*(X3**2-X1**2))
-      B = ((Y2 - Y1) - A*(X2**2 - X1**2)) / (X2-X1)
-      C = Y1 - A*X1**2 - B*X1
+      d = (x2-x1)*(x3-x1)*(x3-x2)
+      a = ( (x2-x1)*y3 - (x3-x1)*y2 + (x3-x2)*y1 )/d
+      b =-( (x2**2-x1**2)*y3 - (x3**2-x1**2)*y2 + (x3**2-x2**2)*y1 )/d
+      c = ( (x2 - x1)*x1*x2*y3 - (x3 - x1)*x1*x3*y2 + (x3 - x2)*x2*x3*y1 )/d
 
       y = a*x**2 + b*x + c
+   end function
+
+   !**********************************************************************
+   !> Given four points of coordinates xOld, yOld, extimate the next point at x.
+   !**********************************************************************
+   function nextPoint4(xOld,yOld,x) result(y)
+      implicit none
+      double precision:: y
+      double precision, intent(in):: xOld(degree), yOld(degree), x
+      double precision:: a,b,c,d, x1, x2, x3, x4, y1, y2, y3, y4
+
+      x1 = xOld(1)
+      x2 = xOld(2)
+      x3 = xOld(3)
+      x4 = xOld(4)
+      y1 = yOld(1)
+      y2 = yOld(2)
+      y3 = yOld(3)
+      y4 = yOld(4)
+
+      a = ( ((x2-x1)*x3**2+(x1**2-x2**2)*x3+x1*x2**2-x1**2*x2)*y4 + &
+            ((x1-x2)*x4**2+(x2**2-x1**2)*x4-x1*x2**2+x1**2*x2)*y3 + &
+            ((x3-x1)*x4**2+(x1**2-x3**2)*x4+x1*x3**2-x1**2*x3)*y2 + &
+            ((x2-x3)*x4**2+(x3**2-x2**2)*x4-x2*x3**2+x2**2*x3)*y1 )/( &
+            ((x2-x1)*x3**2+(x1**2-x2**2)*x3+x1*x2**2-x1**2*x2)*x4**3 + &
+            ((x1-x2)*x3**3+(x2**3-x1**3)*x3-x1*x2**3+x1**3*x2)*x4**2 + &
+            ((x2**2-x1**2)*x3**3+(x1**3-x2**3)*x3**2+x1**2*x2**3-x1**3*x2**2)*x4 + &
+             (x1**2*x2-x1*x2**2)*x3**3 + &
+             (x1* x2**3-x1**3*x2)*x3**2 + &
+             (x1**3*x2**2-x1**2*x2**3)*x3 )
+      b = -( ((x2-x1)*x3**3 + (x1**3-x2**3)*x3 + x1*x2**3-x1**3*x2)*y4 + &
+             ((x1-x2)*x4**3 + (x2**3-x1**3)*x4 - x1*x2**3+x1**3*x2)*y3 + &
+             ((x3-x1)*x4**3 + (x1**3-x3**3)*x4 + x1*x3**3-x1**3*x3)*y2 + &
+             ((x2-x3)*x4**3 + (x3**3-x2**3)*x4 - x2*x3**3+x2**3*x3)*y1 )/( &
+             ((x2-x1)*x3**2 + (x1**2-x2**2)*x3 + x1*x2**2-x1**2*x2)*x4**3 + &
+             ((x1-x2)*x3**3 + (x2**3-x1**3)*x3 - x1*x2**3+x1**3*x2)*x4**2 + &
+             ((x2**2-x1**2)*x3**3 + (x1**3-x2**3)*x3**2 + x1**2*x2**3 - x1**3*x2**2)*x4 + &
+             (x1**2*x2-x1*x2**2)*x3**3 + &
+             (x1*x2**3-x1**3*x2)*x3**2 + &
+             (x1**3*x2**2-x1**2*x2**3)*x3 )
+      c = ( ((x2**2-x1**2)*x3**3+(x1**3-x2**3)*x3**2+x1**2*x2**3-x1**3*x2**2)*y4 + &
+            ((x1**2-x2**2)*x4**3+(x2**3-x1**3)*x4**2-x1**2*x2**3+x1**3*x2**2)*y3 + &
+            ((x3**2-x1**2)*x4**3+(x1**3-x3**3)*x4**2+x1**2*x3**3-x1**3*x3**2)*y2 + &
+            ((x2**2-x3**2)*x4**3+(x3**3-x2**3)*x4**2-x2**2*x3**3+x2**3*x3**2)* y1 )/( &
+            ((x2-x1)*x3**2+(x1**2-x2**2)*x3+x1*x2**2-x1**2*x2)*x4**3+((x1-x2)*x3**3 + &
+            (x2**3-x1**3)*x3-x1*x2**3+x1**3*x2)*x4**2+((x2**2 -x1**2)*x3**3+ &
+            (x1**3-x2**3)*x3**2+x1**2*x2**3-x1**3*x2**2)*x4+( x1**2*x2-x1*x2**2)*x3**3+&
+            (x1*x2**3-x1**3*x2)*x3**2+(x1**3*x2**2 -x1**2*x2**3)*x3)
+      d = -( ((x1*x2**2-x1**2*x2)*x3**3 + (x1**3*x2-x1 *x2**3)*x3**2 + &
+             (x1**2*x2**3-x1**3*x2**2)*x3)*y4 + ((x1**2*x2-x1*x2 **2)*x4**3+&
+             (x1*x2**3-x1**3*x2)*x4**2+(x1**3*x2**2-x1**2*x2**3)* x4)*y3+&
+             ((x1*x3**2-x1**2*x3)*x4**3+(x1**3*x3-x1*x3**3)*x4**2+&
+             (x1**2*x3**3-x1**3*x3**2)*x4)*y2+((x2**2*x3-x2*x3**2)*x4**3+&
+             (x2*x3 **3-x2**3*x3)*x4**2+(x2**3*x3**2-x2**2*x3**3)*x4)*y1)/(&
+             ((x2-x1) *x3**2+(x1**2-x2**2)*x3+x1*x2**2-x1**2*x2)*x4**3+&
+             ((x1-x2)*x3**3 +(x2**3-x1**3)*x3-x1*x2**3+x1**3*x2)*x4**2+&
+             ((x2**2-x1**2)*x3**3 +(x1**3-x2**3)*x3**2+x1**2*x2**3-x1**3*x2**2)*x4+&
+             (x1**2*x2-x1*x2**2)*x3**3+(x1*x2**3-x1**3*x2)*x3**2+&
+             (x1**3*x2**2-x1**2*x2**3) *x3)
+      y = a*x**3 + b*x**2 + c*x + d
    end function
 
    !**********************************************************************
@@ -172,13 +236,14 @@ contains
       a=b
       b=c
    end subroutine
-   
+
    !**********************************************************************
-   !> 
+   !>
    !**********************************************************************
-   subroutine saveReorderedModeSet(modeSet)
+   subroutine saveReorderedModeSet(modeSet, nModes)
       implicit none
-      double precision, intent(in):: modeSet(:)
+      integer, intent(in):: nModes
+      double precision, intent(in):: modeSet(nModes)
       integer:: i
       open(unit=33, file=trim(fileToRead)//'-sorted', status='NEW')
       do i=1, nModes
@@ -192,7 +257,7 @@ contains
    !**********************************************************************
    subroutine cleanup()
       implicit none
-      close(unit=unitIn)
+      close(unit=unitFileList)
    end subroutine
 
    !**********************************************************************
