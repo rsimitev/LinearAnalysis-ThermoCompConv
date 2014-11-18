@@ -24,7 +24,7 @@ if(${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   # gfortran
   set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -cpp -ffree-line-length-none -fno-f2c")
   set (CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} -cpp -ffree-line-length-none -fno-f2c -Wall -Wextra -fcheck=all -finit-real=inf")
-  set (CMAKE_Fortran_FLAGS_PROFILE "-cpp -ffree-line-length-none -fno-f2c -O0 -g -pg -Wall -Wextra")
+  set (CMAKE_Fortran_FLAGS_PROFILE "-cpp -ffree-line-length-none -fno-f2c -g -pg -coverage -Wall -Wextra")
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -fpp -heap-arrays")
   set (CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} -fpp -warn all -check bounds -traceback  -fp-stack-check -heap-arrays")
