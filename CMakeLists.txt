@@ -3,8 +3,8 @@
 cmake_minimum_required (VERSION 2.6)
 project(GLO)
 enable_language (Fortran)
-set (GLO_VERSION_MAJOR 0)
-set (GLO_VERSION_MINOR 6)
+set (GLO_VERSION_MAJOR 1)
+set (GLO_VERSION_MINOR 1)
 set (GLO_VERSION_PATCH 0)
 set (GLO_VERSION
    "${GLO_VERSION_MAJOR}.${GLO_VERSION_MINOR}.${GLO_VERSION_PATCH}" )
