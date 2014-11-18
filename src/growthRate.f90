@@ -969,19 +969,21 @@ contains
          JN = 0
          SISZ = 1D0
          SISN = 2D0*I+1D0
-   10    DO J = JZ+1, 2*I+1
-            SISZ = SISZ*X
-            IF (SISZ.GT.1D20) exit
-         END DO
-         JZ = J
-         DO J = JN+1, 2*I+1
-            SISN = SISN*J
-            IF (SISN.GT.1D20) exit
-         END DO
-         JN = J
-         SISZ = SISZ / SISN
-         SISN = 1
-         IF ( (JZ.LT.2*I+1) .OR. (JN.LT.2*I+1) ) GOTO 10
+         do
+            DO J = JZ+1, 2*I+1
+               SISZ = SISZ*X
+               IF (SISZ.GT.1D20) exit
+            END DO
+            JZ = J
+            DO J = JN+1, 2*I+1
+               SISN = SISN*J
+               IF (SISN.GT.1D20) exit
+            END DO
+            JN = J
+            SISZ = SISZ / SISN
+            SISN = 1
+            IF ( (JZ.ge.2*I+1) .and. (JN.ge.2*I+1) ) exit
+         enddo
          SISN = 2D0*I+1D0
          JN = 0
 !
