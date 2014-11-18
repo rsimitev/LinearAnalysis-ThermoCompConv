@@ -61,11 +61,11 @@ contains
 
 !       SUBROUTINE zGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
 !     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
-      IF(present(zeval)) THEN ! Compute eigen values and vectors.
+      IF(.not.present(zeval)) THEN ! Compute eigen values and vectors.
+        call zggev('N', 'N',NMAX,ZA,NMAX,ZB,NMAX, ZEWA, ZEWB, ZEVALL, NMAX, ZEVALL, NMAX, ZWORK, 3*NMAX, rwork, info)
+      ELSE ! Only compute eigenvalues
         call zggev('N', 'V',NMAX,ZA,NMAX,ZB,NMAX, ZEWA, ZEWB, ZEVALL, NMAX, ZEVALL, NMAX, ZWORK, 3*NMAX, rwork, info)
         zeval = zevall
-      ELSE ! Only compute eigenvalues
-        call zggev('N', 'N',NMAX,ZA,NMAX,ZB,NMAX, ZEWA, ZEWB, ZEVALL, NMAX, ZEVALL, NMAX, ZWORK, 3*NMAX, rwork, info)
       endIF
 
       ZEW(:)=ZEWA(:)/ZEWB(:)
