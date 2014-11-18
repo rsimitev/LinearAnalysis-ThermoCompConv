@@ -712,7 +712,7 @@ contains
       ELSE
          S1 = (1+2*RI) / (N * DPI)
       ENDIF
-      END FUNCTION S1
+   END FUNCTION S1
 !-----------------------------------------------------------------------
 !
 !
@@ -943,11 +943,11 @@ contains
       double precision, parameter, DIMENSION(4):: AG=(/ 42.242855D0, 302.757865D0, 352.018498D0, 21.821899D0 /)
       double precision, parameter, DIMENSION(4):: BG=(/ 48.196927D0, 482.485984D0, 1114.978885D0, 449.690326D0 /)
       double precision:: F,G
-      F = (X**8+AF (1)*X**6+AF (2)*X**4+AF (3)*X**2+AF (4)&
-      ) / (X**8+BF (1)*X**6+BF (2)*X**4+BF (3)*X**2+BF (4)&
+      F = (X**8 + AF(1)*X**6 + AF(2)*X**4 + AF(3)*X**2 + AF(4)&
+      ) / (X**8 + BF(1)*X**6 + BF(2)*X**4 + BF(3)*X**2 + BF(4)&
       ) / X
-      G = (X**8+AG (1)*X**6+AG (2)*X**4+AG (3)*X**2+AG (4)&
-      ) / (X**8+BG (1)*X**6+BG (2)*X**4+BG (3)*X**2+BG (4)&
+      G = (X**8 + AG(1)*X**6 + AG(2)*X**4 + AG(3)*X**2 + AG(4)&
+      ) / (X**8 + BG(1)*X**6 + BG(2)*X**4 + BG(3)*X**2 + BG(4)&
       ) / X**2
       SIA = DPI / 2D0 - F*DCOS (X) - G*DSIN (X)
    END FUNCTION SIA
