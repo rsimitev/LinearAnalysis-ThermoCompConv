@@ -1,0 +1,406 @@
+\documentclass[a4paper,10pt]{book}
+\usepackage[utf8x]{inputenc}
+% User defined settings
+\usepackage{xspace}
+\usepackage{psfrag}
+\usepackage{xcolor}
+\usepackage{natbib}
+\usepackage{tabularx}
+\usepackage{multicol}
+\usepackage[verbose]{wrapfig}
+\usepackage[colorlinks,bookmarks=true]{hyperref}
+\usepackage{amsbsy,amsfonts,amsmath,amssymb,enumerate,epsfig,graphicx,rotating}
+\usepackage[FIGTOPCAP,nooneline]{subfigure}
+% \usepackage{mdframed}
+
+%Mathematics
+\newcommand{\f}[2]{\frac{#1}{#2}}
+\newcommand{\dd}{\partial}
+\newcommand{\de}{{\rm \, d}}
+\newcommand{\mysec}[1]{{\noindent\bf #1.}}
+\newcommand{\pn}{Prandtl number}
+%-------- Vectors
+\renewcommand{\vec}[1]{\mathbf{#1}}
+\renewcommand{\v}{\vec}
+\newcommand{\bec}{\vec}
+
+%-------- Numbers
+\newcommand{\Ra}{$Ra\ $}
+\renewcommand{\P}{$P\ $}
+\newcommand{\Nu}{$Nu\ $}
+\renewcommand{\t}{$\tau\ $}
+\newcommand{\Pm}{$P_m\ $}
+\newcommand{\El}{$\Lambda\ $}
+\newcommand\ie{i.e.\ }
+\newcommand\etal{\mbox{\textit{et al.}}}
+\newcommand\etc{etc.\ }
+\newcommand\eg{e.g.\ }
+\newcommand{\mypsfrag}[2]{\psfrag{#1}{\footnotesize{#2}}}
+
+
+\providecommand{\MD}{\textbf{MD}\xspace}
+\providecommand{\FD}{\textbf{FD}\xspace}
+\providecommand{\Mdip}{\ensuremath{{M}_\text{dip}}\xspace}
+\providecommand{\Mmp}{\ensuremath{\overline{M}_p}\xspace}
+\providecommand{\Mft}{\ensuremath{\widetilde{M}_t}\xspace}
+\providecommand{\Mmt}{\ensuremath{\overline{M}_t}\xspace}
+\providecommand{\Mfp}{\ensuremath{\widetilde{M}_p}\xspace}
+\providecommand{\Emp}{\ensuremath{\overline{E}_p}\xspace}
+\providecommand{\Efp}{\ensuremath{\widetilde{E}_p}\xspace}
+\providecommand{\Emt}{\ensuremath{\overline{E}_t}\xspace}
+\providecommand{\Eft}{\ensuremath{\widetilde{E}_t}\xspace}
+\providecommand{\Ha}{\ensuremath{H_{\vec{_a}}}\xspace}
+\providecommand{\Hu}{\ensuremath{H_{\vec{_u}}}\xspace}
+\providecommand{\HB}{\ensuremath{H_{\vec{_B}}}\xspace}
+\providecommand{\Hcross}{\ensuremath{H_\times}\xspace}
+\providecommand{\MfpToMmp}{\ensuremath{\widetilde{M}_p/\overline{M}_p}\xspace}
+\providecommand{\MfpToMmpD}{\ensuremath{\widetilde{M}_p^\mathrm{dip}/\overline{M
+}_p^\mathrm{dip}}\xspace}
+
+
+\newcommand\red[1]{{\color{red} #1}}
+\newcommand\todo[2]{{\color{red} #1 \\ {\rule{1mm}{0mm} \hfill ACTION: #2}}}
+
+\allowdisplaybreaks
+\usepackage{charter}
+
+\title{GLO ($@GLO_VERSION@$) \\ A User's Manual}
+\author{Luis Silva}
+
+\begin{document}
+
+\pagenumbering{alph}
+
+\maketitle
+
+\clearpage\pagenumbering{roman}
+
+\tableofcontents
+
+\clearpage\pagenumbering{arabic}
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+This is the user manual for the GLO (\underline{G}lasgow \underline{L}inear \underline{O}set) code.
+API documentation can be found on the online APIDOX.
+Ported to f95 by Luis Silva (lacsilva@gmail.com)
+
+\chapter{How to use this code}
+
+\section{DEPENDENCIES}
+We use cmake version 2.6-patch 4 as the build system.
+For optimisation purposes, we ship our own copy of the required lapack
+subroutines and their dependencies. Speciffically, we depend on the subroutine
+\verb|zggev| \url{http://www.netlib.org/lapack/explore-3.1.1-html/zggev.f.html}
+Online documentation can be built using doxygen $>=$ 1.6.1
+
+\section{Compiling and installing the code}
+The GLO code and utilities use the cmake build system in order to generate
+native builds for *nix and Windows alike. Some features can be activated or
+deactivated at compile time by passing the appropriate ``-D'' option to cmake.
+Check the cmake documentation \citep{CMakeDox} for other build options.
+
+\subsection{Building the online documentation}
+\begin{verbatim}
+$ mkdir BUILD
+$ cd BUILD
+$ cmake ..
+$ make doc
+\end{verbatim}
+The code documentation can then be found by pointing a browser
+to:\\
+\verb|<your favorite browser> BUILD/APIDOX/index.html|
+
+\subsection{COMPILATION}
+\begin{verbatim}
+$ mkdir BUILD
+$ cd BUILD
+$ cmake ..
+$ make && make install
+\end{verbatim}
+After all run successfully, the file drs.exe should be in \verb|bin/|.
+
+\section{Running GLO}
+\subsection{Before running GLO}
+\label{s:runConfig}
+Each run needs to be configured. Configuration is passed on the standard input
+and obeys a format similar to the following.
+\begin{tiny}
+\begin{verbatim}
+  NE (0/1/2) | LCALC (-1/0/1/2/3/4/5/6) |
+       2               3
+ |  RAYLEIGH  |  TAU     |  PRANTEL  |  ETA  |  Lewis |   Rconc   |
+     3.0e6       1.0e5        1.0      0.35    0.3    1.0e2
+ |   NTRUNC (>=1) | MODE |
+       10         19
+ |   DRA   |  df      |   rdx     | NMAX |
+  -100.00    1.00E-08   1.00E-03   1000
+ |   incr_STEP | Tau_END
+       -100       1.0e2
+\end{verbatim}
+\end{tiny}
+
+\chapter{Theory}
+
+\section{Problem set up and approximations}
+\label{s:problemSetup}
+We consider a spherical fluid shell of inner radius $r_i$ and outer radius
+$r_o$. The shell thickness is then $d = r_o - r_i$. The shell is rotating at
+constant angular velocity $\Omega$ about an axis aligned with the $z$ direction.
+Boundaries are impermeable and electrically insulating. Figure~\ref{f:setup}
+\begin{figure}[htb]
+\centering
+\includegraphics[width=0.5\textwidth]{figs/sphshell}
+\caption{Depiction of the problem set-up.}
+\label{f:setup}
+\end{figure}
+
+The fluid inside the shell is electrically and thermally conductive with
+magnetic diffusivity $\lambda$ and thermal diffusivity $\kappa$, and has a
+viscosity $\nu$. It is assumed to have a static thermal state described by a
+radial temperature profile $T_S (r)$ that can be one of the values described in
+Table~\ref{t:t_profiles}.
+\begin{table}[htb]
+\centering
+\begin{tabular}{|c|lp{0.48\textwidth}|}\hline
+ Opt. & Equation & Description\\\hline
+  &                          & \\
+ 0&$T_S(r) = T_0 + \beta(r_i r_o/r - r_i)$ & The conductive temperature
+ profile used in \citep{ChristensenEtAl01}. See Section~\ref{bench:Christ01}.
+ \\\hline
+  &                          & \\
+ 1&$T_S(r) = T_0 - \beta r^2/2$    & This profile closely
+follows the adiabat \citep{LabrossePoirier1997,DaviesGubbins2011} and alludes to
+the possibility that at least a fraction of the energy available to planetary
+dynamos is due to radiogenic heat release. \\ \hline
+\end{tabular}
+\caption{Possible temperature profiles, in K, hardcoded into GLO. First column
+refers to the option values used in the code.}
+\label{t:t_profiles}
+\end{table}
+
+Constants $T_0$ and $\beta$ have values that depend on the profile and can be
+written, in dimensional form, as a function of the temperature at the top
+($T_o$) and bottom ($T_i$) boundaries. Opt.~0 has $T_0 = T_o$ and $\beta = (T_i
+-T_o)/d$ and refers to the same temperature profile used in the first dynamo
+benchmark exercise \citep{ChristensenEtAl01} whereas Opt.~1 has $T_0 = (T_i
+r_o^2 - T_o r_i^2)/(r_o^2 - r_i^2)$ and $\beta = (T_o - T_i)/(r_o^2 - r_i^2)$,
+thus closely following an adiabatic temperature profile
+\citep{LabrossePoirier1997, DaviesGubbins2011}.
+
+\begin{figure}[htb]
+\centering
+ \input{figs/TemperatureProfiles.tex}
+ \caption{Possible temperature profiles, in K, hardcoded into GLO.}
+\end{figure}
+
+The gravity field is described by that of a self gravitating body of constant
+density, $\vec g = - d \gamma \vec r$, where $rd$ is the length of the position
+vector with respect to the center of the sphere and $\gamma$ is a constant given
+in $s^{-2}$. In common with most other simulations of Earth and planetary
+dynamos, we assume the Boussinesq approximation implying a constant density
+$\varrho_0$ except in the gravity term where the temperature dependence is taken
+into account by making it proportional to $\alpha = - ( \de\varrho/\de
+T)/\varrho_0 =${\sl const}.
+
+\section{The adimensional equations}
+GLO solves a set of adimensional equations that make use of the following set of
+scales. Lengths are measured in units of $d$ and times in units of $d^2 / \nu$.
+The temperature is measured in units ($T^*$) that depend on the radial profile:
+$T^* = \beta d \nu/\kappa$ for the case of the conduction profile (Opt.~0); and
+$T^* = \beta d^2 \nu/\kappa$ for the case of the adiabat (Opt.~1). Finally, the
+magnetic flux density is measured in units of $\nu ( \mu \varrho )^{1/2} /d$,
+with $\mu$, the magnetic permeability \citep{ArdesEtAl97}. The equations of
+motion for the velocity vector $\vec u$, the heat equation for the deviation
+$\Theta$ from the radial temperature profile, and the equation of induction for
+the magnetic flux density $\vec B$ are then given by:
+\begin{subequations}
+\begin{gather}
+\label{e:nonDivergence}
+\nabla \cdot \vec u = 0, \qquad \nabla \cdot \vec B = 0, \\
+\label{e:NavierStokes}
+(\partial_t + \vec u \cdot \nabla )\vec u + \tau \vec k \times
+\vec u = - \nabla \pi + R_T \Theta \vec{r} + \nabla^2 \vec u + \vec B \cdot
+\nabla \vec B, \\
+\label{e:temperature}
+\partial_t \Theta + \vec u \cdot \nabla (\Theta+T_S) = \frac{1}{P_T} \nabla^2 \Theta, \\
+\label{e:induction}
+\nabla^2 \vec B =  P_m(\partial_t \vec B + \vec u \cdot \nabla \vec B
+-  \vec B \cdot \nabla \vec u),
+\end{gather}
+\end{subequations}
+where all gradient terms in the equation of motion have been combined into
+$\nabla \pi$. The dimensionless parameters in our formulation are the Rayleigh
+number $R$, the Coriolis number $\tau$, the thermal Prandtl number $P_T$ and the
+magnetic Prandtl number $P_m$,
+\begin{equation}
+R_T = \frac{\alpha \gamma d^4 T^*}{\nu^2} ,
+\enspace \tau = \frac{2
+\Omega d^2}{\nu} , \enspace P_T = \frac{\nu}{\kappa} , \enspace P_m =
+\frac{\nu}{\lambda}.
+\end{equation}
+
+\section{Adding composition}
+Two major changes had to be made in order to accommodate compositional
+convection in the code. The first relates to solving a new equation for the
+composition anomalies $\chi$ around a static profile of composition $C_S(r)$.
+\begin{equation}
+\partial_t \chi  + \vec u \cdot \nabla (\chi+C_S) = \frac{1}{P_C} \nabla^2 \chi,
+\label{e:composition}
+\end{equation}
+This equation now depends on one parameter $P_C=\nu/D$, with $D$
+being the diffusivity of the composition field.
+
+The second change relates to the buoyancy in the Navier-Stokes equation. The
+buoyancy term now reads
+\begin{equation}
+  R_T \Theta \vec r + R_C \chi \vec r,
+\end{equation}
+where $R_T$ is the usual thermal Rayleigh number and now $R_C$ is a new
+compositional Rayleigh number defined as
+\begin{equation}
+ R_C = \frac{\alpha \gamma d^4 C^*}{\nu^2}.
+\end{equation}
+The value $C^*$ is a scaling for the composition anomaly that can be
+chosen arbitrarily or, as is the case of the temperature, based on the profile
+$C_S$.
+
+\subsection{Testing the compositional convection implementation}
+
+\section{Boundary conditions}
+\label{s:boundaryConditions}
+
+\subsection{Boundary conditions on the flow}
+Besides obeying a non penetration condition, at each boundary the velocity
+field obeys one of the following conditions:
+\begin{itemize}
+\item Free slip (0);
+\item No slip (1).
+\end{itemize}
+
+\subsection{Boundary conditions on the temperature}
+At each boundary, the temperature obeys one of the following conditions:
+\begin{itemize}
+ \item Fixed/constant temperature (0);
+ \item Fixed/constant heat flux (1).
+\end{itemize}
+
+\subsection{Boundary conditions on the magnetic field}
+At each of the boundaries, the magnetic field obeys one of the following
+conditions:
+\begin{itemize}
+ \item Vacuum (0);
+ \item Pseudo-vacuum (1);
+\end{itemize}
+
+\subsection{Boundary conditions on the composition}
+At each boundary, the composition obeys one of the following conditions:
+\begin{enumerate}
+ \item Fixed/constant composition (0);
+ \item Fixed/constant chemical flux (1).
+\end{enumerate}
+
+
+\chapter{Discretization and numerical methods}
+
+\section{Poloidal/toroidal decomposition}
+Being solenoidal vector fields  $\vec u$ and $\vec B$ can be represented
+uniquely in terms of poloidal and toroidal components,
+\begin{subequations}
+\begin{gather}
+\vec u = \nabla \times ( \nabla \times (v \vec r) +
+         r \nabla \times ( w \vec r) \enspace , \\
+\vec B = \nabla \times ( \nabla \times (h \vec r) ) +
+         \nabla \times ( g \vec r) \enspace .
+\end{gather}
+\end{subequations}
+Notice that the decomposition is different for the flow and the magnetic field.
+This difference in decomposition justifies the difference in implementation of
+the laplacians, spectral-to-real and real-to-spectral transformations in the
+radial direction. The difference in implementation of the flow decomposition has
+its justification in that values of the flow coefficients under this expansion
+are better numerically behaved \citep{Tilgner1999}.
+
+\section{Polynomial decompositions}
+\subsection{Spherical harmonic decomposition}
+\label{s:SphericalHarmonicDecomp}
+This being a spectral code and all, it would be nice to explain the inner works
+of the code in the horizontal direction.
+
+We use $4\pi$ normalised spherical harmonics, defined as :
+\begin{equation}
+ Y_\ell^m( \theta , \varphi ) =  \sqrt{{(2\ell+1) }{(\ell-m)!\over (\ell+m)!}} \, P_\ell^m ( \cos{\theta} )\, e^{i m \varphi },
+\end{equation}
+where $P_\ell^m ( \cos{\theta} )$ are the unnormalized Associated Legendre Polynomial
+and
+\begin{equation}
+ \int Y_\ell^m( \theta , \varphi ) {Y^*}_\ell^m( \theta , \varphi ) \mbox{d}\Omega = 4\pi.
+\end{equation}
+
+The polynomials $\bar{P}_\ell^m ( \cos{\theta} ) = \sqrt{{(2\ell+1) }{(\ell-m)!\over (\ell+m)!}}$
+are the normalised ALP, which we use throughout the code to construct the spherical harmonics.
+
+
+% \fcolorbox{orange}{white}%
+% {\centering
+% \parbox{0.9\textwidth}{%
+% {\Large \red{Warning}}
+% \vspace*{2mm}\\
+% Before version 1.6.0 (MAGIC numbers 101**) we used unnormalised ALP. After and including GLO 1.6.0
+% we use the new $\bar{P}_\ell^m ( \cos{\theta} )$. This reflects on the imported and exported
+% coefficients. The new code, however, is smart enough to recognise this situation and read
+% coefficients with any of these normalisations. Other codes may not!!!
+% }}
+
+\subsubsection{Recurrence relations for the Associated Legendre Polynomials}
+\begin{align}
+ (\ell-m+1)P_{\ell+1}^{m}(x) &= (2\ell+1)xP_{\ell}^{m}(x) - (\ell+m)P_{\ell-1}^{m}(x)\\
+ (1-x^2)\frac{d}{dx}{P_\ell^m}(x) &= \frac1{2\ell+1}
+  \left[ (\ell+1)(\ell+m)P_{\ell-1}^m(x) \right. \nonumber \\
+   &\quad \left. - \ell(\ell-m+1)P_{\ell+1}^m(x) \right]
+\end{align}
+
+\subsection{Galerkin method for radial decomposition}
+
+\section{Relationship between spectra and supercritical modes}
+\label{s:spectra_defs}
+In spherical geometry, we can define three types of spectrum: a spectrum in
+terms of azimuthal wave number $m$, or {\em m-spectrum}, ${\cal R}_m$; a
+spectrum in terms of the spherical harmonic degree $l$, or {\em l-spectrum},
+${\cal R}_l$; and a spectrum in terms of the Chevichev order $n$, or
+{\em n-spectrum}, ${\cal R}_n$.
+
+For a scalar field, like the temperature or the composition, these are defined
+as:
+\begin{align}
+{\cal R}_l & = \sum_{n=1}^{Nr_s}\sum_{m=0}^l  \\
+{\cal R}_m & = \sum_{n=1}^{Nr_s}\sum_{l=m}^{Nt_s}  \\
+{\cal R}_n & = \sum_{m=0}^{Np_s/2}\sum_{l=m}^{Nt_s}
+\end{align}
+
+See section~\ref{s:spectra_files} for the details on how these quantities are
+stored in files.
+
+\chapter{Input/Output}
+
+\section{Inputs}
+\label{s:inputs}
+
+\appendix
+
+\chapter{Utilities}
+\section{modeTracker}
+\label{util:modeTracker}
+In some situations, it is useful to compute the eigen values of the problem at
+all parameters fixed. Reconstruction of the eigen-value as a function of one of
+the parameters should then be just a matter of running GLO for different values
+of that parameter. However, due to the process involved in obtaining the
+eigen-values themselves, there is no guarantee that eigenvalue x at run
+corresponds to the same mode as eigenvalue x at run y+1.
+
+The mode tracker is a tool that helps reorder the eigen values for each set of
+parameters such that continuity is ensured.
+
+\bibliography{userManual}
+\bibliographystyle{abbrvnat}
+
+\end{document}
