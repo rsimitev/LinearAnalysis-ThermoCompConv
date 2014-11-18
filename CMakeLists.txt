@@ -9,10 +9,10 @@ set (GLO_VERSION_PATCH 0)
 set (GLO_VERSION
    "${GLO_VERSION_MAJOR}.${GLO_VERSION_MINOR}.${GLO_VERSION_PATCH}" )
 
-SET(CMAKE_BUILD_TYPE Release CACHE STRING "default to debug" FORCE)
+# Default build
+SET(CMAKE_BUILD_TYPE Release CACHE STRING "Default to a RELEASE build.")
 # default installation
-set (CMAKE_INSTALL_PREFIX ${GLO_SOURCE_DIR} CACHE STRING "Choose the
-installation directory." FORCE)
+SET(CMAKE_INSTALL_PREFIX ${GLO_SOURCE_DIR} CACHE STRING "Choose the installation directory.")
 
 SET(CMAKE_MODULE_PATH ${GLO_SOURCE_DIR}/cmake)
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
