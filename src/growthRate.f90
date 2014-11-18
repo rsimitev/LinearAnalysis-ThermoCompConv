@@ -680,7 +680,7 @@ contains
       IF (NGU (N) .EQ.1) THEN
          S0 = 0D0
       ELSE
-         S0 = 2D0 / N / DPI
+         S0 = 2D0 / (N * DPI)
       ENDIF
    END FUNCTION S0
 !-----------------------------------------------------------------------
@@ -707,10 +707,10 @@ contains
          IF (N.EQ.0) THEN
             S1 = 0D0
          ELSE
-            S1 = - 1D0 / N / DPI
+            S1 = - 1D0 / (N * DPI)
          ENDIF
       ELSE
-         S1 = (1+2*RI) / N / DPI
+         S1 = (1+2*RI) / (N * DPI)
       ENDIF
       END FUNCTION S1
 !-----------------------------------------------------------------------
