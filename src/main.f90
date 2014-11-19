@@ -53,26 +53,47 @@ program linearOnset
    call init(trim(infile),trim(outfile))
 
    select case(LCALC)
-      case(-1)! most basic case: find the most unstable growth rate at all parameters fixed
+      !> Varies the thermal Rayleigh number and computes the growth rate for
+      !! other parameters fixed.
+      case(-1)
          CALL fixedParGrowthRate()
-      case(0)! Critical Rt, for constant other parameters
+      !> Computes the critical Thermal Rayleigh number for the onset of 
+      !! convections for all other parameters fixed.
+      case(0)
          CALL fixedParCriticalRa()
-      case(1) ! eigenvalues determined for all parameters fixed.
+      !> Writes the (complex) eigenvalues of the problem for fixed parameters.
+      !! The real part of the eigenvalues is the frequency of oscillation of the
+      !! mode. The imaginary part is the symmetric of the growth rate.
+      !! Modes are sorted from heighest to lowest growth rate.
+      case(1)
          call fixedParEigenValues()
+      !> Computes the critical thermal Rayleigh number as a function of tau
+      !! for all other parameters fixed.
       case(2)
          LowerLimit = tau
-         call varyTauCriticalRt()
+         call varyTauCriticalRt(LowerLimit, UpperLimit)
+      !> Computes the lowest critical thermal Rayleigh number of all m's
+      !! as a function of tau for all other parameters fixed.
       case(3)
          LowerLimit = tau
-         call varyTauCriticalState()
-      case(4) ! calculate the critical eigenvector. Print for plotting.
-         CALL fixedParCriticalEigenVector()
-      case(5) ! vary m and calculate critical R at fixed P, tau, eta.
+         call varyTauCriticalState(LowerLimit, UpperLimit)
+      !> Computes the eigen vector (equatorial render)
+      !! Corresponding to the critical value of Rt with all other parameters 
+      !! fixed.
+      case(4)
+         call fixedParCriticalEigenVector()
+      !> Computes the critical thermal Rayleigh number for a range of
+      !! azimuthal wave-numbers m.
+      case(5)
          LowerLimit = m0
          call varyMCriticalRt(int(LowerLimit), int(UpperLimit))
-      case(6) ! vary Le and calculate critical R at fixed P, tau, eta, M
+      !> Varies the Lewis number and computes the critical
+      !! thermal Rayleigh number for fixed other parameters.
+      !! This subroutine changes the module variable "Le" during execution and does
+      !! not restore it at the end.
+      case(6)
          LowerLimit = Le
-         call varyLeCriticalRt()
+         call varyLeCriticalRt(LowerLimit, UpperLimit)
       case default
          Write(*,*) 'Unknown computation type:', LCALC
    end select
@@ -145,9 +166,7 @@ contains
    subroutine fixedParGrowthRate()
       implicit none
       INTEGER:: aux
-      double precision:: Rt0, GroR, factor
-
-      Rt0=Rt
+      double precision:: GroR, factor
 
       if (Rt.gt.UpperLimit) then
          factor = -1.0d0
@@ -224,9 +243,8 @@ contains
          CALL dimension(LMIN,LD,Truncation,M0,NEigenmodes)
          ! Increase the interval, in case we did not find anything.
          do i=1, 3
-            RtMin=Rt/(2.0d0**dble(i))
-            RtMax=Rt*(2.0d0**dble(i))
-            ! Write(*,*)  i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX
+            RtMin = Rt/(2.0d0**dble(i))
+            RtMax = Rt*(2.0d0**dble(i))
             CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, CriticalRt, info)
             if (info.NE.2) exit
          enddo
@@ -283,7 +301,7 @@ contains
       double precision:: GRR, GRI, Pm, C0,CriticalRt, OMM
       integer:: nuds, nuom, MF, LMAX, NIMAX
 
-      TA = TAU*TAU
+      Ta = TAU*TAU
       ! find the zero grothrate:
       CriticalRt = Rt
       CALL minimizer(MaxGrowthRate, Rt/10, Rt*10, RELE ,ABSE, NSMAX, CriticalRt, info)
@@ -311,7 +329,7 @@ contains
           WRITE(unitOut,'(I2,7I3,2D16.8,'' M0,TRUNC,LD,GROTH,DRIFT'')')  M0,Truncation,NTH,KTV,KTH,LTV,LTH,LD,GRR,GRI
           NUDS=1
           PM=0.D0
-          WRITE(unitOut, '(I5,2D14.6,D9.2,D13.6,D9.2,'' I,TA,Rt,Pt,PM,E'')') NUDS,TA,CriticalRt,Pt,PM,ETA
+          WRITE(unitOut, '(I5,2D14.6,D9.2,D13.6,D9.2,'' I,Ta,Rt,Pt,PM,E'')') NUDS,Ta,CriticalRt,Pt,PM,ETA
           C0 = OMEGA/M0
           OMM=0.D0
           NUC=0
@@ -389,20 +407,20 @@ contains
    !**********************************************************************
    !> Computes the critical thermal Rayleigh number as a function of tau
    !! for all other parameters fixed.
-   subroutine varyTauCriticalRt()
+   !! This subroutine changes the module variables tau and Rt.
+   subroutine varyTauCriticalRt(tauMin, tauMax)
       implicit none
+      double precision, intent(in):: tauMin, tauMax
       integer:: NTRYCOUNT, info
       double complex:: frequency
-      double precision:: Ta, CriticalRt, GroR, RtOld
+      double precision:: CriticalRt, GroR, RtOld
       double precision:: Tau0, Tau1, omega, RtMin, RtMax
 
       NTRYCOUNT = 0
-      LowerLimit = Tau
-      TAU0 = LowerLimit
-      TAU1 = LowerLimit
-      TA = TAU*TAU
-      do
-         TA = TAU**2
+      Rtold = Rt
+      TAU1 = tauMin
+      tau = tauMin
+      tauLoop:do
          ! searching for zero grothrate by varying Rt: ----------------------
          RtMin = Rt/5.0
          RtMax = Rt*5
@@ -426,7 +444,7 @@ contains
             IF( DABS(StepSize) .LT. TAU*0.1D0 ) THEN
                TAU = TAU1 + StepSize
             ELSE
-               TAU = TAU1 + 10.0d0**(int(log10(abs(tau1)))-1)*StepSize/dabs(StepSize)
+               TAU = TAU1 + 10.0d0**(int(log10(abs(tau1)))-1)*sign(1.0d0,StepSize)
             ENDIF
 !--         interpolate new startingvalue for Rt:
 !           Assume CriticalRt grows with tau**(4/3)
@@ -438,26 +456,27 @@ contains
 
          if (NTRYCOUNT==3) exit
          ! end value of TAU reached?
-         if(UpperLimit.GT.LowerLimit) then
-            if (TAU.GT.UpperLimit) exit
+         if(tauMax.GT.tauMin) then
+            if (TAU.GT.tauMax) exit
          else
-            if (TAU.LT.UpperLimit) exit
+            if (TAU.LT.tauMin) exit
          endif
-      enddo !--         End of tau Loop
+      enddo tauLoop
    end subroutine
 
    !**********************************************************************
    !> Computes the lowest critical thermal Rayleigh number of all m's
    !! as a function of tau for all other parameters fixed.
-   subroutine varyTauCriticalState()
+   !! This subroutine changes the module variables tau and Rt.
+   subroutine varyTauCriticalState(tauMin, tauMax)
       implicit none
+      double precision, intent(in):: tauMin, tauMax
       double precision:: CriticalRt, RtOld
       double precision:: Tau0, Tau1
       Rtold = Rt
-      LowerLimit = Tau
-      TAU0 = LowerLimit
-      TAU1 = LowerLimit
-      do
+      TAU1 = tauMin
+      tau = tauMin
+      tauLoop:do
          !--------searching for zero grothrate by varying Rt and M0: ---------------
          CALL fixedParCriticalRaAndM0(CriticalRt)
 !--      increment TAU:
@@ -468,7 +487,7 @@ contains
          ELSE
             TAU = TAU1 + 10.0d0**(int(log10(abs(tau1)))-1)*StepSize/dabs(StepSize)
          ENDIF
-!--      interpolate new startingvalue for Rt:
+!--      interpolate new extimate for Rt_c:
          IF(dabs(TAU1-TAU0).le.1.0d-10) THEN
 !          Assume Rac grows with Ta**(4/3)
            Rt = CriticalRt + (4.0/3.0)*Tau1**(1.0/3.0)*(TAU-TAU1)
@@ -478,14 +497,17 @@ contains
          RtOld = CriticalRt
 
          ! end value of TAU reached?
-         if(UpperLimit.GT.LowerLimit) then
-            if (TAU.GT.UpperLimit) exit
+         if(tauMax.GT.tauMin) then
+            if (TAU.GT.tauMax) exit
          else
-            if (TAU.LT.UpperLimit) exit
+            if (TAU.LT.tauMin) exit
          endif
-      enddo
+      enddo tauLoop
    end subroutine
 
+   !**********************************************************************
+   !> Computes the critical thermal Rayleigh number for a range of
+   !! azimuthal wave-numbers m.
    subroutine varyMCriticalRt(mMin, mMax)
       implicit none
       double precision:: CriticalRt
@@ -513,24 +535,27 @@ contains
       enddo
    end subroutine
 
+   !**********************************************************************
    !> Varies the Lewis number and computes the critical
    !! thermal Rayleigh number for fixed other parameters.
-   subroutine varyLeCriticalRt()
+   !! This subroutine changes the module variable "Le" during execution and does
+   !! not restore it at the end.
+   subroutine varyLeCriticalRt(LeMin, LeMax)
       implicit none
-      double precision:: LeOld, GroR
-      double precision:: CriticalRt
+      double precision, intent(in):: LeMin, LeMax
+      double precision:: GroR, CriticalRt
       integer:: niter, i, info
-      LeOld = Le
-      niter = int((UpperLimit-LeOld)/StepSize)
+
+      niter = int((LeMax-LeMin)/StepSize)
+
       do i=0, niter
-         Le  = LeOld + i*StepSize
+         Le  = LeMin + i*StepSize
          CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
          GROR = MaxGrowthRate(CriticalRt)
          WRITE(*,*) Le, CriticalRt, GROR
          WRITE(unitOut,'(3D16.8)') Le, CriticalRt, GROR
       enddo
    end subroutine
-
 
 end program
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
