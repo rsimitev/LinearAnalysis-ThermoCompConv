@@ -80,6 +80,7 @@ program linearOnset
 contains
 
    !**********************************************************************
+   !> Initialises things.
    SUBROUTINE init(inputfile,outputfile)
       implicit none
       CHARACTER(len=*) inputfile,outputfile
@@ -121,6 +122,10 @@ contains
    END subroutine
 
    !**********************************************************************
+   !> Writes the (complex) eigenvalues of the problem for fixed parameters.
+   !! The real part of the eigenvalues is the frequency of oscillation of the
+   !! mode. The imaginary part is the symmetric of the growth rate.
+   !! Modes are sorted from heighest to lowest growth rate.
    subroutine fixedParEigenValues()
       implicit none
       double complex:: ZEW(NMAX)
@@ -134,7 +139,9 @@ contains
       enddo
    end subroutine
 
-!**********************************************************************
+   !**********************************************************************
+   !> Varies the thermal Rayleigh number and computes the growth rate for
+   !! other parameters fixed.
    subroutine fixedParGrowthRate()
       implicit none
       INTEGER:: aux
@@ -165,7 +172,9 @@ contains
       WRITE(*,*) 'If growth rate < 0 then above onset'
    end subroutine
 
-!**********************************************************************
+   !**********************************************************************
+   !> Computes the critical Thermal Rayleigh number for the onset of 
+   !! convections when all other parameters are considered fixed.
    subroutine fixedParCriticalRa()
       implicit none
       double Complex:: frequency
@@ -181,9 +190,10 @@ contains
       WRITE(*,*) 'R_crit=',CriticalRt, '  (growth rate =',GROR,')'
    end subroutine
 
-
-!**********************************************************************
-      subroutine fixedParCriticalRaAndM0(CriticalRt)
+   !**********************************************************************
+   !> Computes the lowest critical thermal Rayleigh number of all m's
+   !! for all other parameters fixed.
+   subroutine fixedParCriticalRaAndM0(CriticalRt)
       implicit none
       double precision, intent(out):: CriticalRt
       integer, parameter::nm0=3
@@ -260,7 +270,10 @@ contains
       ENDIF
    end subroutine
 
-!**********************************************************************
+   !**********************************************************************
+   !> Computes and Writes out the eigen vector (equatorial render)
+   !! Corresponding to the critical value of Rt with all other parameters 
+   !! fixed.
    subroutine fixedParCriticalEigenVector()
       implicit none
       double precision:: GroR, Omega, Ta
@@ -371,9 +384,11 @@ contains
           WRITE(unitOut,*) 'NO CRITICAL RAYLEIGH NUMBER FOUND.'
           STOP NO_RA_FOUND
        ENDIF
-      end subroutine
+   end subroutine
 
-!**********************************************************************
+   !**********************************************************************
+   !> Computes the critical thermal Rayleigh number as a function of tau
+   !! for all other parameters fixed.
    subroutine varyTauCriticalRt()
       implicit none
       integer:: NTRYCOUNT, info
@@ -431,6 +446,9 @@ contains
       enddo !--         End of tau Loop
    end subroutine
 
+   !**********************************************************************
+   !> Computes the lowest critical thermal Rayleigh number of all m's
+   !! as a function of tau for all other parameters fixed.
    subroutine varyTauCriticalState()
       implicit none
       double precision:: CriticalRt, RtOld
@@ -440,7 +458,7 @@ contains
       TAU0 = LowerLimit
       TAU1 = LowerLimit
       do
-!--------searching for zero grothrate by varying Rt and M0: ---------------
+         !--------searching for zero grothrate by varying Rt and M0: ---------------
          CALL fixedParCriticalRaAndM0(CriticalRt)
 !--      increment TAU:
          TAU0 = TAU1
