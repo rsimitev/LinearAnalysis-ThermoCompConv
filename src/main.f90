@@ -69,7 +69,7 @@ program linearOnset
          CALL fixedParCriticalEigenVector()
       case(5) ! vary m and calculate critical R at fixed P, tau, eta.
          LowerLimit = m0
-         call varyMCriticalRt()
+         call varyMCriticalRt(int(LowerLimit), int(UpperLimit))
       case(6) ! vary Le and calculate critical R at fixed P, tau, eta, M
          LowerLimit = Le
          call varyLeCriticalRt()
@@ -486,22 +486,23 @@ contains
       enddo
    end subroutine
 
-   subroutine varyMCriticalRt()
+   subroutine varyMCriticalRt(mMin, mMax)
       implicit none
       double precision:: CriticalRt
+      integer, intent(in):: mMin, mMax
       integer:: info
       CriticalRt=Rt
-      do M0=int(LowerLimit), int(UpperLimit), INT(StepSize)
+      do M0=mMin, mMax, INT(StepSize)
+         ! -   UNDEFINED SYMMETRIE:
          IF(Symmetry.EQ.0) THEN
-! -   UNDEFINED SYMMETRIE:
             LMIN=M0
             LD=1
+         ! -   EQUATORIAL ANTISYMMETRIE (L+M ODD):
          ELSEIF(Symmetry.EQ.1) THEN
-! -   EQUATORIAL ANTISYMMETRIE (L+M ODD):
             LMIN=M0+1
             LD=2
+         ! -   EQUATORIAL SYMMETRIE (L+M EVEN);
          ELSEIF(Symmetry.EQ.2) THEN
-! -   EQUATORIAL SYMMETRIE (L+M EVEN);
             LMIN=M0
             LD=2
          ENDIF
