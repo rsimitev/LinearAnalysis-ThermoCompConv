@@ -4,9 +4,23 @@ module GrowthRateMod
    implicit none
    private
    double precision, parameter:: DPI=3.141592653589793D0
+   !> Internally used parameters
+   double precision:: Rt_i, Rc_i, Le_i, Pt_i, tau_i, ri, ro
+   integer:: mm_i, Symmetry_i
    public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes, dimension
 contains
 
+   subroutine GrowthRateInit(Rt, Rc, Pt, Le, tau, m, Symmetry)
+      implicit none
+      double precision, intent(in)::Rt, Rc, Pt, Le, tau
+      integer, intent(in):: m, Symmetry
+      Rt_i = Rt
+      Rc_i = Rc
+      Pt_i = Pt
+      Le_i = Le
+      mm_i = m
+      Symmetry_i = Symmetry
+   end subroutine
    !***********************************************************************
    !> Computes the maximum imaginary part of the frequency,
    !! that is, the maximum growth rate for all eigen modes.
@@ -17,8 +31,7 @@ contains
       double complex:: ZEW(NMAX)
       integer:: imin
 
-      RtOld = Rt
-      Rt    = Ra
+      Rt_i = Ra
       call computeGrowthRateModes(.false., zew)
       ! search for lowest imaginary part:
       IMIN = minloc(DIMAG(ZEW),1)
@@ -57,7 +70,7 @@ contains
       integer:: i, j, k, info
 
       ! - MAT SETS THE complex(8) MATRICES ZA AND ZB SETTING OF MATRIX:
-      CALL MAT(Rt, Rc, Le, ZA,ZB,NMAX)
+      CALL MAT(Rt, Rc, Pt, Le, m, Symmetry, ZA,ZB, NMAX)
 
 !       SUBROUTINE zGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
 !     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
@@ -93,11 +106,12 @@ contains
 
    !************************************************************************
    ! - SETS THE complex(8) MATRICES ZA AND ZB.
-   SUBROUTINE MAT(Rt_i, Rc_i, Le_i, ZA,ZB,NDIM)
+   SUBROUTINE MAT(Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB,NDIM)
       implicit none
-      double complex:: ZA(ndim,ndim),ZB(ndim,ndim)
-      double precision:: Rt_i, Rc_i, Le_i
-      integer:: ndim, lmax
+      integer, intent(in):: ndim, mm_i, Symmetry_i
+      double complex, intent(out):: ZA(ndim,ndim),ZB(ndim,ndim)
+      double precision, intent(in):: Rt_i, Rc_i, Pt_i, Le_i
+      integer:: lmax
       integer:: ni, i, nimax, li, lpi, lti
       integer:: nj, j, njmax, lj, lpj, ltj
 
@@ -106,32 +120,32 @@ contains
       ZB(:,:)=DCMPLX(0D0,0D0)
 
       I=0
-      LMAX=2*Truncation+M0-1
+      LMAX=2*Truncation+mm_i-1
 
       DO LI=LMIN,LMAX,LD
          LPI=LI
          ! Determine L for toroidal (w) field:
-         IF( Symmetry.EQ.2 ) THEN
+         IF( Symmetry_i.EQ.2 ) THEN
             LTI=LI+1
-         ELSEIF( Symmetry.EQ.1 ) THEN
+         ELSEIF( Symmetry_i.EQ.1 ) THEN
             LTI=LI-1
-         ELSEIF( Symmetry.EQ.0 ) THEN
+         ELSEIF( Symmetry_i.EQ.0 ) THEN
             LTI=LI
          endIF
-         NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
+         NIMAX=INT( DBLE(2*Truncation+1-LI+mm_i)/2 )
 
          DO NI=1,NIMAX
             J=0
             DO LJ=LMIN,LMAX,LD
                LPJ=LJ
-               IF( Symmetry.EQ.2 ) THEN
+               IF( Symmetry_i.EQ.2 ) THEN
                   LTJ=LJ+1
-               ELSEIF( Symmetry.EQ.1 ) THEN
+               ELSEIF( Symmetry_i.EQ.1 ) THEN
                   LTJ=LJ-1
-               ELSEIF( Symmetry.EQ.0 ) THEN
+               ELSEIF( Symmetry_i.EQ.0 ) THEN
                   LTJ=LJ
                endIF
-               NJMAX=INT( DBLE(2*Truncation+1-LJ+M0)/2 )
+               NJMAX=INT( DBLE(2*Truncation+1-LJ+mm_i)/2 )
 
                !  ******************** I: Equation (Line) ******************
                !  ******************** J: Variable (Column) ****************
@@ -221,21 +235,21 @@ contains
    ! ---- TOROIDAL EQUATION , CORRIOLIS
       implicit none
       integer:: N1, N2, NU1
-      DII3=-TAU*NU1*M0*R('CC ',4,N1-1,N2-1,0)
+      DII3=-TAU*NU1*mm_i*R('CC ',4,N1-1,N2-1,0)
    end function
 
    double precision function DII4A(N1,N2,L1,NU1)
    ! ---- TOROIADL EQUATION , Q-TERM 1 (L1=L3+1)
       implicit none
       integer:: N1, N2, l1, NU1
-      DII4A= TAU*DSQRT( DBLE(L1-NU1*M0)*(L1+NU1*M0)/(2*L1-1)/(2*L1+1) )*( (L1**2-1)*(L1-1)*R('CS ',2,N1-1,N2,0)  - (L1+1)*(L1-1)*N2*DPI*R('CC ',3,N1-1,N2,0)    )
+      DII4A= TAU*DSQRT( DBLE(L1-NU1*mm_i)*(L1+NU1*mm_i)/(2*L1-1)/(2*L1+1) )*( (L1**2-1)*(L1-1)*R('CS ',2,N1-1,N2,0)  - (L1+1)*(L1-1)*N2*DPI*R('CC ',3,N1-1,N2,0)    )
    end function
 
    double precision function DII4B(N1,N2,L1,NU1)
    ! ---- TOROIADL EQUATION , Q-TERM 1 (L1=L3-1)
       implicit none
       integer:: N1, N2, l1, NU1
-      DII4B= TAU*DSQRT( DBLE(L1-NU1*M0+1)*(L1+NU1*M0+1)/(2*L1+1)/(2*L1+3) )*( (1-(L1+1)**2)*(L1+2)*R('CS ',2,N1-1,N2,0)  - L1*(L1+2)*N2*DPI*R('CC ',3,N1-1,N2,0)  )
+      DII4B= TAU*DSQRT( DBLE(L1-NU1*mm_i+1)*(L1+NU1*mm_i+1)/(2*L1+1)/(2*L1+3) )*( (1-(L1+1)**2)*(L1+2)*R('CS ',2,N1-1,N2,0)  - L1*(L1+2)*N2*DPI*R('CC ',3,N1-1,N2,0)  )
    end function
 
    double precision function DIII1(N1,N2,L1)
@@ -256,21 +270,21 @@ contains
    ! ---- POLOIDAL EQUATION , CORRIOLIS
       implicit none
       integer:: N1, N2, l1, NU1
-      DIII3= TAU*NU1*M0*( -N2**2*DPI**2*R('SS ',2,N1,N2,0)+2*N2*DPI*R('SC ',1,N1,N2,0) - DL(L1)*R('SS ',0,N1,N2,0) )
+      DIII3= TAU*NU1*mm_i*( -N2**2*DPI**2*R('SS ',2,N1,N2,0)+2*N2*DPI*R('SC ',1,N1,N2,0) - DL(L1)*R('SS ',0,N1,N2,0) )
    end function
 
    double precision function DIII4A(N1,N2,L1,NU1)
    ! ---- POLOIDAL EUQUATION , Q-TERM 1 (L1=L3+1)
       implicit none
       integer:: N1, N2, l1, NU1
-      DIII4A= TAU*DSQRT( DBLE(L1-M0*NU1)*(L1+M0*NU1)/(2*L1-1)/(2*L1+1) ) * ( (L1*(L1-1)-2)*(L1-1)*R('SC ',2,N1,N2-1,0) + (L1+1)*(L1-1)*(N2-1)*DPI*R('SS ',3,N1,N2-1,0) )
+      DIII4A= TAU*DSQRT( DBLE(L1-mm_i*NU1)*(L1+mm_i*NU1)/(2*L1-1)/(2*L1+1) ) * ( (L1*(L1-1)-2)*(L1-1)*R('SC ',2,N1,N2-1,0) + (L1+1)*(L1-1)*(N2-1)*DPI*R('SS ',3,N1,N2-1,0) )
    end function
 
    double precision function DIII4B(N1,N2,L1,NU1)
    ! ---- POLOIDAL EQUATION , Q-TERM 2 (L1=L3-1)
       implicit none
       integer:: N1, N2, l1, NU1
-      DIII4B= TAU*DSQRT( DBLE(L1-M0*NU1+1)*(L1+M0*NU1+1)/(2*L1+1)/(2*L1+3) ) * ( (L1+2)*(2-(L1+1)*(L1+2))*R('SC ',2,N1,N2-1,0) + L1*(L1+2)*(N2-1)*DPI*R('SS ',3,N1,N2-1,0) )
+      DIII4B= TAU*DSQRT( DBLE(L1-mm_i*NU1+1)*(L1+mm_i*NU1+1)/(2*L1+1)/(2*L1+3) ) * ( (L1+2)*(2-(L1+1)*(L1+2))*R('SC ',2,N1,N2-1,0) + L1*(L1+2)*(N2-1)*DPI*R('SS ',3,N1,N2-1,0) )
    end function
 
    double precision function DIII5(Ra,N1,N2,L1)
@@ -299,20 +313,20 @@ contains
    end function
 
    !***************************************************************************
-   SUBROUTINE DIMENSION(LMIN,LD,Truncation,M0,NEigenmodes)
+   SUBROUTINE DIMENSION(LMIN,LD,Truncation,M,NEigenmodes)
    !***************************************************************************
       implicit none
-      integer:: Truncation,M0,NEigenmodes,LMIN,LD
+      integer:: Truncation,M,NEigenmodes,LMIN,LD
       integer:: L
       ! - DETERMINATION OF DIMENSION:
       ! - for each value of L the number of possible N-values is added
       !         print*, "Triangular truncation (2.12)"
-      !         print*, LMIN, "...", 2*Truncation+M0-1,LD
+      !         print*, LMIN, "...", 2*Truncation+M-1,LD
       NEigenmodes=0
-      DO L = LMIN, 2*Truncation+M0-1, LD
-         !         print*, L, 1, "...", INT( DBLE(2*Truncation+1-L+M0)/2 )
-         ! cccccccc18    NEigenmodes=NEigenmodes+3*DINT( DBLE(2*Truncation+1-L+M0)/2 )
-         NEigenmodes = NEigenmodes+4*INT( DBLE(2*Truncation+1-L+M0)/2 )
+      DO L = LMIN, 2*Truncation+M-1, LD
+         !         print*, L, 1, "...", INT( DBLE(2*Truncation+1-L+M)/2 )
+         ! cccccccc18    NEigenmodes=NEigenmodes+3*DINT( DBLE(2*Truncation+1-L+M)/2 )
+         NEigenmodes = NEigenmodes+4*INT( DBLE(2*Truncation+1-L+M)/2 )
       endDO
 
       IF(NEigenmodes.GT.NMAX) THEN
@@ -623,7 +637,7 @@ contains
       R = RINT
    END FUNCTION R
 !-----------------------------------------------------------------------
-!     END OF RI
+!     END OF ri
 !-----------------------------------------------------------------------
 !
 !
@@ -710,7 +724,7 @@ contains
             S1 = - 1D0 / (N * DPI)
          ENDIF
       ELSE
-         S1 = (1+2*RI) / (N * DPI)
+         S1 = (ri+ro) / (N * DPI)
       ENDIF
    END FUNCTION S1
 !-----------------------------------------------------------------------
@@ -722,7 +736,7 @@ contains
       integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
-            C1 = RI+1D0 / 2
+            C1 = ro/2
          ELSE
             C1 = 0D0
          ENDIF
@@ -741,10 +755,10 @@ contains
          IF (N.EQ.0) THEN
             S2 = 0D0
          ELSE
-            S2 = - (2*RI+1) / DPI / N
+            S2 = - (ri+ro) / DPI / N
          ENDIF
       ELSE
-         S2 = (1+2*RI*(RI+1) ) / DPI / N - 4D0 / N**3 / DPI**3
+         S2 = (1+2*ri*ro ) / DPI / N - 4D0 / N**3 / DPI**3
       ENDIF
    END FUNCTION S2
 !-----------------------------------------------------------------------
@@ -757,12 +771,12 @@ contains
       integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
-            C2 = RI*(RI+1)+1D0 / 3
+            C2 = ri*ro + 1D0 / 3
          ELSE
             C2 = 2D0 / N**2 / DPI**2
          ENDIF
       ELSE
-         C2 = - 2D0*(2*RI+1) / N**2 / DPI**2
+         C2 = - 2D0*(ri+ro) / N**2 / DPI**2
       ENDIF
       END FUNCTION C2
 !-----------------------------------------------------------------------
@@ -776,10 +790,10 @@ contains
          IF (N.EQ.0) THEN
             S3 = 0D0
          ELSE
-            S3 = - (1+3*RI+3*RI**2) / DPI / N+6 / DPI**3 / N**3
+            S3 = - (1+3*ri+3*ri**2) / DPI / N+6 / DPI**3 / N**3
          ENDIF
       ELSE
-         S3 = (1+3*RI+3*RI**2+2*RI**3) / DPI / N - (6+12*RI) / DPI**3 / N**3
+         S3 = (1+3*ri+3*ri**2+2*ri**3) / DPI / N - (6+12*ri) / DPI**3 / N**3
       ENDIF
       END FUNCTION S3
 !-----------------------------------------------------------------------
@@ -792,12 +806,12 @@ contains
       integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
-            C3 = 1D0 / 4+RI+3D0 / 2*RI**2+RI**3
+            C3 = 1D0 / 4+ri+3D0 / 2*ri**2+ri**3
          ELSE
-            C3 = (3+6*RI) / DPI**2 / N**2
+            C3 = (3+6*ri) / DPI**2 / N**2
          ENDIF
       ELSE
-         C3 = - (3+6*RI+6*RI**2) / DPI**2 / N**2+12 / DPI**4 / N**4
+         C3 = - (3+6*ri+6*ri**2) / DPI**2 / N**2+12 / DPI**4 / N**4
       ENDIF
       END FUNCTION C3
 !-----------------------------------------------------------------------
@@ -811,11 +825,11 @@ contains
          IF (N.EQ.0) THEN
             S4 = 0D0
          ELSE
-            S4 = - (1+4*RI+6*RI**2+4*RI**3) / DPI / N+(12+24*RI) / DPI**3 / N**3
+            S4 = - (1+4*ri+6*ri**2+4*ri**3) / DPI / N+(12+24*ri) / DPI**3 / N**3
          ENDIF
       ELSE
-         S4 = (1+4*RI+6*RI**2+4*RI**3+2*RI**4) / DPI /  &
-         N - (12+24*RI+24*RI**2) / DPI**3 / N**3+48D0 / DPI**5 / N**5
+         S4 = (1+4*ri+6*ri**2+4*ri**3+2*ri**4) / DPI /  &
+         N - (12+24*ri+24*ri**2) / DPI**3 / N**3+48D0 / DPI**5 / N**5
       ENDIF
       END FUNCTION S4
 !-----------------------------------------------------------------------
@@ -828,14 +842,12 @@ contains
       integer, intent(in):: N
       IF (NGU (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
-            C4 = 1D0 / 5+RI+2*RI**2+2*RI**3+RI**4
+            C4 = 1D0 / 5 + ri + 2*ri**2 + 2*ri**3 + ri**4
          ELSE
-            C4 = (4+12*RI+12*RI**2) / DPI**2 / N**2 - 24 / DPI**&
-            4 / N**4
+            C4 = (4+12*ri+12*ri**2) / DPI**2 / N**2 - 24 / DPI**4 / N**4
          ENDIF
       ELSE
-         C4 = - (4+12*RI+12*RI**2+8*RI**3) / DPI**2 / N**2 +&
-         (24+48*RI) / DPI**4 / N**4
+         C4 = - (4+12*ri+12*ri**2+8*ri**3) / DPI**2 / N**2 + (24+48*ri) / DPI**4 / N**4
       ENDIF
       END FUNCTION C4
 !-----------------------------------------------------------------------
@@ -849,8 +861,8 @@ contains
       IF (N.EQ.0) THEN
          SM1 = 0D0
       ELSE
-         SM1 = DCOS (N*RI*DPI)*DIS (RI, RI+1, DPI*N) - DSIN ( &
-         N*RI*DPI)*DIC (RI, RI+1, N*DPI)
+         SM1 = DCOS (N*ri*DPI)*DIS (ri, ro, DPI*N) - DSIN ( &
+         N*ri*DPI)*DIC (ri, ro, N*DPI)
       ENDIF
       END FUNCTION SM1
 !-----------------------------------------------------------------------
@@ -862,10 +874,10 @@ contains
       implicit none
       integer, intent(in):: N
       IF (N.EQ.0) THEN
-         CM1 = DLOG ( (RI+1) / RI)
+         CM1 = DLOG ( ro / ri)
       ELSE
-         CM1 = DCOS (N*RI*DPI)*DIC (RI, RI+1, N*DPI)+DSIN ( &
-         N*RI*DPI)*DIS (RI, RI+1, N*DPI)
+         CM1 = DCOS (N*ri*DPI)*DIC (ri, ro, N*DPI)+DSIN ( &
+         N*ri*DPI)*DIS (ri, ro, N*DPI)
       ENDIF
       END FUNCTION CM1
 !-----------------------------------------------------------------------
@@ -876,14 +888,15 @@ contains
 !-----------------------------------------------------------------------
       implicit none
       integer, intent(in):: N
+      double precision:: NPi, NPiri, NPiro
       IF (N.EQ.0) THEN
          SM2 = 0D0
       ELSE
-         SM2 = DCOS (N*RI*DPI)*(DSIN (N*DPI*RI) / RI - DSIN ( &
-         N*DPI*(RI+1) ) / (RI+1)+N*DPI*DIC (RI, RI+1, N &
-        *DPI) ) - DSIN (N*RI*DPI)*(DCOS (N*DPI*RI) / RI -   &
-         DCOS (N*DPI*(RI+1) ) / (RI+1) - N*DPI*DIS (RI, RI +&
-         1, N*DPI) )
+         NPi   = N*DPI
+         NPiri = N*ri*DPI
+         NPiro = N*ro*DPI
+         SM2 = COS(NPiri)*( SIN(NPiri)/ri - SIN(NPiro)/ro + NPI*DIC(ri,ro,NPI) ) - &
+               SIN(NPiri)*( COS(NPiri)/ri - COS(NPiro)/ro - NPI*DIS(ri,ro,NPI) )
       ENDIF
       END FUNCTION SM2
 !-----------------------------------------------------------------------
@@ -894,14 +907,15 @@ contains
 !-----------------------------------------------------------------------
       implicit none
       integer, intent(in):: N
+      double precision:: NPi, NPiri, NPiro
       IF (N.EQ.0) THEN
-         CM2 = 1D0 / RI - 1D0 / (1+RI)
+         CM2 = 1D0/ri - 1D0/ro
       ELSE
-         CM2 = DSIN (N*RI*DPI)*(DSIN (N*DPI*RI) / RI - DSIN ( &
-         N*DPI*(RI+1) ) / (RI+1)+N*DPI*DIC (RI, RI+1, N &
-        *DPI) )+DCOS (N*RI*DPI)*(DCOS (N*DPI*RI) / RI -   &
-         DCOS (N*DPI*(RI+1) ) / (RI+1) - N*DPI*DIS (RI, RI +&
-         1, N*DPI) )
+         NPi   = N*DPI
+         NPiri = N*ri*DPI
+         NPiro = N*ro*DPI
+         CM2 = SIN(NPiri)*( SIN(NPIRI)/ri - SIN(NPiro)/ro + NPi*DIC (ri, ro, NPi) ) + &
+               COS(NPiri)*( COS(NPIRI)/ri - COS(NPIro)/ro - NPi*DIS (ri, ro, NPi) )
       ENDIF
       END FUNCTION CM2
 !-----------------------------------------------------------------------
@@ -959,9 +973,9 @@ contains
 !-----------------------------------------------------------------------
       implicit none
       double precision, intent(in):: x
+      double precision, parameter:: GENAU = 1.0D-7
       integer:: Jz, Jn, i, j
       double precision:: GENAU, SISO,SISN, SISZ
-      GENAU = 1D-7
 
       SISO = X
       DO I = 1, 200000
@@ -987,7 +1001,7 @@ contains
          SISN = 2D0*I+1D0
          JN = 0
 !
-         SIS = SISO+( - 1) **I*SISZ
+         SIS = SISO + ((-1)**I)*SISZ
          IF (I.GT.1) THEN
             IF (DABS (1D0 - SIS / SISO) .LE.GENAU) exit
          ENDIF
@@ -1005,13 +1019,13 @@ contains
       double precision:: DICMAX, DICMIN, x
 !
       X = DABS (A*XMAX)
-      IF (X.LT.1) THEN
+      IF (X.LT.1.0d0) THEN
          DICMAX = CIS (X)
       ELSE
          DICMAX = CIA (X)
       ENDIF
       X = DABS (A*XMIN)
-      IF (X.LT.1) THEN
+      IF (X.LT.1.0d0) THEN
          DICMIN = CIS (X)
       ELSE
          DICMIN = CIA (X)
@@ -1042,35 +1056,35 @@ contains
 !
 !-----------------------------------------------------------------------
    pure double precision function CIS (X)
-!-----------------------------------------------------------------------
       implicit none
-      double precision, PARAMETER:: C = 0.5772156649D0
+      double precision, PARAMETER:: C = 0.5772156649D0, GENAU = 1D-7
       integer:: Jz, Jn, i, j
       double precision, intent(in):: x
-      double precision:: GENAU, CISN, CISO, CISZ
-      GENAU = 1D-7
-!
+      double precision:: CISN, CISO, CISZ
+      
       CISO = DLOG (X)+C
       DO I = 1, 200000
          JZ = 0
          JN = 0
          CISZ = 1D0
          CISN = 2D0*I
-   100   DO J = JZ+1, 2*I
-            CISZ = CISZ*X
-            IF (CISZ.GT.1D20) exit
-         END DO
-         JZ = J
-         DO J = JN+1, 2*I
-            CISN = CISN*J
-            IF (CISN.GT.1D20) exit
-         END DO
-         JN = J
-         CISZ = CISZ / CISN
-         CISN = 1D0
-         IF ( (JZ.LT.2*I) .OR. (JN.LT.2*I) ) GOTO 100
+         do
+            DO J = JZ+1, 2*I
+               CISZ = CISZ*X
+               IF (CISZ.GT.1D20) exit
+            END DO
+            JZ = J
+            DO J = JN+1, 2*I
+               CISN = CISN*J
+               IF (CISN.GT.1D20) exit
+            END DO
+            JN = J
+            CISZ = CISZ / CISN
+            CISN = 1D0
+            IF ( (JZ.ge.2*I) .and. (JN.ge.2*I) ) exit
+         enddo
 !
-         CIS = CISO+( - 1) **I*CISZ
+         CIS = CISO+(-1)**I*CISZ
          IF (I.GT.1) THEN
             IF (DABS (1D0 - CIS / CISO) .LE.GENAU) exit
          ENDIF
