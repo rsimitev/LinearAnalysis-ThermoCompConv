@@ -517,13 +517,33 @@ contains
    subroutine varyLeCriticalRt()
       implicit none
       double precision:: LeOld, GroR
-      double precision:: CriticalRt
-      integer:: niter, i, info
+      double precision:: CriticalRt, RtMin, RtMax, dRt
+      integer:: niter, i, info, counter
       LeOld = Le
       niter = int((UpperLimit-LeOld)/StepSize)
+      CALL dimension(LMIN,LD,Truncation,M0,NEigenmodes)
+      dRt = Rt
       do i=0, niter
          Le  = LeOld + i*StepSize
-         CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
+         RtMin = Rt - dRt
+         RtMax = Rt + dRt
+         counter = 0
+         do
+            CALL minimizer(MaxGrowthRate,RtMin, RtMax,RELE,ABSE,NSMAX,CriticalRt, info)
+            if (info==0 .or. counter.gt.20) exit
+            counter = counter + 1
+            RtMin = RtMin - dRt
+            RtMax = RtMax + dRt
+            Write(*,*) 'Minimization failed. Trying with a larger interval [', RtMin, RtMax, ']'
+         enddo
+         Rt   = CriticalRt
+         if (abs(Rt).gt.1.0d100) then
+            Write(*,*) "Rt=",Rt
+            Write(*,*) "This is way too much. Bayling out!"
+            exit
+         endif
+
+         dRt  = CriticalRt/10.0d0
          GROR = MaxGrowthRate(CriticalRt)
          WRITE(*,*) Le, CriticalRt, GROR
          WRITE(unitOut,'(3D16.8)') Le, CriticalRt, GROR
