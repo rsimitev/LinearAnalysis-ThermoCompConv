@@ -61,7 +61,9 @@ contains
       implicit none
       !> .True. Sort the eigenvalues and eigenvectors if computed.
       logical, intent(in):: sort
+      !> Stores the eigenvalues.
       double complex, intent(out):: ZEW(NMAX)
+      !> If present, stores the eigenvectors ordered as the eigenvalues.
       double complex, intent(out), optional::ZEVAL(NMAX,NMAX)
       double complex:: ZA(NMAX,NMAX),ZB(NMAX,NMAX)
       double complex:: ZEWA(NMAX),ZEWB(NMAX),ZEVALL(NMAX,NMAX)
