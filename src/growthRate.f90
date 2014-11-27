@@ -1,5 +1,4 @@
 module GrowthRateMod
-#include "losub-inc.h"
 #include "errorcodes.h"
    use parameters
    implicit none

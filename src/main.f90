@@ -24,7 +24,6 @@
 !
 ! Start:    glo inputfilename outputfilename
 !
-#include "losub-inc.h"
 #include "errorcodes.h"
 program linearOnset
    use parameters

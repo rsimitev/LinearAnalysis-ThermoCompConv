@@ -6,6 +6,7 @@ module parameters
   ! Dimensions
   integer::Truncation,M0,NEigenmodes,LMIN,LD,Symmetry, NSMAX, LCALC
   double precision:: LowerLimit,UpperLimit,StepSize,DRt,ABSE,RELE, DRc
+  integer, parameter:: NMAX=900
 contains
    subroutine setDefaults()
       implicit none
