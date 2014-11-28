@@ -4,7 +4,8 @@ module GrowthRateMod
    implicit none
    private
    double precision, parameter:: DPI=3.141592653589793D0
-   public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes, dimension
+   public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes
+   public:: EigenmodeNumber
 contains
 
    !***********************************************************************
@@ -14,7 +15,7 @@ contains
       implicit none
       double precision, intent(in):: Ra
       double precision:: RtOld
-      double complex:: ZEW(NMAX)
+      double complex:: ZEW(NEigenmodes)
       integer:: imin
 
       RtOld = Rt
@@ -31,7 +32,7 @@ contains
       implicit none
       double precision, intent(in):: Ra
       double precision:: RtOld
-      double complex:: ZEW(NMAX)
+      double complex:: ZEW(NEigenmodes)
       integer:: imin
 
       RtOld = Rt
@@ -49,24 +50,24 @@ contains
       !> .True. Sort the eigenvalues and eigenvectors if computed.
       logical, intent(in):: sort
       !> Stores the eigenvalues.
-      double complex, intent(out):: ZEW(NMAX)
+      double complex, intent(out):: ZEW(NEigenmodes)
       !> If present, stores the eigenvectors ordered as the eigenvalues.
-      double complex, intent(out), optional::ZEVAL(NMAX,NMAX)
-      double complex:: ZA(NMAX,NMAX),ZB(NMAX,NMAX)
-      double complex:: ZEWA(NMAX),ZEWB(NMAX),ZEVALL(NMAX,NMAX)
-      double complex:: ZEVEC(NMAX), ZSAVE, ZWORK(3*NMAX)
-      double precision:: RWORK(8*NMAX)
+      double complex, intent(out), optional::ZEVAL(NEigenmodes,NEigenmodes)
+      double complex:: ZA(NEigenmodes,NEigenmodes),ZB(NEigenmodes,NEigenmodes)
+      double complex:: ZEWA(NEigenmodes),ZEWB(NEigenmodes),ZEVALL(NEigenmodes,NEigenmodes)
+      double complex:: ZEVEC(NEigenmodes), ZSAVE, ZWORK(3*NEigenmodes)
+      double precision:: RWORK(8*NEigenmodes)
       integer:: i, j, k, info
 
       ! - MAT SETS THE complex(8) MATRICES ZA AND ZB SETTING OF MATRIX:
-      CALL MAT(Rt, Rc, Le, ZA,ZB,NMAX)
+      CALL MAT(Rt, Rc, Le, ZA,ZB,NEigenmodes)
 
 !       SUBROUTINE zGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
 !     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
       IF(.not.present(zeval)) THEN ! Compute eigen values and vectors.
-        call zggev('N', 'N',NMAX,ZA,NMAX,ZB,NMAX, ZEWA, ZEWB, ZEVALL, NMAX, ZEVALL, NMAX, ZWORK, 3*NMAX, rwork, info)
+        call zggev('N', 'N',NEigenmodes,ZA,NEigenmodes,ZB,NEigenmodes, ZEWA, ZEWB, ZEVALL, NEigenmodes, ZEVALL, NEigenmodes, ZWORK, 3*NEigenmodes, rwork, info)
       ELSE ! Only compute eigenvalues
-        call zggev('N', 'V',NMAX,ZA,NMAX,ZB,NMAX, ZEWA, ZEWB, ZEVALL, NMAX, ZEVALL, NMAX, ZWORK, 3*NMAX, rwork, info)
+        call zggev('N', 'V',NEigenmodes,ZA,NEigenmodes,ZB,NEigenmodes, ZEWA, ZEWB, ZEVALL, NEigenmodes, ZEVALL, NEigenmodes, ZWORK, 3*NEigenmodes, rwork, info)
         zeval = zevall
       endIF
 
@@ -301,7 +302,7 @@ contains
    end function
 
    !***************************************************************************
-   SUBROUTINE DIMENSION(LMIN,LD,Truncation,M0,NEigenmodes)
+   SUBROUTINE EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
    !***************************************************************************
       implicit none
       integer:: Truncation,M0,NEigenmodes,LMIN,LD
@@ -317,10 +318,6 @@ contains
          NEigenmodes = NEigenmodes+4*INT( DBLE(2*Truncation+1-L+M0)/2 )
       endDO
 
-      IF(NEigenmodes.GT.NMAX) THEN
-         WRITE(*,*) 'DIMENSION OF MATRIX TOO SMALL:',NEigenmodes,'>',NMAX
-         STOP DIM_TO_SMALL
-      endIF
    end subroutine
 
 !-----------------------------------------------------------------------

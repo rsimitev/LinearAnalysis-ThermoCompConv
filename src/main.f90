@@ -117,8 +117,7 @@ contains
          LD=2
       ENDIF
 
-      CALL DIMENSION(LMIN,LD,Truncation,M0,NEigenmodes)
-      write(*,*) 'DIMENSION OF MATRIX:',NEigenmodes
+      CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
    END subroutine
 
    !**********************************************************************
@@ -128,7 +127,7 @@ contains
    !! Modes are sorted from heighest to lowest growth rate.
    subroutine fixedParEigenValues()
       implicit none
-      double complex:: ZEW(NMAX)
+      double complex:: ZEW(NEigenmodes)
       integer:: i
       call computeGrowthRateModes(.true., zew)
       write(*,*) 'n     Frequ.(exp(+iwt))   -Grothrate  '
@@ -221,7 +220,7 @@ contains
       DO II=1, nm0
          M0   = M0I(II)
          LMIN = LMINI(II)
-         CALL dimension(LMIN,LD,Truncation,M0,NEigenmodes)
+         CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
          ! Increase the interval, in case we did not find anything.
          do i=1, 3
             RtMin=Rt/(2.0d0**dble(i))
@@ -277,7 +276,7 @@ contains
    subroutine fixedParCriticalEigenVector()
       implicit none
       double precision:: GroR, Omega, Ta
-      complex(8):: ZEVEC(NMAX), zew(NMAX), ZEVAL(NMAX,NMAX)
+      complex(8):: ZEVEC(NEigenmodes), zew(NEigenmodes), ZEVAL(NEigenmodes,NEigenmodes)
       integer:: info, i, ni, li, lti, lpi
       integer:: NTH, KTV, KTH, LTV, LTH, lst, NUC
       double precision:: GRR, GRI, Pm, C0,CriticalRt, OMM
@@ -505,7 +504,7 @@ contains
             LMIN=M0
             LD=2
          ENDIF
-         CALL dimension(LMIN,LD,Truncation,M0,NEigenmodes)
+         CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
          CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
          WRITE(*,*) M0,CriticalRt
          WRITE(unitOut,*) M0, CriticalRt
@@ -521,7 +520,7 @@ contains
       integer:: niter, i, info, counter
       LeOld = Le
       niter = int((UpperLimit-LeOld)/StepSize)
-      CALL dimension(LMIN,LD,Truncation,M0,NEigenmodes)
+      CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
       dRt = Rt
       do i=0, niter
          Le  = LeOld + i*StepSize
