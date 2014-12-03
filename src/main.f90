@@ -70,7 +70,7 @@ program linearOnset
       case(5) ! vary m and calculate critical R at fixed P, tau, eta.
          LowerLimit = m0
          call varyMCriticalRt()
-      case(6) ! vary Le and calculate critical R at fixed P, tau, eta, M
+      case(6) ! vary Le and calculate critical Rt at fixed Rc,  P, tau, eta, m
          LowerLimit = Le
          call varyLeCriticalRt()
       case default
@@ -548,7 +548,5 @@ contains
          WRITE(unitOut,'(3D16.8)') Le, CriticalRt, GROR
       enddo
    end subroutine
-
-
 end program
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
