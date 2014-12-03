@@ -1,5 +1,5 @@
 module io
-#include "losub-inc.h"
+#include "errorcodes.h"
    use parameters
    implicit none
 contains
@@ -80,7 +80,7 @@ contains
          WRITE(99,'(1P,E17.6,5(A,E17.6))') Rt,' ',TAU,' ',Pt,' ',ETA,' ',Le,' ',Rc
          WRITE(99,*) '|   NTRUNC (>=1) | MODE |'
          WRITE(99,'(A,2I12)') ' ',Truncation, M0
-         WRITE(99,*) '|   DRA   | ABSERR  |  RELERR  | NMAX |'
+         WRITE(99,*) '|   DRA   | ABSERR  |  RELERR  | NSMAX |'
          WRITE(99,'(1PG13.6,A,1PG12.5,A,1PG12.5,A,I4)') DRt,' ',ABSE,' ',RELE,' ',NSMAX
          WRITE(99,*) '|  StepSize  | UpperLimit'
          WRITE(99,'(1P,2G11.4)') StepSize, UpperLimit
