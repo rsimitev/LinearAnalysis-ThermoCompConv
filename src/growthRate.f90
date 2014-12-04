@@ -7,7 +7,7 @@ module GrowthRateMod
    !> Internally used parameters
    double precision:: Rt_i, Rc_i, Le_i, Pt_i, tau_i
    double precision:: ri, ro
-   integer:: mm_i, Symmetry_i
+   integer:: Symmetry_i
    public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes
    public:: EigenmodeNumber
 contains
@@ -20,7 +20,6 @@ contains
       Rc_i = Rc
       Pt_i = Pt
       Le_i = Le
-      mm_i = m
       tau_i= tau
       Symmetry_i = Symmetry
    end subroutine
@@ -75,7 +74,7 @@ contains
       integer:: i, j, k, info
 
       ! - MAT SETS THE complex(8) MATRICES ZA AND ZB SETTING OF MATRIX:
-      CALL MAT(Rt, Rc, Pt, Le, m, Symmetry, ZA,ZB, NEigenmodes)
+      CALL MAT(tau, Rt, Rc, Pt, Le, m, Symmetry, ZA,ZB, NEigenmodes)
 
 !       SUBROUTINE zGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
 !     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
@@ -174,21 +173,21 @@ contains
                      ZA(I+2,J+1) = DCMPLX(DI3(NI,NJ,LPI),             0.D0)
                      ZA(I+2,J+2) = DCMPLX(DI2(NI,NJ,LPI),             0.D0)
                      ZB(I+3,J+3) = DCMPLX(0.D0,                      -DII2(NI,NJ,LTI,1))
-                     ZA(I+3,J+3) = DCMPLX(DII1(NI,NJ,LTI),            DII3(tau_i, NI,NJ,1))
+                     ZA(I+3,J+3) = DCMPLX(DII1(NI,NJ,LTI),            DII3(tau_i mm_i,, NI,NJ,1))
                      ! -- concentration equation
                      ZB(I+4,J+4) = DCMPLX(0.D0,                      -DI1(Pt_i, NI,NJ,1))
                      ZA(I+4,J+1) = DCMPLX(DI3(NI,NJ,LPI),             0.D0)
                      ZA(I+4,J+4) = DCMPLX(DI2(NI,NJ,LPI)/Le_i,        0.D0)
                   endIF
                   IF( LPI.EQ.LTJ+1 ) THEN
-                     ZA(I+1,J+3) = DCMPLX(DIII4A(tau_i,NI,NJ,LPI,1),        0.D0)
+                     ZA(I+1,J+3) = DCMPLX(DIII4A(tau_i, mm_i,NI,NJ,LPI,1),        0.D0)
                   ELSEIF( LPI.EQ.LTJ-1 ) THEN
-                     ZA(I+1,J+3) = DCMPLX(DIII4B(tau_i,NI,NJ,LPI,1),        0.D0)
+                     ZA(I+1,J+3) = DCMPLX(DIII4B(tau_i, mm_i,NI,NJ,LPI,1),        0.D0)
                   endIF
                   IF( LTI.EQ.LPJ+1 ) THEN
-                     ZA(I+3,J+1) = DCMPLX(DII4A(tau_i, NI,NJ,LTI,1),         0.D0)
+                     ZA(I+3,J+1) = DCMPLX(DII4A(tau_i,mm, NI,NJ,LTI,1),         0.D0)
                   ELSEIF( LTI.EQ.LPJ-1 ) THEN
-                     ZA(I+3,J+1) = DCMPLX(DII4B(tau_i, NI,NJ,LTI,1),         0.D0)
+                     ZA(I+3,J+1) = DCMPLX(DII4B(tau_i,mm, NI,NJ,LTI,1),         0.D0)
                   endIF
                   J=J+4
                enddo
@@ -237,28 +236,28 @@ contains
       DII2=NU1*DL(L1)*R('CC ',4,N1-1,N2-1,0)
    end function
 
-   double precision function DII3(tau, N1,N2,NU1)
+   double precision function DII3(tau, mm, N1,N2,NU1)
    ! ---- TOROIDAL EQUATION , CORRIOLIS
       implicit none
       double precision, intent(in):: tau
-      integer, intent(in):: N1, N2, NU1
-      DII3=-tau*NU1*mm_i*R('CC ',4,N1-1,N2-1,0)
+      integer, intent(in):: N1, N2, NU1, mm
+      DII3=-tau*NU1*mm*R('CC ',4,N1-1,N2-1,0)
    end function
 
-   double precision function DII4A(tau, N1,N2,L1,NU1)
+   double precision function DII4A(tau,mm, N1,N2,L1,NU1)
    ! ---- TOROIADL EQUATION , Q-TERM 1 (L1=L3+1)
       implicit none
       double precision, intent(in):: tau
-      integer, intent(in):: N1, N2, l1, NU1
-      DII4A= tau*DSQRT( DBLE(L1-NU1*mm_i)*(L1+NU1*mm_i)/(2*L1-1)/(2*L1+1) )*( (L1**2-1)*(L1-1)*R('CS ',2,N1-1,N2,0)  - (L1+1)*(L1-1)*N2*DPI*R('CC ',3,N1-1,N2,0)    )
+      integer, intent(in):: N1, N2, l1, NU1, mm
+      DII4A= tau*DSQRT( DBLE(L1-NU1*mm)*(L1+NU1*mm)/(2*L1-1)/(2*L1+1) )*( (L1**2-1)*(L1-1)*R('CS ',2,N1-1,N2,0)  - (L1+1)*(L1-1)*N2*DPI*R('CC ',3,N1-1,N2,0)    )
    end function
 
-   double precision function DII4B(tau, N1,N2,L1,NU1)
+   double precision function DII4B(tau,mm,  N1,N2,L1,NU1)
    ! ---- TOROIADL EQUATION , Q-TERM 1 (L1=L3-1)
       implicit none
       double precision, intent(in):: tau
-      integer, intent(in):: N1, N2, l1, NU1
-      DII4B= tau*DSQRT( DBLE(L1-NU1*mm_i+1)*(L1+NU1*mm_i+1)/(2*L1+1)/(2*L1+3) )*( (1-(L1+1)**2)*(L1+2)*R('CS ',2,N1-1,N2,0)  - L1*(L1+2)*N2*DPI*R('CC ',3,N1-1,N2,0)  )
+      integer, intent(in):: N1, N2, l1, NU1, mm
+      DII4B= tau*DSQRT( DBLE(L1-NU1*mm+1)*(L1+NU1*mm+1)/(2*L1+1)/(2*L1+3) )*( (1-(L1+1)**2)*(L1+2)*R('CS ',2,N1-1,N2,0)  - L1*(L1+2)*N2*DPI*R('CC ',3,N1-1,N2,0)  )
    end function
 
    double precision function DIII1(N1,N2,L1)
@@ -275,28 +274,28 @@ contains
       DIII2= -NU1*DL(L1)*(-N2**2*DPI**2*R('SS ',2,N1,N2,0)+2*N2*DPI*R('SC ',1,N1,N2,0)-DL(L1)*R('SS ',0,N1,N2,0) )
    end function
 
-   double precision function DIII3(tau, N1,N2,L1,NU1)
+   double precision function DIII3(tau,mm, N1,N2,L1,NU1)
    ! ---- POLOIDAL EQUATION , CORRIOLIS
       implicit none
       double precision, intent(in):: tau
-      integer, intent(in):: N1, N2, l1, NU1
-      DIII3= tau*NU1*mm_i*( -N2**2*DPI**2*R('SS ',2,N1,N2,0)+2*N2*DPI*R('SC ',1,N1,N2,0) - DL(L1)*R('SS ',0,N1,N2,0) )
+      integer, intent(in):: N1, N2, l1, NU1, mm
+      DIII3= tau*NU1*mm*( -N2**2*DPI**2*R('SS ',2,N1,N2,0)+2*N2*DPI*R('SC ',1,N1,N2,0) - DL(L1)*R('SS ',0,N1,N2,0) )
    end function
 
-   double precision function DIII4A(tau, N1, N2, L1, NU1)
+   double precision function DIII4A(tau,mm,  N1, N2, L1, NU1)
    ! ---- POLOIDAL EUQUATION , Q-TERM 1 (L1=L3+1)
       implicit none
       double precision, intent(in):: tau
-      integer, intent(in):: N1, N2, l1, NU1
-      DIII4A= tau*DSQRT( DBLE(L1-mm_i*NU1)*(L1+mm_i*NU1)/(2*L1-1)/(2*L1+1) ) * ( (L1*(L1-1)-2)*(L1-1)*R('SC ',2,N1,N2-1,0) + (L1+1)*(L1-1)*(N2-1)*DPI*R('SS ',3,N1,N2-1,0) )
+      integer, intent(in):: N1, N2, l1, NU1, mm
+      DIII4A= tau*DSQRT( DBLE(L1-mm*NU1)*(L1+mm*NU1)/(2*L1-1)/(2*L1+1) ) * ( (L1*(L1-1)-2)*(L1-1)*R('SC ',2,N1,N2-1,0) + (L1+1)*(L1-1)*(N2-1)*DPI*R('SS ',3,N1,N2-1,0) )
    end function
 
-   double precision function DIII4B(tau, N1, N2, L1, NU1)
+   double precision function DIII4B(tau,mm, N1, N2, L1, NU1)
    ! ---- POLOIDAL EQUATION , Q-TERM 2 (L1=L3-1)
       implicit none
       double precision, intent(in):: tau
-      integer, intent(in):: N1, N2, l1, NU1
-      DIII4B= tau*DSQRT( DBLE(L1-M0*NU1+1)*(L1+M0*NU1+1)/(2*L1+1)/(2*L1+3) ) * ( (L1+2)*(2-(L1+1)*(L1+2))*R('SC ',2,N1,N2-1,0) + L1*(L1+2)*(N2-1)*DPI*R('SS ',3,N1,N2-1,0) )
+      integer, intent(in):: N1, N2, l1, NU1, mm
+      DIII4B= tau*DSQRT( DBLE(L1-mm*NU1+1)*(L1+mm*NU1+1)/(2*L1+1)/(2*L1+3) ) * ( (L1+2)*(2-(L1+1)*(L1+2))*R('SC ',2,N1,N2-1,0) + L1*(L1+2)*(N2-1)*DPI*R('SS ',3,N1,N2-1,0) )
    end function
 
    double precision function DIII5(Ra,N1,N2,L1)
@@ -983,7 +982,7 @@ contains
       double precision, intent(in):: x
       double precision, parameter:: GENAU = 1.0D-7
       integer:: Jz, Jn, i, j
-      double precision:: GENAU, SISO,SISN, SISZ
+      double precision:: SISO,SISN, SISZ
 
       SISO = X
       DO I = 1, 200000
