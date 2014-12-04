@@ -7,21 +7,24 @@ module GrowthRateMod
    !> Internally used parameters
    double precision:: Rt_i, Rc_i, Le_i, Pt_i, tau_i
    double precision:: ri, ro
-   integer:: Symmetry_i
+   integer:: Symmetry_i, mm_i
    public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes
    public:: EigenmodeNumber
 contains
 
-   subroutine GrowthRateInit(Rt, Rc, Pt, Le, tau, m, Symmetry)
+   subroutine GrowthRateInit(Rt, Rc, Pt, Le, tau,eta, m, Symmetry)
       implicit none
-      double precision, intent(in)::Rt, Rc, Pt, Le, tau
+      double precision, intent(in)::Rt, Rc, Pt, Le, tau, eta
       integer, intent(in):: m, Symmetry
       Rt_i = Rt
       Rc_i = Rc
       Pt_i = Pt
       Le_i = Le
       tau_i= tau
+      mm_i = m
       Symmetry_i = Symmetry
+      RI = ETA/(1.0d0-ETA)
+      RO = 1.0D0 + RI
    end subroutine
    !***********************************************************************
    !> Computes the maximum imaginary part of the frequency,
@@ -74,7 +77,7 @@ contains
       integer:: i, j, k, info
 
       ! - MAT SETS THE complex(8) MATRICES ZA AND ZB SETTING OF MATRIX:
-      CALL MAT(tau, Rt, Rc, Pt, Le, m, Symmetry, ZA,ZB, NEigenmodes)
+      CALL MAT(tau, Rt, Rc, Pt, Le, mm_i, Symmetry, ZA,ZB, NEigenmodes)
 
 !       SUBROUTINE zGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
 !     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
@@ -164,7 +167,7 @@ contains
                   endIF
                   IF( LI.EQ.LJ ) THEN
                      ZB(I+1,J+1) = DCMPLX(0.D0,                      -DIII2(NI,NJ,LPI,1))
-                     ZA(I+1,J+1) = DCMPLX(DIII1(NI,NJ,LPI),           DIII3(tau_i, NI,NJ,LPI,1))
+                     ZA(I+1,J+1) = DCMPLX(DIII1(NI,NJ,LPI),           DIII3(tau_i,mm_i, NI,NJ,LPI,1))
                      ZA(I+1,J+2) = DCMPLX(DIII5(Rt_i, NI,NJ,LPI),     0.D0)
                      ! -- concentration driving
                      ZA(I+1,J+4) = DCMPLX(DIII5conc(Rc_i,NI,NJ,LPI),  0.D0)
@@ -173,7 +176,7 @@ contains
                      ZA(I+2,J+1) = DCMPLX(DI3(NI,NJ,LPI),             0.D0)
                      ZA(I+2,J+2) = DCMPLX(DI2(NI,NJ,LPI),             0.D0)
                      ZB(I+3,J+3) = DCMPLX(0.D0,                      -DII2(NI,NJ,LTI,1))
-                     ZA(I+3,J+3) = DCMPLX(DII1(NI,NJ,LTI),            DII3(tau_i mm_i,, NI,NJ,1))
+                     ZA(I+3,J+3) = DCMPLX(DII1(NI,NJ,LTI),            DII3(tau_i, mm_i, NI,NJ,1))
                      ! -- concentration equation
                      ZB(I+4,J+4) = DCMPLX(0.D0,                      -DI1(Pt_i, NI,NJ,1))
                      ZA(I+4,J+1) = DCMPLX(DI3(NI,NJ,LPI),             0.D0)
@@ -185,9 +188,9 @@ contains
                      ZA(I+1,J+3) = DCMPLX(DIII4B(tau_i, mm_i,NI,NJ,LPI,1),        0.D0)
                   endIF
                   IF( LTI.EQ.LPJ+1 ) THEN
-                     ZA(I+3,J+1) = DCMPLX(DII4A(tau_i,mm, NI,NJ,LTI,1),         0.D0)
+                     ZA(I+3,J+1) = DCMPLX(DII4A(tau_i,mm_i, NI,NJ,LTI,1),         0.D0)
                   ELSEIF( LTI.EQ.LPJ-1 ) THEN
-                     ZA(I+3,J+1) = DCMPLX(DII4B(tau_i,mm, NI,NJ,LTI,1),         0.D0)
+                     ZA(I+3,J+1) = DCMPLX(DII4B(tau_i,mm_i, NI,NJ,LTI,1),         0.D0)
                   endIF
                   J=J+4
                enddo

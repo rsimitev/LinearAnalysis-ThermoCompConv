@@ -111,6 +111,8 @@ contains
       ! ----INPUT:
       CALL readConfigFile(inputfile)
 
+      call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
+
       ! ---- doesn't work for M=0 !!!!!!
       IF(M0.LT.1) THEN
         write(*,*) 'The code does not work for M0<1. ', M0, ' --> 1'
@@ -120,9 +122,6 @@ contains
       ! ----OUTPUT:
       OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
       CALL writeOutputHeader(unitOut)
-
-      RI = ETA/(1.0d0-ETA)
-      RO = 1.0D0 + RI
 
       IF(Symmetry.EQ.0) THEN
          ! - UNDEFINED SYMMETRIE:
@@ -541,11 +540,11 @@ contains
    !! not restore it at the end.
    subroutine varyLeCriticalRt(LeMin, LeMax)
       implicit none
+      double precision, intent(in):: LeMin, LeMax
       double precision:: LeOld, GroR
       double precision:: CriticalRt, RtMin, RtMax, dRt
       integer:: niter, i, info, counter
-      LeOld = Le
-      niter = int((UpperLimit-LeOld)/StepSize)
+      niter = int((LeMax-LeMin)/StepSize)
       CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
       dRt = Rt
       do i=0, niter
