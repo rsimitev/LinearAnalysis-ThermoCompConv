@@ -368,7 +368,7 @@ contains
             IF (I*J.EQ.0) THEN
                RINT = 0D0
             ELSE
-               RINT = 1D0 / 2D0*(C0 (I - J) - C0 (I+J) )
+               RINT = 1D0 / 2D0*(delta(I - J) - delta(I+J) )
             ENDIF
          ELSEIF (TRI.EQ.'SC ') THEN
             IF (I.EQ.0) THEN
@@ -377,7 +377,7 @@ contains
                RINT = 1D0 / 2D0*(S0 (I - J)+S0 (I+J) )
             ENDIF
          ELSEIF (TRI.EQ.'CC ') THEN
-            RINT = 1D0 / 2D0*(C0 (I+J)+C0 (I - J) )
+            RINT = 1D0 / 2D0*(delta (I+J)+delta (I - J) )
          ELSEIF (TRI.EQ.'SSS') THEN
             IF (I*J*K.EQ.0) THEN
                RINT = 0D0
@@ -387,8 +387,8 @@ contains
             ENDIF
          ELSEIF (TRI.EQ.'SSC') THEN
             IF (I*J.NE.0) THEN
-               RINT = 1D0 / 4D0*(C0 (I - J - K) - C0 (I+J+K)      &
-              +C0 (I - J+K) - C0 (I+J - K) )
+               RINT = 1D0 / 4D0*(delta (I - J - K) - delta (I+J+K)      &
+              +delta (I - J+K) - delta (I+J - K) )
             ELSE
                RINT = 0D0
             ENDIF
@@ -400,8 +400,8 @@ contains
               +S0 (I - J+K)+S0 (I - J - K) )
             ENDIF
          ELSEIF (TRI.EQ.'CCC') THEN
-            RINT = 1D0 / 4D0*(C0 (I+J+K)+C0 (I+J - K)+C0 (I &
-            - J+K)+C0 (I - J - K) )
+            RINT = 1D0 / 4D0*(delta (I+J+K)+delta (I+J - K)+delta (I &
+            - J+K)+delta (I - J - K) )
          ENDIF
       ELSEIF (Symmetry_i.EQ.1) THEN
          IF (TRI.EQ.'SS ') THEN
@@ -650,14 +650,14 @@ contains
 !     END OF ri
 !-----------------------------------------------------------------------
 !
-!
+!> Returns 1 if N is even or -1 if N is odd
 !-----------------------------------------------------------------------
-   pure integer function NGU (N)
+   pure integer function even_odd (N)
         implicit none
         integer, intent(in):: n
-        NGU = - 1
-        IF (MOD (N, 2) .EQ.0) NGU = 1
-   END FUNCTION NGU
+        even_odd = - 1
+        IF (MOD (N, 2) .EQ.0) even_odd = 1
+   END FUNCTION even_odd
 !-----------------------------------------------------------------------
 !
 !
@@ -701,7 +701,7 @@ contains
    pure double precision function S0 (N)
       implicit none
       integer, intent(in):: N
-      IF (NGU (N) .EQ.1) THEN
+      IF (even_odd(N) .EQ.1) THEN
          S0 = 0D0
       ELSE
          S0 = 2D0 / (N * DPI)
@@ -709,17 +709,15 @@ contains
    END FUNCTION S0
 !-----------------------------------------------------------------------
 !
-!
+!> Returns 1 id N is equal to 0. Returns 0 otherwise.
 !-----------------------------------------------------------------------
-   pure double precision function C0 (N)
+   pure double precision function delta (N)
       implicit none
       integer, intent(in):: N
-      IF (N.EQ.0) THEN
-         C0 = 1D0
-      ELSE
-         C0 = 0D0
+      delta = 0D0
+      IF (N.EQ.0) delta = 1D0
       ENDIF
-   END FUNCTION C0
+   END FUNCTION delta
 !-----------------------------------------------------------------------
 !
 !
@@ -727,7 +725,7 @@ contains
    pure double precision function S1 (N)
       implicit none
       integer, intent(in):: N
-      IF (NGU (N) .EQ.1) THEN
+      IF (even_odd (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             S1 = 0D0
          ELSE
@@ -744,7 +742,7 @@ contains
    pure double precision function C1 (N)
       implicit none
       integer, intent(in):: N
-      IF (NGU (N) .EQ.1) THEN
+      IF (even_odd (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             C1 = ro/2
          ELSE
@@ -761,7 +759,7 @@ contains
    pure double precision function S2 (N)
       implicit none
       integer, intent(in):: N
-      IF (NGU (N) .EQ.1) THEN
+      IF (even_odd (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             S2 = 0D0
          ELSE
@@ -779,7 +777,7 @@ contains
 !-----------------------------------------------------------------------
       implicit none
       integer, intent(in):: N
-      IF (NGU (N) .EQ.1) THEN
+      IF (even_odd (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             C2 = ri*ro + 1D0 / 3
          ELSE
@@ -796,7 +794,7 @@ contains
    pure double precision function S3 (N)
       implicit none
       integer, intent(in):: N
-      IF (NGU (N) .EQ.1) THEN
+      IF (even_odd (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             S3 = 0D0
          ELSE
@@ -814,7 +812,7 @@ contains
 !-----------------------------------------------------------------------
       implicit none
       integer, intent(in):: N
-      IF (NGU (N) .EQ.1) THEN
+      IF (even_odd (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             C3 = 1D0 / 4+ri+3D0 / 2*ri**2+ri**3
          ELSE
@@ -831,7 +829,7 @@ contains
    pure double precision function S4 (N)
       implicit none
       integer, intent(in):: N
-      IF (NGU (N) .EQ.1) THEN
+      IF (even_odd (N) .EQ.1) THEN
          IF (N.EQ.0) THEN
             S4 = 0D0
          ELSE
@@ -846,15 +844,15 @@ contains
 !
 !
 !-----------------------------------------------------------------------
-   pure double precision function C4 (N)
+   pure double precision function C4(N)
 !-----------------------------------------------------------------------
       implicit none
       integer, intent(in):: N
-      IF (NGU (N) .EQ.1) THEN
+      IF (even_odd(N).EQ.1) THEN
          IF (N.EQ.0) THEN
             C4 = 1D0 / 5 + ri + 2*ri**2 + 2*ri**3 + ri**4
          ELSE
-            C4 = (4+12*ri+12*ri**2) / DPI**2 / N**2 - 24 / DPI**4 / N**4
+            C4 = (4+12*RI+12*RI**2) / DPI**2 / N**2 - 24 / DPI**4 / N**4
          ENDIF
       ELSE
          C4 = - (4+12*ri+12*ri**2+8*ri**3) / DPI**2 / N**2 + (24+48*ri) / DPI**4 / N**4
