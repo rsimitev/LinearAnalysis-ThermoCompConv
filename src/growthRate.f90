@@ -691,7 +691,6 @@ contains
       integer, intent(in):: N
       delta = 0D0
       IF (N.EQ.0) delta = 1D0
-      ENDIF
    END FUNCTION delta
 !-----------------------------------------------------------------------
 !
