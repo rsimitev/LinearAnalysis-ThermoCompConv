@@ -311,7 +311,7 @@ contains
       integer:: L
       NEigenmodes=0
       DO L = LMIN, 2*Truncation+M0-1, LD
-         NEigenmodes = NEigenmodes+4*INT( DBLE(2*Truncation+1-L+M0)/2 )
+         NEigenmodes = NEigenmodes + 4*INT( DBLE(2*Truncation+1-L+M0)/2 )
       endDO
    end subroutine
 
