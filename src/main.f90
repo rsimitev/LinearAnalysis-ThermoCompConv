@@ -73,6 +73,8 @@ program linearOnset
       case(6) ! vary Le and calculate critical Rt at fixed Rc,  P, tau, eta, m
          LowerLimit = Le
          call varyLeCriticalRt()
+      case(7) ! Loops through the m's to find the critical Rt_c ans m_c.
+         call fixedParCriticalRaAndM0_v2()
       case default
          Write(*,*) 'Unknown computation type:', LCALC
    end select
@@ -188,6 +190,64 @@ contains
       WRITE(*,*) 'Lewis=',Le,' Rc=',Rc
       WRITE(*,*) 'R_crit=',CriticalRt, '  (growth rate =',GROR,')'
    end subroutine
+
+   !**********************************************************************
+   !> Computes the lowest critical thermal Rayleigh number of all m's
+   !! for all other parameters fixed.
+   subroutine fixedParCriticalRaAndM0_v2()
+      implicit none
+      double precision:: Rt_c
+      double precision:: RtMin, RtMax
+      double precision:: CriticalRt
+      INTEGER:: CriticalM
+      integer:: info, i
+
+      info=0
+      CriticalRt = 1.0d300
+      Write(*,*)  "i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info"
+      DO m0=1, Truncation
+         IF(Symmetry.EQ.0) THEN
+            ! - UNDEFINED SYMMETRIE:
+            LMIN=M0
+            LD=1
+         ELSEIF(Symmetry.EQ.1) THEN
+            ! - EQUATORIAL ANTISYMMETRIE (L+M ODD):
+            LMIN=M0+1
+            LD=2
+         ELSEIF(Symmetry.EQ.2) THEN
+            ! - EQUATORIAL SYMMETRIE (L+M EVEN);
+            LMIN=M0
+            LD=2
+         ENDIF
+         CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
+         ! Increase the interval, in case we did not find anything.
+         do i=1, 5
+            RtMin=Rt - 3.0d0*Rt
+            RtMax=Rt + 3.0d0*Rt
+
+            CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info)
+            Rt = Rt_c
+            if (info.NE.2 .and. i > 2) then
+               Write(*,*)  i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info
+               exit
+            endif
+         enddo
+         if(info.NE.0) then
+            Write(*,*) 'Failed to find roots: error:', info
+            stop 5
+         endif
+         if (Rt_c < CriticalRt) then
+            CriticalRt = Rt_c
+            CriticalM  = m0
+         endif
+         write( unitOut,'(1X,1P,E17.6,I4)') Rt_c, M0
+         write( *,'(1X,1P,E17.6,I4)') Rt_c, M0
+         Rt = Rt_c
+      enddo
+      write( unitOut,'(">",1P,E17.6,I4)')  CriticalRt, CriticalM
+      write( *,'(">",1P,E17.6,I4)')    CriticalRt, CriticalM
+   end subroutine
+
 
    !**********************************************************************
    !> Computes the lowest critical thermal Rayleigh number of all m's
