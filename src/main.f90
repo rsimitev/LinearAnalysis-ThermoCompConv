@@ -222,15 +222,13 @@ contains
          CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
          ! Increase the interval, in case we did not find anything.
          do i=1, 5
-            RtMin=Rt - 3.0d0*dabs(Rt)
-            RtMax=Rt + 3.0d0*dabs(Rt)
+            RtMin=Rt - 2*i*dabs(Rt)
+            RtMax=Rt + 2*i*dabs(Rt)
 
             CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info)
             Rt = Rt_c
-            if (info.NE.2 .and. i > 2) then
-               Write(*,*)  i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info
-               exit
-            endif
+            Write(*,*)  i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info
+            if (info.eq.0) exit
          enddo
          if(info.NE.0) then
             Write(*,*) 'Failed to find roots: error:', info

@@ -98,7 +98,7 @@
          ! If we have gone over stepMax iterations, exit
          IF (N.GT.stepMax) THEN
             info = 1
-            x0 = max(x1,x2)
+            x0 = xmin
             exit
          ENDIF
       enddo !mainloop
