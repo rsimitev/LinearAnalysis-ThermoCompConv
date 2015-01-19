@@ -26,6 +26,11 @@
       end interface
 
       info = 0
+      if(xmin>xmax) then
+         x0   = xmin
+         xmin = xmax
+         xmax = x0
+      endif
       x0 = xmin
       X1 = Xmin
       X2 = Xmax
