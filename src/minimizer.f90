@@ -27,13 +27,14 @@
 
       info = 0
       if(xmin>xmax) then
-         x0   = xmin
-         xmin = xmax
-         xmax = x0
+         x0 = xmax
+         X1 = Xmax
+         X2 = Xmin
+      else
+         x0 = xmin
+         X1 = Xmin
+         X2 = Xmax
       endif
-      x0 = xmin
-      X1 = Xmin
-      X2 = Xmax
       F1 = FN (X1)
       F2 = FN (X2)
       ! Write(*,*) 'In minimizer: ',X1, F1, X2, F2
@@ -97,7 +98,7 @@
          ! If we have gone over stepMax iterations, exit
          IF (N.GT.stepMax) THEN
             info = 1
-            x0 = xmin
+            x0 = max(x1,x2)
             exit
          ENDIF
       enddo !mainloop
