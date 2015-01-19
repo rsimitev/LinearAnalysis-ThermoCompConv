@@ -222,8 +222,8 @@ contains
          CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
          ! Increase the interval, in case we did not find anything.
          do i=1, 5
-            RtMin=Rt - 3.0d0*Rt
-            RtMax=Rt + 3.0d0*Rt
+            RtMin=Rt - 3.0d0*dabs(Rt)
+            RtMax=Rt + 3.0d0*dabs(Rt)
 
             CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info)
             Rt = Rt_c
