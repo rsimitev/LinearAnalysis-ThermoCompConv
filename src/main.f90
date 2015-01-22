@@ -226,7 +226,6 @@ contains
             RtMax=Rt + 2*i*dabs(Rt)
 
             CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info)
-            Rt = Rt_c
             Write(*,*)  i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info
             if (info.eq.0) exit
          enddo
@@ -240,7 +239,7 @@ contains
          endif
          write( unitOut,'(1X,1P,E17.6,I4)') Rt_c, M0
          write( *,'(1X,1P,E17.6,I4)') Rt_c, M0
-         Rt = Rt_c
+         !Rt = Rt_c
       enddo
       write( unitOut,'(">",1P,E17.6,I4)')  CriticalRt, CriticalM
       write( *,'(">",1P,E17.6,I4)')    CriticalRt, CriticalM

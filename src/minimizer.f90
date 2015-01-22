@@ -1,19 +1,23 @@
 !*********************************************************************
-!    fn     : double precision function of only one variable
-!--  Xmin   : min of interval
-!--  Xmax   : max of interval
-!    rdx    : relative error in x
-!--  df     : absolute error limit in f
-!--  stepMax   : max. count of steps
-!--  X0     : on output: calculated root
-!--  info   : on output: 0: convergence; 1: no convergence;
-!                     2: abserr or relerr should be zero;
+!>    fn     : double precision function of only one variable
+!!    Xmin   : min of interval
+!!    Xmax   : max of interval
+!!    rdx    : relative error in x
+!!    df     : absolute error limit in f
+!!    stepMax   : max. count of steps
+!!    X0     : on output: calculated root
+!!    info   : on output: 0: convergence; 
+!!                        1: no convergence;
+!!                        2: no zero in the interval;
    SUBROUTINE minimizer (fn, Xmin, xmax, rdx, df, stepMax, X0, info)
       implicit none
       double precision, intent(in):: xmin, xmax, rdx, df
-      integer, intent(in):: stepMax
+      integer, intent(in):: stepMax !< max. count of steps
+!>    0: convergence;\n 
+!!    1: no convergence;\n
+!!    2: no zero in the interval;
       integer, intent(out):: info
-      double precision, intent(out):: x0
+      double precision, intent(out):: x0 !< Calculated root
       double precision:: x1, x2, x3
       double precision:: f1, f2, f3, ff, dxdf
       integer:: n
