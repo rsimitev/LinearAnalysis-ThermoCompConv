@@ -67,7 +67,7 @@ program linearOnset
          call varyTauCriticalState()
       case(4) ! calculate the critical eigenvector. Print for plotting.
          CALL fixedParCriticalEigenVector()
-      case(5) ! vary m and calculate critical R at fixed P, tau, eta.
+      case(5) ! vary m and calculate critical Rt at fixed P, tau, eta, Rc.
          LowerLimit = m0
          call varyMCriticalRt()
       case(6) ! vary Le and calculate critical Rt at fixed Rc,  P, tau, eta, m
@@ -544,9 +544,12 @@ contains
 
    subroutine varyMCriticalRt()
       implicit none
-      double precision:: CriticalRt
-      integer:: info
+      double precision:: CriticalRt, MinCriticalRt
+      integer:: info, MforMinCriticalRt
       CriticalRt=Rt
+      MinCriticalRt=100.d10
+      MforMinCriticalRt=2000
+
       do M0=int(LowerLimit), int(UpperLimit), INT(StepSize)
          IF(Symmetry.EQ.0) THEN
 ! -   UNDEFINED SYMMETRIE:
@@ -563,9 +566,19 @@ contains
          ENDIF
          CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
          CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
-         WRITE(*,*) M0,CriticalRt
+         if(info.NE.0) then
+            Write(*,*) 'Failed to find roots: error:', info
+            stop 5
+         endif
          WRITE(unitOut,*) M0, CriticalRt
+         WRITE(*,*) M0,CriticalRt
+         if (CriticalRt < MinCriticalRt) then
+            MinCriticalRt     = CriticalRt
+            MforMinCriticalRt = M0
+         endif
       enddo
+      write( unitOut,'(">",1P,E17.6,I4)')  MinCriticalRt, MforMinCriticalRt
+      write( *,'(">",1P,E17.6,I4)')  MinCriticalRt, MforMinCriticalRt
    end subroutine
 
    !> Varies the Lewis number and computes the critical
