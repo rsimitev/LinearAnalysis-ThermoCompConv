@@ -9,28 +9,29 @@ set (GLO_VERSION_PATCH 1)
 set (GLO_VERSION
    "${GLO_VERSION_MAJOR}.${GLO_VERSION_MINOR}.${GLO_VERSION_PATCH}" )
 
-# Default build
-SET(CMAKE_BUILD_TYPE Release CACHE STRING "Default to a RELEASE build.")
-# default installation
-SET(CMAKE_INSTALL_PREFIX ${GLO_SOURCE_DIR} CACHE STRING "Choose the installation directory.")
 
 SET(CMAKE_MODULE_PATH ${GLO_SOURCE_DIR}/cmake)
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
 # FFLAGS depend on the compiler
 get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 
 if(${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   # gfortran
+  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp -ffree-line-length-none -fno-f2c")
   set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -cpp -ffree-line-length-none -fno-f2c")
   set (CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} -cpp -ffree-line-length-none -fno-f2c -Wall -Wextra -fcheck=all -finit-real=inf")
   set (CMAKE_Fortran_FLAGS_PROFILE "-cpp -ffree-line-length-none -fno-f2c -g -pg -coverage -Wall -Wextra")
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
+  set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fpp -heap-arrays")
   set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -fpp -heap-arrays")
   set (CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} -fpp -warn all -check bounds -traceback  -fp-stack-check -heap-arrays")
 endif ()
 
 set (GLO_VERSION_STRING "${GLO_VERSION}(${FEATURES}) - ${CMAKE_BUILD_TYPE}")
+
+# Default build
+SET(CMAKE_BUILD_TYPE RELEASE CACHE STRING "Default to a RELEASE build.")
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 
 include_directories(${GLO_BINARY_DIR})
 
