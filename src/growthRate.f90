@@ -363,6 +363,7 @@ contains
       J = JI
       K = KI
       CALL tauSCH (TRI, I, J, K)
+      ! TODO: COnvert into select case.
       IF (Symmetry_i.EQ.0) THEN
          IF (TRI.EQ.'SS ') THEN
             IF (I*J.EQ.0) THEN
