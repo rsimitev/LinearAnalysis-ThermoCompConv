@@ -140,7 +140,8 @@ contains
          LD=2
       ENDIF
 
-      CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
+      CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
+      Write(*,*) 'Init: ', LMIN, LD, Truncation, M0, getEigenProblemSize()
    END subroutine
 
    !**********************************************************************
@@ -238,7 +239,7 @@ contains
             LMIN=M0
             LD=2
          ENDIF
-         CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
+         CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
          ! Increase the interval, in case we did not find anything.
          do i=1, 5
             RtMin=Rt - 2*i*dabs(Rt)
@@ -296,7 +297,7 @@ contains
       DO II=1, nm0
          M0   = M0I(II)
          LMIN = LMINI(II)
-         CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
+         CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
          ! Increase the interval, in case we did not find anything.
          do i=1, 3
             RtMin = Rt/(2.0d0**dble(i))
@@ -586,7 +587,7 @@ contains
             LMIN=M0
             LD=2
          ENDIF
-         CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
+         CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
          CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
          if(info.NE.0) then
             Write(*,*) 'Failed to find roots: error:', info
@@ -615,7 +616,7 @@ contains
       double precision:: CriticalRt, RtMin, RtMax, dRt
       integer:: niter, i, info, counter
       niter = int((LeMax-LeMin)/StepSize)
-      CALL EigenmodeNumber(LMIN,LD,Truncation,M0,NEigenmodes)
+      CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
       dRt = Rt
       do i=0, niter
          Le  = LeOld + i*StepSize

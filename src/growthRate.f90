@@ -10,7 +10,7 @@ module GrowthRateMod
    character(len=3):: variable='Rt'
    integer:: Symmetry_i, mm_i
    public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes
-   public:: EigenmodeNumber, GrowthRateInit, setVariableParam
+   public:: setEigenProblemSize, getEigenProblemSize, GrowthRateInit, setVariableParam
 contains
 
    !***********************************************************************
@@ -175,7 +175,8 @@ contains
 
       I=0
       LMAX=2*Truncation+mm_i-1
-
+      Write(*,*) 'MAT():', tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i
+      Write(*,*) 'MAT():', Symmetry_i, Truncation, NDIM
       DO LI=LMIN,LMAX,LD
          LPI=LI
          ! Determine L for toroidal (w) field:
@@ -210,6 +211,7 @@ contains
                DO NJ=1,NJMAX
                   IF(J+3.GT.NDIM .OR. I+3.GT.NDIM) THEN
                      write(*,*) 'MAT(): NDIM too small.'
+                     Write(*,*) 'i =',i,'j =', j, 'NDIM =', NDIM
                      stop
                   endIF
                   IF( LI.EQ.LJ ) THEN
@@ -376,11 +378,10 @@ contains
    !***************************************************************************
    ! - DETERMINATION OF DIMENSION of the problem:
    ! - for each value of L the number of possible N-values is added
-   SUBROUTINE EigenmodeNumber(LMIN,LD,Truncation,M,NEigenmodes)
+   SUBROUTINE setEigenProblemSize(LMIN,LD,Truncation,M)
    !***************************************************************************
       implicit none
       integer, intent(in):: LMIN,LD,Truncation,M
-      integer, intent(out):: NEigenmodes
       integer:: L
       ! - DETERMINATION OF DIMENSION:
       ! - for each value of L the number of possible N-values is added
@@ -391,6 +392,11 @@ contains
          NEigenmodes = NEigenmodes + 4*INT( DBLE(2*Truncation+1-L+M)/2 )
       endDO
    end subroutine
+
+   integer function getEigenProblemSize()
+      implicit none
+      getEigenProblemSize = NEigenModes 
+   end function
 
 !-----------------------------------------------------------------------
    pure double precision function R (TRII, Symmetry_i, II, JI, KI)
