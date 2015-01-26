@@ -106,7 +106,7 @@
             exit
          ENDIF
       enddo !mainloop
-      END SUBROUTINE minimizer
+   END SUBROUTINE minimizer
 
    !***************************************************************
    SUBROUTINE swap (X1, Y1, X2, Y2)
