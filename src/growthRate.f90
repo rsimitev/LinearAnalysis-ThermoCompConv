@@ -175,7 +175,7 @@ contains
 
       I=0
       LMAX=2*Truncation+mm_i-1
-      Write(*,*) 'MAT():', tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i
+      Write(*,*) 'MAT():', mm_i, LMIN, LMAX, LD
       Write(*,*) 'MAT():', Symmetry_i, Truncation, NDIM
       DO LI=LMIN,LMAX,LD
          LPI=LI

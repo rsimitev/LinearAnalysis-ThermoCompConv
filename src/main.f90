@@ -239,6 +239,7 @@ contains
             LMIN=M0
             LD=2
          ENDIF
+         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
          CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
          ! Increase the interval, in case we did not find anything.
          do i=1, 5
@@ -296,8 +297,10 @@ contains
       enddo
       DO II=1, nm0
          M0   = M0I(II)
+         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
          LMIN = LMINI(II)
          CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
+         !WRITE(*,*) 'fixedParCriticalRaAndM0: ', m0, LMIN, LD
          ! Increase the interval, in case we did not find anything.
          do i=1, 3
             RtMin = Rt/(2.0d0**dble(i))
@@ -482,6 +485,7 @@ contains
          RtMin = Rt/5.0
          RtMax = Rt*5
          RtOld = Rt
+         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
          CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE, ABSE, 50, CriticalRt, info)
          frequency = MaxGrowthRateCmplx(CriticalRt)
          GROR  = dimag(frequency)
@@ -587,6 +591,7 @@ contains
             LMIN=M0
             LD=2
          ENDIF
+         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
          CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
          CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
          if(info.NE.0) then
@@ -624,6 +629,7 @@ contains
          RtMax = Rt + dRt
          counter = 0
          do
+            call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
             CALL minimizer(MaxGrowthRate,RtMin, RtMax,RELE,ABSE,NSMAX,CriticalRt, info)
             if (info==0 .or. counter.gt.20) exit
             counter = counter + 1
