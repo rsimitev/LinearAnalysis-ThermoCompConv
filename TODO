@@ -1,4 +1,6 @@
 * Bring the scripts up to scratch.
-* Write unit tests.
+* Write more unit tests.
+* Rename minimizer -> root_finder because that is what it is.
+* Increase efficiency of the root finder.
 
 
