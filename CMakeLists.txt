@@ -36,6 +36,17 @@ include_directories(${GLO_BINARY_DIR})
 
 find_package(BLAS REQUIRED)
 
+
+# Declare all the options in the toplevel CMakeLists.txt file
+option(BUILD_UTILS "Build the utilities associated with the code." OFF)
+option(BUILD_TESTS "Build a series of driver programs that test several subroutines of the code." OFF)
+option(BUILD_DOCS  "Build online documentation and user's manual." OFF)
+
+# Optionally enable testing
+if(BUILD_TESTS)
+   enable_testing()
+endif(BUILD_TESTS)
+
 add_subdirectory(src)
 add_subdirectory(scripts)
 
