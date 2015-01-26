@@ -6,62 +6,109 @@ module GrowthRateMod
    double precision, parameter:: DPI=3.141592653589793D0
    !> Internally used parameters
    double precision:: Rt_i, Rc_i, Le_i, Pt_i, tau_i
-   double precision:: ri, ro
+   double precision:: ri, ro, eta_i
+   character(len=3):: variable='Rt'
    integer:: Symmetry_i, mm_i
    public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes
-   public:: EigenmodeNumber
+   public:: EigenmodeNumber, GrowthRateInit, setVariableParam
 contains
 
+   !***********************************************************************
+   !> Initializes the module with fixed parameters.
    subroutine GrowthRateInit(Rt, Rc, Pt, Le, tau,eta, m, Symmetry)
       implicit none
       double precision, intent(in)::Rt, Rc, Pt, Le, tau, eta
       integer, intent(in):: m, Symmetry
-      Rt_i = Rt
-      Rc_i = Rc
-      Pt_i = Pt
-      Le_i = Le
-      tau_i= tau
-      mm_i = m
+      Rt_i  = Rt
+      Rc_i  = Rc
+      Pt_i  = Pt
+      Le_i  = Le
+      tau_i = tau
+      mm_i  = m
+      eta_i = eta
       Symmetry_i = Symmetry
-      RI = ETA/(1.0d0-ETA)
+      RI = ETA_i/(1.0d0-ETA_i)
       RO = 1.0D0 + RI
    end subroutine
+
+   !***********************************************************************
+   !> Sets which parameter is going to be varied.
+   !! Possible values for par are Rt, Rc, Pt, Le, tau, eta and m.\n
+   !! The default value is 'Rt'.
+   subroutine setVariableParam(par)
+      implicit none
+      character(len=3), intent(in):: par
+      select case(par)
+         case ('Rt','Rc','Pt','Le','tau','eta','m')
+            variable = par
+         case default
+            variable = 'Rt'
+      end select
+   end subroutine
+
+   !***********************************************************************
+   !> Sets the internal parameter selected by setVariableParam(par) to the value
+   !! \a val
+   subroutine setParameterValue(val)
+      implicit none
+      double precision, intent(in):: val
+      select case(variable)
+         case ('Rt')
+            Rt_i = val
+         case ('Rc')
+            Rc_i = val
+         case ('Pc')
+            Pt_i = val
+         case ('Le')
+            Le_i = val
+         case ('tau')
+            tau_i = val
+         case ('eta')
+            eta_i = val
+         case ('m')
+            mm_i = int(val)
+         case default
+            Rt_i = val
+      end select
+   end subroutine
+
    !***********************************************************************
    !> Computes the maximum imaginary part of the frequency,
    !! that is, the maximum growth rate for all eigen modes.
-   double precision FUNCTION MaxGrowthRate(Ra)
+   !! Whatever parameter is varied will see its value changed to \a val.
+   double precision FUNCTION MaxGrowthRate(val)
       implicit none
-      double precision, intent(in):: Ra
-      double precision:: RtOld
+      double precision, intent(in):: val
       double complex:: ZEW(NEigenmodes)
       integer:: imin
-
-      Rt_i = Ra
+      call setParameterValue(val)
       call computeGrowthRateModes(.false., zew)
       ! search for lowest imaginary part:
       IMIN = minloc(DIMAG(ZEW),1)
       MaxGrowthRate = DIMAG(ZEW(imin))
-      Rt=RtOld
    end function
 
+   !***********************************************************************
    !> Computes the complex frequency for which the growth rate is maximum.
-   double complex FUNCTION MaxGrowthRateCmplx(Ra)
+   !! Whatever parameter is varied will see its value changed to \a val.
+   double complex FUNCTION MaxGrowthRateCmplx(val)
       implicit none
-      double precision, intent(in):: Ra
-      double precision:: RtOld
+      double precision, intent(in):: val
       double complex:: ZEW(NEigenmodes)
       integer:: imin
 
-      RtOld = Rt
-      Rt    = Ra
+      call setParameterValue(val)
       Zew = dcmplx(0.0d0,0.0d0)
       call computeGrowthRateModes(.false., zew)
       ! search for lowest imaginary part:
       IMIN = minloc(DIMAG(ZEW),1)
       MaxGrowthRateCmplx = ZEW(IMIN)
-      Rt=RtOld
    end function
 
+   !***********************************************************************
+   !> Computes the eigenvalues and optionally the eigen modes of the
+   !! algebraic problem. The real part of the eigen value is the oscillation
+   !! frequency and the imaginary part is the symmetric of the growth rate.
    subroutine computeGrowthRateModes(sort, zew, zeval)
       implicit none
       !> .True. Sort the eigenvalues and eigenvectors if computed.
@@ -77,7 +124,7 @@ contains
       integer:: i, j, k, info
 
       ! - MAT SETS THE complex(8) MATRICES ZA AND ZB SETTING OF MATRIX:
-      CALL MAT(tau, Rt, Rc, Pt, Le, mm_i, Symmetry, ZA,ZB, NEigenmodes)
+      CALL MAT(tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB, NEigenmodes)
 
 !       SUBROUTINE zGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
 !     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
@@ -327,7 +374,7 @@ contains
    end function
 
    !***************************************************************************
-   ! - DETERMINATION OF DIMENSION:
+   ! - DETERMINATION OF DIMENSION of the problem:
    ! - for each value of L the number of possible N-values is added
    SUBROUTINE EigenmodeNumber(LMIN,LD,Truncation,M,NEigenmodes)
    !***************************************************************************
@@ -340,8 +387,8 @@ contains
       !         print*, "Triangular truncation (2.12)"
       !         print*, LMIN, "...", 2*Truncation+M-1,LD
       NEigenmodes=0
-      DO L = LMIN, 2*Truncation+M0-1, LD
-         NEigenmodes = NEigenmodes + 4*INT( DBLE(2*Truncation+1-L+M0)/2 )
+      DO L = LMIN, 2*Truncation+M-1, LD
+         NEigenmodes = NEigenmodes + 4*INT( DBLE(2*Truncation+1-L+M)/2 )
       endDO
    end subroutine
 
