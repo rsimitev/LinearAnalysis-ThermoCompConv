@@ -2,6 +2,7 @@ add_subdirectory(lapack)
 
 set(GLO_SRCS
    growthRate.f90  
+   parser.f90
    io.f90  
    main.f90  
    minimizer.f90  
