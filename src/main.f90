@@ -548,7 +548,7 @@ contains
          ELSE
             TAU = TAU1 + 10.0d0**(int(log10(abs(tau1)))-1)*StepSize/dabs(StepSize)
          ENDIF
-!--      interpolate new extimate for Rt_c:
+!--      interpolate new estimate for Rt_c:
          IF(dabs(TAU1-TAU0).le.1.0d-10) THEN
 !          Assume Rac grows with Ta**(4/3)
            Rt = CriticalRt + (4.0/3.0)*Tau1**(1.0/3.0)*(TAU-TAU1)
@@ -561,7 +561,7 @@ contains
          if(tauMax.GT.tauMin) then
             if (TAU.GT.tauMax) exit
          else
-            if (TAU.LT.tauMin) exit
+            if (TAU.LT.tauMax) exit
          endif
       enddo tauLoop
    end subroutine
