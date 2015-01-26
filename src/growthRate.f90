@@ -175,9 +175,9 @@ contains
       ZB(:,:)=DCMPLX(0D0,0D0)
 
       I=0
-      LMAX=2*Truncation+M0-1
-      !Write(*,*) 'MAT():', m0, LMIN, LMAX, LD
-      !Write(*,*) 'MAT():', Symmetry, Truncation, NDIM
+      LMAX=2*Truncation+mm_i-1
+      Write(*,*) 'MAT():', mm_i, LMIN, LMAX, LD
+      Write(*,*) 'MAT():', Symmetry_i, Truncation, NDIM
       DO LI=LMIN,LMAX,LD
          LPI=LI
          ! Determine L for toroidal (w) field:
@@ -250,23 +250,37 @@ contains
       enddo
    end subroutine
 
-   subroutine testMAT()
+   subroutine testMAT(ZA_refFile, ZB_refFile, error)
       implicit none
-      integer, parameter:: mm_i=18, Symmetry_i=2, Nmodes=220, Truncation=10
+      character(len=*), intent(in):: ZA_refFile, ZB_refFile
+      integer, intent(out):: error
+      integer, parameter:: mm_i=18, Symmetry_i=2, Nmodes=220
       double complex:: ZA(Nmodes,Nmodes),ZB(Nmodes,Nmodes)
       double complex:: ZA_ref,ZB_ref
       double precision, parameter:: tau_i=1.0d5, Rt_i=3.0d6, Rc_i=1.0d2
       double precision, parameter:: Pt_i=1.0d0, Le_i=0.3d0
       integer:: i,j,k1, k2
-      integer:: lmax, LMIN
+      integer:: lmax
       integer:: ni, nimax, li, lpi, lti
       integer:: nj, njmax, lj, lpj, ltj
-      CALL MAT(tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB, Nmodes)
-      I=0
+      Write(*,*) ZA_refFile,' ', ZB_refFile
+      Write(*,*) tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, Nmodes 
+      eta=0.35
       LMIN = mm_i
+      LD = 2
+      Truncation=10
+      Symmetry=2
+      NEigenModes=Nmodes
+      call GrowthRateInit(Rt_i, Rc_i, Pt_i, Le_i, tau_i,eta, mm_i, Symmetry) 
+      Write(*,*) 'ri =', ri,'ro =', ro
+      CALL MAT(tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB, Nmodes)
+      Write(*,*) 'Done with MAT.'
+
+      I=0
+      error=0
       LMAX = 2*Truncation+mm_i-1
-      open(unit=444, file='ZA_ref.txt', status='OLD')
-      open(unit=445, file='ZB_ref.txt', status='OLD')
+      open(unit=444, file=trim(ZA_refFile), status='OLD')
+      open(unit=445, file=trim(ZB_refFile), status='OLD')
       DO LI=LMIN,LMAX,LD
          LPI=LI
          ! Determine L for toroidal (w) field:
@@ -302,16 +316,16 @@ contains
                   do k1=1, 4
                      do k2=1, 4
                         Read(444,*) ZA_ref
-                        if(ZA(i+k1,j+k2).ne.ZA_ref) then 
-                           Write(*,*) 'Fail.'
-                           Write(*,*) 'ZA(',i+k1,',',j+k2,')=',ZA(i+k1,j+k2),'.ne.',ZA_ref
-                           stop
+                        Write(*,*) 'ZA(',i+k1,',',j+k2,')=',ZA(i+k1,j+k2),'.vs.',ZA_ref
+                        if(abs(ZA(i+k1,j+k2)-ZA_ref).gt.1.0e-5) then 
+                           error=1
+                           return
                         endif
                         Read(445,*) ZB_ref
-                        if(ZB(i+k1,j+k2).ne.ZB_ref) then 
-                           Write(*,*) 'Fail.'
-                           Write(*,*) 'ZB(',i+k1,',',j+k2,')=',ZB(i+k1,j+k2),'.ne.',ZB_ref
-                           stop
+                        Write(*,*) 'ZB(',i+k1,',',j+k2,')=',ZB(i+k1,j+k2),'.vs.',ZB_ref
+                        if(abs(ZB(i+k1,j+k2)-ZB_ref).gt.1.0e-5) then 
+                           error=2
+                           return
                         endif
                      enddo
                   enddo
@@ -491,8 +505,8 @@ contains
       I = II
       J = JI
       K = KI
-      CALL tauSCH (TRI, I, J, K)
-      ! TODO: COnvert into select case.
+      CALL tausch (TRI, I, J, K)
+      ! TODO: COnvert to select case.
       IF (Symmetry_i.EQ.0) THEN
          IF (TRI.EQ.'SS ') THEN
             IF (I*J.EQ.0) THEN
