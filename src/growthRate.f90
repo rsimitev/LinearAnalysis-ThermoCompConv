@@ -110,7 +110,8 @@ contains
 
       I=0
       LMAX=2*Truncation+M0-1
-
+      !Write(*,*) 'MAT():', m0, LMIN, LMAX, LD
+      !Write(*,*) 'MAT():', Symmetry, Truncation, NDIM
       DO LI=LMIN,LMAX,LD
          LPI=LI
          ! Determine L for toroidal (w) field:
