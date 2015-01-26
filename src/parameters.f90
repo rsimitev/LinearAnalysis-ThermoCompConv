@@ -4,8 +4,7 @@ module parameters
   double precision:: TAU,Rt,Pt,C,Le,Rc,eta
   ! Dimensions
   integer::Truncation,M0,NEigenmodes,LMIN,LD,Symmetry, NSMAX, LCALC
-  double precision:: LowerLimit,UpperLimit,StepSize,DRt,ABSE,RELE, DRc
-  integer, parameter:: NMAX=900
+  double precision:: LowerLimit,UpperLimit,StepSize,ABSE,RELE, DRt
   character(len=3):: VariablePar
 contains
    subroutine setDefaults()
@@ -13,9 +12,7 @@ contains
       Symmetry = 2
       LCALC = 2
       Rt   = 4.D3
-      DRt  = Rt*0.1d0
       Rc   = 4.D3
-      DRc  = Rc*0.1D0
       TAU  = 100.0D0
       LowerLimit  = TAU
       UpperLimit  = 10*LowerLimit

@@ -10,7 +10,7 @@ contains
       CHARACTER(len=*) inputfile
       OPEN(15,FILE=inputfile,STATUS='OLD',ERR=10)
       GOTO 11
-10    WRITE(*,*) 'LOSUB.F: Error while reading inputfile!'
+10    WRITE(*,*) 'Error while reading inputfile!'
       STOP   NO_INFILE
 11    CONTINUE
       READ(15,'(A)',END=15) 
