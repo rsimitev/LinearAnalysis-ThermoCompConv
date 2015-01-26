@@ -11,6 +11,7 @@ module GrowthRateMod
    integer:: Symmetry_i, mm_i
    public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes
    public:: setEigenProblemSize, getEigenProblemSize, GrowthRateInit, setVariableParam
+   public:: testMAT
 contains
 
    !***********************************************************************
@@ -247,6 +248,81 @@ contains
              I=I+4
          enddo
       enddo
+   end subroutine
+
+   subroutine testMAT()
+      implicit none
+      integer, parameter:: mm_i=18, Symmetry_i=2, Nmodes=220, Truncation=10
+      double complex:: ZA(Nmodes,Nmodes),ZB(Nmodes,Nmodes)
+      double complex:: ZA_ref,ZB_ref
+      double precision, parameter:: tau_i=1.0d5, Rt_i=3.0d6, Rc_i=1.0d2
+      double precision, parameter:: Pt_i=1.0d0, Le_i=0.3d0
+      integer:: i,j,k1, k2
+      integer:: lmax, LMIN
+      integer:: ni, nimax, li, lpi, lti
+      integer:: nj, njmax, lj, lpj, ltj
+      CALL MAT(tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB, Nmodes)
+      I=0
+      LMIN = mm_i
+      LMAX = 2*Truncation+mm_i-1
+      open(unit=444, file='ZA_ref.txt', status='OLD')
+      open(unit=445, file='ZB_ref.txt', status='OLD')
+      DO LI=LMIN,LMAX,LD
+         LPI=LI
+         ! Determine L for toroidal (w) field:
+         IF( Symmetry_i.EQ.2 ) THEN
+            LTI=LI+1
+         ELSEIF( Symmetry_i.EQ.1 ) THEN
+            LTI=LI-1
+         ELSEIF( Symmetry_i.EQ.0 ) THEN
+            LTI=LI
+         endIF
+         NIMAX=INT( DBLE(2*Truncation+1-LI+mm_i)/2 )
+
+         DO NI=1,NIMAX
+            J=0
+            DO LJ=LMIN,LMAX,LD
+               LPJ=LJ
+               IF( Symmetry_i.EQ.2 ) THEN
+                  LTJ=LJ+1
+               ELSEIF( Symmetry_i.EQ.1 ) THEN
+                  LTJ=LJ-1
+               ELSEIF( Symmetry_i.EQ.0 ) THEN
+                  LTJ=LJ
+               endIF
+               NJMAX=INT( DBLE(2*Truncation+1-LJ+mm_i)/2 )
+
+               !  ******************** I: Equation (Line) ******************
+               !  ******************** J: Variable (Column) ****************
+               !  ******************** I+1: v (poloidal)  ******************
+               !  ******************** I+2: theta         ******************
+               !  ******************** I+3: w (toroidal)  ******************
+               ! new****************** I+4: gamma (concentration) **********
+               DO NJ=1,NJMAX
+                  do k1=1, 4
+                     do k2=1, 4
+                        Read(444,*) ZA_ref
+                        if(ZA(i+k1,j+k2).ne.ZA_ref) then 
+                           Write(*,*) 'Fail.'
+                           Write(*,*) 'ZA(',i+k1,',',j+k2,')=',ZA(i+k1,j+k2),'.ne.',ZA_ref
+                           stop
+                        endif
+                        Read(445,*) ZB_ref
+                        if(ZB(i+k1,j+k2).ne.ZB_ref) then 
+                           Write(*,*) 'Fail.'
+                           Write(*,*) 'ZB(',i+k1,',',j+k2,')=',ZB(i+k1,j+k2),'.ne.',ZB_ref
+                           stop
+                        endif
+                     enddo
+                  enddo
+                  J=J+4
+               enddo
+            enddo
+             I=I+4
+         enddo
+      enddo
+      close(444)
+      close(445)
    end subroutine
 
    !************************************************************************
