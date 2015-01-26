@@ -111,9 +111,10 @@ contains
       ! ----Default values:
       CALL setDefaults()
       ! ----INPUT:
-      CALL readConfigFile(inputfile)
+      CALL readConfigFileNew(inputfile)
 
       call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
+      call setVariableParam(VariablePar)
 
       ! ---- doesn't work for M=0 !!!!!!
       IF(M0.LT.1) THEN
