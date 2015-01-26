@@ -1,6 +1,7 @@
 module io
 #include "errorcodes.h"
    use parameters
+   use parser
    implicit none
 contains
 
@@ -29,7 +30,61 @@ contains
 16    CONTINUE
    end subroutine
 
-!**********************************************************************
+   !**********************************************************************
+   subroutine readConfigFileNew(inputfile)
+      implicit none
+      CHARACTER(len=*) inputfile
+      CHARACTER(len=60) varname
+      CHARACTER(len=256) line
+      integer:: err
+      OPEN(15,FILE=inputfile,STATUS='OLD', iostat=err)
+      if(err.ne.0) then
+         WRITE(*,*) 'Error opening input file!'
+         STOP   NO_INFILE
+      endif
+      do
+         call parse(15, varname, line, err)
+         if (err.ne.0) exit
+         select case(varname)
+            case('Calculation')
+               call read_val(line, LCALC)
+            case('VariablePar')
+               call read_val(line, VariablePar)
+            case('Symmetry')
+               call read_val(line, Symmetry)
+            case('Truncation')
+               call read_val(line, Truncation)
+            case('Rt')
+               call read_val(line, Rt)
+            case('Rc')
+               call read_val(line, Rc)
+            case('Pt')
+               call read_val(line, Pt)
+            case('Le')
+               call read_val(line, Le)
+            case('m0')
+               call read_val(line, m0)
+            case('eta')
+               call read_val(line, eta)
+            case('tau')
+               call read_val(line, tau)
+            case('StepSize')
+               call read_val(line, StepSize)
+            case('UpperLimit')
+               call read_val(line, UpperLimit)
+            case('AbsParameterError')
+               call read_val(line, ABSE)
+            case('RelativeGREror')
+               call read_val(line, RELE)
+            case('MaxIterations')
+               call read_val(line, NSMAX)
+            case default
+               cycle
+         end select
+      enddo
+      close(15)
+   end subroutine
+   !**********************************************************************
    subroutine writeOutputHeader(unitOut)
       use parameters
       IMPLICIT none
