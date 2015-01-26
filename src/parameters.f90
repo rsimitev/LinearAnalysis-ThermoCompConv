@@ -7,6 +7,7 @@ module parameters
   integer::Truncation,M0,NEigenmodes,LMIN,LD,Symmetry, NSMAX, LCALC
   double precision:: LowerLimit,UpperLimit,StepSize,DRt,ABSE,RELE, DRc
   integer, parameter:: NMAX=900
+  character(len=3):: VariablePar
 contains
    subroutine setDefaults()
       implicit none
@@ -27,6 +28,7 @@ contains
       ABSE = 1.0d-6
       RELE = 1.0d-6
       NSMAX = 100
+      VariablePar='Rt'
    end subroutine
 end module parameters
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
