@@ -327,22 +327,22 @@ contains
    end function
 
    !***************************************************************************
+   ! - DETERMINATION OF DIMENSION:
+   ! - for each value of L the number of possible N-values is added
    SUBROUTINE EigenmodeNumber(LMIN,LD,Truncation,M,NEigenmodes)
    !***************************************************************************
       implicit none
-      integer:: Truncation,M,NEigenmodes,LMIN,LD
+      integer, intent(in):: LMIN,LD,Truncation,M
+      integer, intent(out):: NEigenmodes
       integer:: L
       ! - DETERMINATION OF DIMENSION:
       ! - for each value of L the number of possible N-values is added
       !         print*, "Triangular truncation (2.12)"
       !         print*, LMIN, "...", 2*Truncation+M-1,LD
       NEigenmodes=0
-      DO L = LMIN, 2*Truncation+M-1, LD
-         !         print*, L, 1, "...", INT( DBLE(2*Truncation+1-L+M)/2 )
-         ! cccccccc18    NEigenmodes=NEigenmodes+3*DINT( DBLE(2*Truncation+1-L+M)/2 )
-         NEigenmodes = NEigenmodes+4*INT( DBLE(2*Truncation+1-L+M)/2 )
+      DO L = LMIN, 2*Truncation+M0-1, LD
+         NEigenmodes = NEigenmodes + 4*INT( DBLE(2*Truncation+1-L+M0)/2 )
       endDO
-
    end subroutine
 
 !-----------------------------------------------------------------------
@@ -717,7 +717,6 @@ contains
       integer, intent(in):: N
       delta = 0D0
       IF (N.EQ.0) delta = 1D0
-      ENDIF
    END FUNCTION delta
 !-----------------------------------------------------------------------
 !

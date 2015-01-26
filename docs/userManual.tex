@@ -36,6 +36,10 @@
 \newcommand\etc{etc.\ }
 \newcommand\eg{e.g.\ }
 \newcommand{\mypsfrag}[2]{\psfrag{#1}{\footnotesize{#2}}}
+\newcommand{\warningbox}[1]{\fcolorbox{orange}{white}%
+{\centering \parbox{0.9\textwidth}{ {\Large \red{Warning}}%
+\vspace*{2mm}\\%
+#1}}}
 
 
 \providecommand{\MD}{\textbf{MD}\xspace}
@@ -165,7 +169,7 @@ Table~\ref{t:t_profiles}.
  Opt. & Equation & Description\\\hline
   &                          & \\
  0&$T_S(r) = T_0 + \beta(r_i r_o/r - r_i)$ & The conductive temperature
- profile used in \citep{ChristensenEtAl01}. See Section~\ref{bench:Christ01}.
+ profile used in \citep{ChristensenEtAl01}.
  \\\hline
   &                          & \\
  1&$T_S(r) = T_0 - \beta r^2/2$    & This profile closely
@@ -264,7 +268,117 @@ The value $C^*$ is a scaling for the composition anomaly that can be
 chosen arbitrarily or, as is the case of the temperature, based on the profile
 $C_S$.
 
-\subsection{Testing the compositional convection implementation}
+\section{Description of the linearised system.}
+\label{s:problemSetup}
+We use a Galerkin method to find the critical thermal Rayleigh number and most
+unstable mode for the onset of convection. The method is described in detail for
+the pure thermal case by \citep{ZhangBusse87}. In our case we added one more
+equation for the composition following the same decomposition. The composition
+is treated as a second temperature, capable of generating buoyncay and obeying
+the same static profile and boundary conditions.
+
+We make use of the following linearized equations:
+\begin{subequations}
+\label{eqs:linearizedConvection}
+\begin{gather}
+\label{eq:NavierStokes}
+\partial_t \vec u = - \tau \vec k \times \vec u - \nabla \pi + (R_t \Theta +R_c \chi )\vec r + \nabla^2 \vec u, \\
+\label{eq:temperature}
+\partial_t \Theta = \frac{1}{P_t}\nabla^2 \Theta + \vec r \cdot \vec u , \\
+\label{eq:composition}
+\partial_t \chi = \frac{1}{P_c}\nabla^2 \chi  + \vec r \cdot \vec u .
+\end{gather}
+\end{subequations}
+
+
+Both temperatures are considered uniform and constant in time at the boundaries,
+whereas the flow is taken to be stress free. Except when otherwise mentioned,
+the equations are solved for a spherical shell with an inner to outer radius
+ratio of $\eta=0.35$
+
+Taking the radial component of the curl and the radial componentof curls curl of
+\ref{eq:NavierStokes} we obtain, respectively, the equations for the toroidal
+($T(\vec r,t)$) and poloidal ($S(\vec r,t)$) scalars of the flow.
+
+We assume that the system is at the onset of convection and so all quantities
+are small oscillations around a static state. Each scalar quantity is then
+assumed to obbei the following ansatz in time:
+\begin{equation}
+ X(\vec r, t) = \tilde X(\vec r,\omega) e^{it(\omega-iGR)},
+\end{equation}
+where $\omega$ is the frequency of oscillation and $GR$ is a grouth rate. The
+system will be stable, that is, any oscillation will decay, if $GR$ is less than
+or equal to zero. Any instability will grow exponentially over time otherwhise.
+The four scalar equations are then
+\begin{subequations}
+\begin{gather}
+\label{eq:Poloidal}
+(\nabla^2-2r\partial_r)(\nabla^2_{H} \tilde S) (i\omega +GR)= - \tau \hat r \cdot curl (\vec k \times \tilde{\vec u})  + \nabla^2_{H}(R_t \tilde\Theta +R_c \tilde\chi ) + \hat r \cdot curl (curl(\nabla^2 \tilde{\vec u})), \\
+\label{eq:Toroidal}
+(\nabla^2_{H} \tilde T) (i\omega +GR) = - \hat r \cdot curl (\tau \vec k \times \tilde{\vec u})  + \hat r \cdot curl (\nabla^2 \tilde{\vec u}), \\
+\label{eq:temp}
+\tilde \Theta (i\omega +GR) = \frac{1}{P_t}\nabla^2 \Theta + \vec r \cdot \tilde{\vec u} , \\
+\label{eq:comp}
+\tilde \chi  (i\omega +GR) = \frac{1}{P_c}\nabla^2 \chi  + \vec r \cdot \tilde{\vec u} .
+\end{gather}
+\end{subequations}
+
+Each scalar quantity can now be expanded in terms of spherical harmonics for the
+angular part. The Galerkin method consists in expanding the radial part of the
+scalar quantities in terms of functions that obbey the speciffic boundary
+conditions we whish to impose.
+
+Once this is done, we can represent the system above as an algebraic equation:
+\begin{equation}
+ \left[ A \right] \cdot
+ \begin{bmatrix}
+    \tilde s_{n,l,m}\\
+    \tilde t_{n,l,m}\\
+    \tilde \theta_{n,l,m}\\
+    \tilde \chi_{n,l,m}
+\end{bmatrix}
+(i\omega +GR)  =
+ \left[ B \right]
+        \cdot
+        \begin{bmatrix}
+        \tilde s_{n,l,m}\\
+        \tilde t_{n,l,m}\\
+        \tilde \theta_{n,l,m}\\
+        \tilde \chi_{n,l,m}
+        \end{bmatrix}.
+\end{equation}
+$A$ and $B$ are matrices of the following form:
+\begin{equation}
+\left[ A \right] =
+\begin{bmatrix}
+\square     & \varnothing & \varnothing & \varnothing \\
+\varnothing & \square     & \varnothing & \varnothing \\
+\varnothing & \varnothing & \square     & \varnothing \\
+\varnothing & \varnothing & \varnothing & \square \\
+\end{bmatrix}
+\end{equation},
+\begin{equation}
+\left[ B \right] =
+\begin{bmatrix}
+\square     & \varnothing & \square     & \square     \\
+\varnothing & \square     & \varnothing & \varnothing \\
+\square     & \varnothing & \square     & \varnothing \\
+\square     & \varnothing & \varnothing & \square     \\
+\end{bmatrix}
+\end{equation}
+Where squares represent non-null blocks.
+This matrix equation can then be solved for the eigenvalues $(i\omega +GR)$
+using standard methods.
+
+\warningbox{
+At this point in time, we do not take advantage of the fact that the matrix $A$
+is diagonal by blocks and the matrix $B$ has a quite a lot of zeros. We are
+still stuck with the original code design where all the values are interleaved
+with $m$ fixed, $n$ varying faster and $l$ varying slower.
+}
+
+We explore the effects of the adimensional parameters on the onset of convection
+of the system as a whole and on speciffic azimuthal modes.
 
 \section{Boundary conditions}
 \label{s:boundaryConditions}
@@ -340,17 +454,6 @@ The polynomials $\bar{P}_\ell^m ( \cos{\theta} ) = \sqrt{{(2\ell+1) }{(\ell-m)!\
 are the normalised ALP, which we use throughout the code to construct the spherical harmonics.
 
 
-% \fcolorbox{orange}{white}%
-% {\centering
-% \parbox{0.9\textwidth}{%
-% {\Large \red{Warning}}
-% \vspace*{2mm}\\
-% Before version 1.6.0 (MAGIC numbers 101**) we used unnormalised ALP. After and including GLO 1.6.0
-% we use the new $\bar{P}_\ell^m ( \cos{\theta} )$. This reflects on the imported and exported
-% coefficients. The new code, however, is smart enough to recognise this situation and read
-% coefficients with any of these normalisations. Other codes may not!!!
-% }}
-
 \subsubsection{Recurrence relations for the Associated Legendre Polynomials}
 \begin{align}
  (\ell-m+1)P_{\ell+1}^{m}(x) &= (2\ell+1)xP_{\ell}^{m}(x) - (\ell+m)P_{\ell-1}^{m}(x)\\
@@ -376,9 +479,6 @@ as:
 {\cal R}_m & = \sum_{n=1}^{Nr_s}\sum_{l=m}^{Nt_s}  \\
 {\cal R}_n & = \sum_{m=0}^{Np_s/2}\sum_{l=m}^{Nt_s}
 \end{align}
-
-See section~\ref{s:spectra_files} for the details on how these quantities are
-stored in files.
 
 \chapter{Input/Output}
 
