@@ -258,7 +258,7 @@ contains
       double complex:: ZA(Nmodes,Nmodes),ZB(Nmodes,Nmodes)
       double complex:: ZA_ref,ZB_ref
       double precision, parameter:: tau_i=1.0d5, Rt_i=3.0d6, Rc_i=1.0d2
-      double precision, parameter:: Pt_i=1.0d0, Le_i=0.3d0
+      double precision, parameter:: Pt_i=1.0d0, Le_i=0.30d0
       integer:: i,j,k1, k2
       integer:: lmax
       integer:: ni, nimax, li, lpi, lti
@@ -413,7 +413,7 @@ contains
    ! ---- POLOIDAL EQUATION , TIME DERIVATIVE
       implicit none
       integer:: N1, N2, l1, NU1
-      DIII2= -NU1*DL(L1)*(-N2**2*DPI**2*R('SS ',2,N1,N2,0)+2*N2*DPI*R('SC ',1,N1,N2,0)-DL(L1)*R('SS ',0,N1,N2,0) )
+      DIII2= -NU1*DL(L1)*( -N2**2*DPI**2*R('SS ',2,N1,N2,0) + 2*N2*DPI*R('SC ',1,N1,N2,0) - DL(L1)*R('SS ',0,N1,N2,0) )
    end function
 
    double precision function DIII3(tau,mm, N1,N2,L1,NU1)
@@ -1046,8 +1046,8 @@ contains
          NPi   = N*DPI
          NPiri = N*ri*DPI
          NPiro = N*ro*DPI
-         SM2 = COS(NPiri)*( SIN(NPiri)/ri - SIN(NPiro)/ro + NPI*DIC(ri,ro,NPI) ) - &
-               SIN(NPiri)*( COS(NPiri)/ri - COS(NPiro)/ro - NPI*DIS(ri,ro,NPI) )
+         SM2 = DCOS(NPiri)*( DSIN(NPiri)/ri - DSIN(NPiro)/ro + NPI*DIC(ri,ro,NPI) ) - &
+               DSIN(NPiri)*( DCOS(NPiri)/ri - DCOS(NPiro)/ro - NPI*DIS(ri,ro,NPI) )
       ENDIF
       END FUNCTION SM2
 !-----------------------------------------------------------------------
@@ -1065,8 +1065,8 @@ contains
          NPi   = N*DPI
          NPiri = N*ri*DPI
          NPiro = N*ro*DPI
-         CM2 = SIN(NPiri)*( SIN(NPIRI)/ri - SIN(NPiro)/ro + NPi*DIC (ri, ro, NPi) ) + &
-               COS(NPiri)*( COS(NPIRI)/ri - COS(NPIro)/ro - NPi*DIS (ri, ro, NPi) )
+         CM2 = DSIN(NPiri)*( DSIN(NPIRI)/ri - DSIN(NPiro)/ro + NPi*DIC (ri, ro, NPi) ) + &
+               DCOS(NPiri)*( DCOS(NPIRI)/ri - DCOS(NPIro)/ro - NPi*DIS (ri, ro, NPi) )
       ENDIF
       END FUNCTION CM2
 !-----------------------------------------------------------------------
