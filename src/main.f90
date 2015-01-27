@@ -56,11 +56,11 @@ program linearOnset
       !> Varies the thermal Rayleigh number and computes the growth rate for
       !! other parameters fixed.
       case(-1)
-         CALL fixedParGrowthRate()
+         call fixedParGrowthRate()
       !> Computes the critical Thermal Rayleigh number for the onset of 
       !! convections for all other parameters fixed.
       case(0)
-         CALL fixedParCriticalRa()
+         call fixedParCriticalRa()
       !> Writes the (complex) eigenvalues of the problem for fixed parameters.
       !! The real part of the eigenvalues is the frequency of oscillation of the
       !! mode. The imaginary part is the symmetric of the growth rate.
@@ -80,8 +80,8 @@ program linearOnset
       !> Computes the eigen vector (equatorial render)
       !! Corresponding to the critical value of Rt with all other parameters 
       !! fixed.
-      case(4)
-         call fixedParCriticalEigenVector()
+!      case(4)
+!         call fixedParCriticalEigenVector()
       !> Computes the critical thermal Rayleigh number for a range of
       !! azimuthal wave-numbers m.
       case(5)
@@ -109,11 +109,11 @@ contains
       CHARACTER(len=*) inputfile,outputfile
 
       ! ----Default values:
-      CALL setDefaults()
+      call setDefaults()
       ! ----INPUT:
-      CALL readConfigFileNew(inputfile)
+      call readConfigFileNew(inputfile)
 
-      call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
+      call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
       call setVariableParam(VariablePar)
 
       ! ---- doesn't work for M=0 !!!!!!
@@ -124,24 +124,9 @@ contains
 
       ! ----OUTPUT:
       OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
-      CALL writeOutputHeader(unitOut)
+      call writeOutputHeader(unitOut)
 
-      IF(Symmetry.EQ.0) THEN
-         ! - UNDEFINED SYMMETRIE:
-         LMIN=M0
-         LD=1
-      ELSEIF(Symmetry.EQ.1) THEN
-         ! - EQUATORIAL ANTISYMMETRIE (L+M ODD):
-         LMIN=M0+1
-         LD=2
-      ELSEIF(Symmetry.EQ.2) THEN
-         ! - EQUATORIAL SYMMETRIE (L+M EVEN);
-         LMIN=M0
-         LD=2
-      ENDIF
-
-      CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
-      Write(*,*) 'Init: ', LMIN, LD, Truncation, M0, getEigenProblemSize()
+      call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
    END subroutine
 
    !**********************************************************************
@@ -151,12 +136,14 @@ contains
    !! Modes are sorted from heighest to lowest growth rate.
    subroutine fixedParEigenValues()
       implicit none
-      double complex:: ZEW(NEigenmodes)
-      integer:: i
+      double complex, allocatable:: ZEW(:)
+      integer:: i, Nmodes
+      Nmodes = getEigenProblemSize()
+      allocate(ZEW(Nmodes))
       call computeGrowthRateModes(.true., zew)
       write(*,*) 'n     Frequ.(exp(+iwt))   -Grothrate  '
       write(unitOut,*) 'n     Frequ.(exp(+iwt))   -Grothrate  '
-      do i=1, NEigenmodes
+      do i=1, Nmodes
          WRITE(*,'(I4,2D16.6)') I,ZEW(I)
          WRITE(unitOut,'(I4,2D16.6)') I,ZEW(I)
       enddo
@@ -201,7 +188,7 @@ contains
       double Complex:: frequency
       double precision:: CriticalRt, Omega, GroR
       integer:: info
-      CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
+      call minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
       frequency = MaxGrowthRateCmplx(CriticalRt)
       GROR  = dimag(frequency)
       OMEGA = -dble(frequency)
@@ -226,27 +213,13 @@ contains
       CriticalRt = 1.0d300
       Write(*,*)  "i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info"
       DO m0=1, Truncation
-         IF(Symmetry.EQ.0) THEN
-            ! - UNDEFINED SYMMETRIE:
-            LMIN=M0
-            LD=1
-         ELSEIF(Symmetry.EQ.1) THEN
-            ! - EQUATORIAL ANTISYMMETRIE (L+M ODD):
-            LMIN=M0+1
-            LD=2
-         ELSEIF(Symmetry.EQ.2) THEN
-            ! - EQUATORIAL SYMMETRIE (L+M EVEN);
-            LMIN=M0
-            LD=2
-         ENDIF
-         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
-         CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
+         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
          ! Increase the interval, in case we did not find anything.
          do i=1, 5
             RtMin=Rt - 2*i*dabs(Rt)
             RtMax=Rt + 2*i*dabs(Rt)
 
-            CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info)
+            call minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info)
             Write(*,*)  i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info
             if (info.eq.0) exit
          enddo
@@ -278,7 +251,7 @@ contains
       double precision:: RACI(nm0),OMI(nm0),GRORi(nm0)
       double precision:: RtMin, RtMax
       double Complex:: frequency
-      INTEGER:: M0I(nm0),LLI(nm0),LMINI(nm0)
+      INTEGER:: M0I(nm0),LLI(nm0)
       INTEGER, save:: NTRYCOUNT=0
       integer:: first_m0, first_lmin, i, ii
       integer:: info, idx
@@ -287,25 +260,20 @@ contains
       CriticalRt = Rt
       do i=0, nm0/2
          first_m0   = m0 - i
-         first_lmin = lmin-i
          if (first_m0==1) exit
       enddo
 !     Start a search around the previous m0
       do i=1, nm0
         M0I(i)   = first_m0+i-1
-        LMINI(i) = first_lmin+i-1
       enddo
       DO II=1, nm0
          M0   = M0I(II)
-         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
-         LMIN = LMINI(II)
-         CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
-         !WRITE(*,*) 'fixedParCriticalRaAndM0: ', m0, LMIN, LD
+         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
          ! Increase the interval, in case we did not find anything.
          do i=1, 3
             RtMin = Rt/(2.0d0**dble(i))
             RtMax = Rt*(2.0d0**dble(i))
-            CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, CriticalRt, info)
+            call minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, CriticalRt, info)
             if (info.NE.2) exit
          enddo
          if(info.NE.0) then
@@ -334,7 +302,6 @@ contains
          CriticalRt   = RACI(idx)
          OMEGA = OMI(idx)
          M0    = M0I(idx)
-         LMIN  = LMINI(idx)
          write( unitOut,'(1P,3E17.6,I4)') TAU, CriticalRt, OMEGA, M0
          write( *,'(">",1P,3E17.6,I4,A3,2E17.6)') TAU,CriticalRt,OMEGA, M0,' | ', CriticalRt*(1/(1-eta))**4*(2/TAU),(OMEGA*2.0/TAU)
          write(*,*)
@@ -348,121 +315,123 @@ contains
       ENDIF
    end subroutine
 
-   !**********************************************************************
-   !> Computes and Writes out the eigen vector (equatorial render)
-   !! Corresponding to the critical value of Rt with all other parameters 
-   !! fixed.
-   subroutine fixedParCriticalEigenVector()
-      implicit none
-      double precision:: GroR, Omega, Ta
-      complex(8):: ZEVEC(NEigenmodes), zew(NEigenmodes), ZEVAL(NEigenmodes,NEigenmodes)
-      integer:: info, i, ni, li, lti, lpi
-      integer:: NTH, KTV, KTH, LTV, LTH, lst, NUC
-      double precision:: GRR, GRI, Pm, C0,CriticalRt, OMM
-      integer:: nuds, nuom, MF, LMAX, NIMAX
-
-      Ta = TAU*TAU
-      ! find the zero grothrate:
-      CriticalRt = Rt
-      CALL minimizer(MaxGrowthRate, Rt/10, Rt*10, RELE ,ABSE, NSMAX, CriticalRt, info)
-      Rt = CriticalRt
-      call computeGrowthRateModes(.TRUE.,zew,zeval)
-      GROR  = DIMAG(zew(1))
-      Omega = -dble(zew(1))
-      zevec(:) = zeval(:,1)
-
-      IF(info.EQ.0) THEN
-         ! print eigenvector
-         ! Fileformat for outputfile:
-         ! LST=0 formatted Wicht
-         ! LST=1 formatted Hirsching
-         ! LST=3 unformatted
-          LST=0
-          WRITE(unitOut,'(2I2,'' LINEAR ONSET '')')  LST,LCALC
-          NTH=0
-          KTV=0
-          KTH=0
-          LTV=0
-          LTH=0
-          GRR=0.D0
-          GRI=0.D0
-          WRITE(unitOut,'(I2,7I3,2D16.8,'' M0,TRUNC,LD,GROTH,DRIFT'')')  M0,Truncation,NTH,KTV,KTH,LTV,LTH,LD,GRR,GRI
-          NUDS=1
-          PM=0.D0
-          WRITE(unitOut, '(I5,2D14.6,D9.2,D13.6,D9.2,'' I,Ta,Rt,Pt,PM,E'')') NUDS,Ta,CriticalRt,Pt,PM,ETA
-          C0 = OMEGA/M0
-          OMM=0.D0
-          NUC=0
-          NUOM=0
-          MF=0
-          WRITE(unitOut,9100) C0,OMM,NUC,NUOM,MF
-9100      FORMAT(2D17.10,3I4,'    C,OM, WHERE?,FLOQUET')
-
-          LMAX=2*Truncation+M0-1
-          I=0
-          DO 3000 LI=LMIN,LMAX,LD
-!           L for poloidal (v) field:
-            LPI = LI
-            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
-            DO 3000 NI=1,NIMAX
-              IF( LST.EQ.0 ) THEN
-               WRITE(unitOut,9200) 'V',LPI,M0,NI,0, DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),0.D0,0.D0
-              ELSEIF(LST.EQ.3) THEN
-               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''V ''',LPI,M0,NI,0,' ', DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),' .0D+00 .0D+00 '
-              ENDIF
-             I=I+4
-3000      CONTINUE
+!   !**********************************************************************
+!   !> Computes and Writes out the eigen vector (equatorial render)
+!   !! Corresponding to the critical value of Rt with all other parameters 
+!   !! fixed.
+!   subroutine fixedParCriticalEigenVector()
+!      implicit none
+!      double precision:: GroR, Omega, Ta
+!      complex(8), allocatable:: ZEVEC(:), zew(:), ZEVAL(:,:)
+!      integer:: info, i, ni, li, lti, lpi, Nmodes
+!      integer:: NTH, KTV, KTH, LTV, LTH, lst, NUC
+!      double precision:: GRR, GRI, Pm, C0,CriticalRt, OMM
+!      integer:: nuds, nuom, MF, LMAX, NIMAX
 !
-          I=0
-          DO 3200 LI=LMIN,LMAX,LD
-!           L for toroidal (w) field:
-            IF( Symmetry.EQ.2 ) THEN
-             LTI=LI+1
-            ELSEIF( Symmetry.EQ.1 ) THEN
-             LTI=LI-1
-            ELSEIF( Symmetry.EQ.0 ) THEN
-             LTI=LI
-            ENDIF
-            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
-            DO 3200 NI=1,NIMAX
-              IF( LST.EQ.0 ) THEN
-               WRITE(unitOut,9200) 'W',LTI,M0,NI,0, DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),0.D0,0.D0
-              ELSEIF(LST.EQ.3) THEN
-               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''W ''',LTI,M0,NI,0,' ', DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),' .0D+00 .0D+00 '
-              ENDIF
-              I=I+4
-3200      CONTINUE
+!      Ta = TAU*TAU
+!      ! find the zero grothrate:
+!      CriticalRt = Rt
+!      call minimizer(MaxGrowthRate, Rt/10, Rt*10, RELE ,ABSE, NSMAX, CriticalRt, info)
+!      Rt = CriticalRt
+!      Nmodes = getEigenProblemSize()
+!      allocate( ZEVEC(Nmodes), zew(Nmodes), ZEVAL(Nmodes,Nmodes))
+!      call computeGrowthRateModes(.TRUE.,zew,zeval)
+!      GROR  = DIMAG(zew(1))
+!      Omega = -dble(zew(1))
+!      zevec(:) = zeval(:,1)
 !
-          I=0
-          DO 3400 LI=LMIN,LMAX,LD
-            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
-            DO 3400 NI=1,NIMAX
-              IF( LST.EQ.0 ) THEN
-               WRITE(unitOut,9200) 'T',LI,M0,NI,0, DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),0.D0,0.D0
-              ELSEIF(LST.EQ.3) THEN
-               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''T ''',LI,M0,NI,0,' ', DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),' .0D+00 .0D+00 '
-              ENDIF
-             I=I+4
-3400      CONTINUE
+!      IF(info.EQ.0) THEN
+!         ! print eigenvector
+!         ! Fileformat for outputfile:
+!         ! LST=0 formatted Wicht
+!         ! LST=1 formatted Hirsching
+!         ! LST=3 unformatted
+!          LST=0
+!          WRITE(unitOut,'(2I2,'' LINEAR ONSET '')')  LST,LCALC
+!          NTH=0
+!          KTV=0
+!          KTH=0
+!          LTV=0
+!          LTH=0
+!          GRR=0.D0
+!          GRI=0.D0
+!          WRITE(unitOut,'(I2,7I3,2D16.8,'' M0,TRUNC,LD,GROTH,DRIFT'')')  M0,Truncation,NTH,KTV,KTH,LTV,LTH,LD,GRR,GRI
+!          NUDS=1
+!          PM=0.D0
+!          WRITE(unitOut, '(I5,2D14.6,D9.2,D13.6,D9.2,'' I,Ta,Rt,Pt,PM,E'')') NUDS,Ta,CriticalRt,Pt,PM,ETA
+!          C0 = OMEGA/M0
+!          OMM=0.D0
+!          NUC=0
+!          NUOM=0
+!          MF=0
+!          WRITE(unitOut,9100) C0,OMM,NUC,NUOM,MF
+!9100      FORMAT(2D17.10,3I4,'    C,OM, WHERE?,FLOQUET')
 !
-          I=0
-          DO 3600 LI=LMIN,LMAX,LD
-            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
-            DO 3600 NI=1,NIMAX
-              IF( LST.EQ.0 ) THEN
-               WRITE(unitOut,9200) 'G',LI,M0,NI,0, DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),0.D0,0.D0
-              ELSEIF(LST.EQ.3) THEN
-               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''G ''',LI,M0,NI,0,' ', DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),' .0D+00 .0D+00 '
-              ENDIF
-             I=I+4
-3600      CONTINUE
-!
-9200            FORMAT(1X,A1,4I3,4D16.8)
-         ELSE
-          WRITE(unitOut,*) 'NO CRITICAL RAYLEIGH NUMBER FOUND.'
-          STOP NO_RA_FOUND
-       ENDIF
-   end subroutine
+!          LMAX=2*Truncation+M0-1
+!          I=0
+!          DO 3000 LI=LMIN,LMAX,LD
+!!           L for poloidal (v) field:
+!            LPI = LI
+!            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
+!            DO 3000 NI=1,NIMAX
+!              IF( LST.EQ.0 ) THEN
+!               WRITE(unitOut,9200) 'V',LPI,M0,NI,0, DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),0.D0,0.D0
+!              ELSEIF(LST.EQ.3) THEN
+!               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''V ''',LPI,M0,NI,0,' ', DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),' .0D+00 .0D+00 '
+!              ENDIF
+!             I=I+4
+!3000      CONTINUE
+!!
+!          I=0
+!          DO 3200 LI=LMIN,LMAX,LD
+!!           L for toroidal (w) field:
+!            IF( Symmetry.EQ.2 ) THEN
+!             LTI=LI+1
+!            ELSEIF( Symmetry.EQ.1 ) THEN
+!             LTI=LI-1
+!            ELSEIF( Symmetry.EQ.0 ) THEN
+!             LTI=LI
+!            ENDIF
+!            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
+!            DO 3200 NI=1,NIMAX
+!              IF( LST.EQ.0 ) THEN
+!               WRITE(unitOut,9200) 'W',LTI,M0,NI,0, DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),0.D0,0.D0
+!              ELSEIF(LST.EQ.3) THEN
+!               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''W ''',LTI,M0,NI,0,' ', DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),' .0D+00 .0D+00 '
+!              ENDIF
+!              I=I+4
+!3200      CONTINUE
+!!
+!          I=0
+!          DO 3400 LI=LMIN,LMAX,LD
+!            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
+!            DO 3400 NI=1,NIMAX
+!              IF( LST.EQ.0 ) THEN
+!               WRITE(unitOut,9200) 'T',LI,M0,NI,0, DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),0.D0,0.D0
+!              ELSEIF(LST.EQ.3) THEN
+!               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''T ''',LI,M0,NI,0,' ', DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),' .0D+00 .0D+00 '
+!              ENDIF
+!             I=I+4
+!3400      CONTINUE
+!!
+!          I=0
+!          DO 3600 LI=LMIN,LMAX,LD
+!            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
+!            DO 3600 NI=1,NIMAX
+!              IF( LST.EQ.0 ) THEN
+!               WRITE(unitOut,9200) 'G',LI,M0,NI,0, DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),0.D0,0.D0
+!              ELSEIF(LST.EQ.3) THEN
+!               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''G ''',LI,M0,NI,0,' ', DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),' .0D+00 .0D+00 '
+!              ENDIF
+!             I=I+4
+!3600      CONTINUE
+!!
+!9200            FORMAT(1X,A1,4I3,4D16.8)
+!         ELSE
+!          WRITE(unitOut,*) 'NO CRITICAL RAYLEIGH NUMBER FOUND.'
+!          STOP NO_RA_FOUND
+!       ENDIF
+!   end subroutine
 
    !**********************************************************************
    !> Computes the critical thermal Rayleigh number as a function of tau
@@ -485,8 +454,8 @@ contains
          RtMin = Rt/5.0
          RtMax = Rt*5
          RtOld = Rt
-         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
-         CALL minimizer(MaxGrowthRate, RtMin, RtMax, RELE, ABSE, 50, CriticalRt, info)
+         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+         call minimizer(MaxGrowthRate, RtMin, RtMax, RELE, ABSE, 50, CriticalRt, info)
          frequency = MaxGrowthRateCmplx(CriticalRt)
          GROR  = dimag(frequency)
          OMEGA = -dble(frequency)
@@ -535,11 +504,11 @@ contains
       double precision:: CriticalRt, RtOld
       double precision:: Tau0, Tau1
       Rtold = Rt
-      TAU1 = tauMin
-      tau = tauMin
+      TAU1  = tauMin
+      tau   = tauMin
       tauLoop:do
          !--------searching for zero grothrate by varying Rt and M0: ---------------
-         CALL fixedParCriticalRaAndM0(CriticalRt)
+         call fixedParCriticalRaAndM0(CriticalRt)
 !--      increment TAU:
          TAU0 = TAU1
          TAU1 = TAU
@@ -578,22 +547,8 @@ contains
       MinCriticalRt=100.d10
       MforMinCriticalRt=2000
       do M0=mMin, mMax, INT(StepSize)
-         ! -   UNDEFINED SYMMETRIE:
-         IF(Symmetry.EQ.0) THEN
-            LMIN=M0
-            LD=1
-         ! -   EQUATORIAL ANTISYMMETRIE (L+M ODD):
-         ELSEIF(Symmetry.EQ.1) THEN
-            LMIN=M0+1
-            LD=2
-         ! -   EQUATORIAL SYMMETRIE (L+M EVEN);
-         ELSEIF(Symmetry.EQ.2) THEN
-            LMIN=M0
-            LD=2
-         ENDIF
-         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
-         CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
-         CALL minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
+         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+         call minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
          if(info.NE.0) then
             Write(*,*) 'Failed to find roots: error:', info
             stop 5
@@ -621,7 +576,6 @@ contains
       double precision:: CriticalRt, RtMin, RtMax, dRt
       integer:: niter, i, info, counter
       niter = int((LeMax-LeMin)/StepSize)
-      CALL setEigenProblemSize(LMIN,LD,Truncation,M0)
       dRt = Rt
       do i=0, niter
          Le  = LeOld + i*StepSize
@@ -629,8 +583,8 @@ contains
          RtMax = Rt + dRt
          counter = 0
          do
-            call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry)
-            CALL minimizer(MaxGrowthRate,RtMin, RtMax,RELE,ABSE,NSMAX,CriticalRt, info)
+            call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+            call minimizer(MaxGrowthRate,RtMin, RtMax,RELE,ABSE,NSMAX,CriticalRt, info)
             if (info==0 .or. counter.gt.20) exit
             counter = counter + 1
             RtMin = RtMin - dRt

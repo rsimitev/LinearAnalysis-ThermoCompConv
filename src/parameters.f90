@@ -3,8 +3,8 @@ module parameters
   ! Adimensional parameters
   double precision:: TAU,Rt,Pt,C,Le,Rc,eta
   ! Dimensions
-  integer::Truncation,M0,NEigenmodes,LMIN,LD,Symmetry, NSMAX, LCALC
-  double precision:: LowerLimit,UpperLimit,StepSize,ABSE,RELE, DRt
+  integer::Truncation,M0,Symmetry, NSMAX, LCALC
+  double precision:: LowerLimit,UpperLimit,StepSize,ABSE,RELE
   character(len=3):: VariablePar
 contains
    subroutine setDefaults()

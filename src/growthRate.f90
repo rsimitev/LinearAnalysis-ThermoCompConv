@@ -1,6 +1,5 @@
 module GrowthRateMod
 #include "errorcodes.h"
-   use parameters
    implicit none
    private
    double precision, parameter:: DPI=3.141592653589793D0
@@ -8,18 +7,18 @@ module GrowthRateMod
    double precision:: Rt_i, Rc_i, Le_i, Pt_i, tau_i
    double precision:: ri, ro, eta_i
    character(len=3):: variable='Rt'
-   integer:: Symmetry_i, mm_i
+   integer:: Symmetry_i, mm_i, NEigenmodes, lmin, ld, Truncation_i
    public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes
    public:: setEigenProblemSize, getEigenProblemSize, GrowthRateInit, setVariableParam
-   public:: testMAT
+   public:: testMAT, setLminAndLD
 contains
 
    !***********************************************************************
    !> Initializes the module with fixed parameters.
-   subroutine GrowthRateInit(Rt, Rc, Pt, Le, tau,eta, m, Symmetry)
+   subroutine GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m, Symmetry, truncation)
       implicit none
       double precision, intent(in)::Rt, Rc, Pt, Le, tau, eta
-      integer, intent(in):: m, Symmetry
+      integer, intent(in):: m, Symmetry, truncation
       Rt_i  = Rt
       Rc_i  = Rc
       Pt_i  = Pt
@@ -28,9 +27,32 @@ contains
       mm_i  = m
       eta_i = eta
       Symmetry_i = Symmetry
+      truncation_i = truncation
       RI = ETA_i/(1.0d0-ETA_i)
       RO = 1.0D0 + RI
+      call setLminAndLD(Symmetry, m, LMIN, LD)
+      call setEigenProblemSize(LMIN,LD,truncation_i,M)
    end subroutine
+
+   subroutine setLminAndLD(Sym, mm, LMIN, LD)
+      implicit none
+      integer, intent(in):: Sym, mm
+      integer, intent(out):: LMIN, LD
+      IF(Sym.EQ.0) THEN
+         ! - UNDEFINED SYMMETRIE:
+         LMIN = mm
+         LD   = 1
+      ELSEIF(Sym.EQ.1) THEN
+         ! - EQUATORIAL ANTISYMMETRIE (L+M ODD):
+         LMIN = mm+1
+         LD   = 2
+      ELSEIF(Sym.EQ.2) THEN
+         ! - EQUATORIAL SYMMETRIE (L+M EVEN);
+         LMIN = mm
+         LD   = 2
+      ENDIF
+   end subroutine
+
 
    !***********************************************************************
    !> Sets which parameter is going to be varied.
@@ -175,9 +197,9 @@ contains
       ZB(:,:)=DCMPLX(0D0,0D0)
 
       I=0
-      LMAX=2*Truncation+mm_i-1
+      LMAX=2*truncation_i+mm_i-1
       !Write(*,*) 'MAT():', mm_i, LMIN, LMAX, LD
-      !Write(*,*) 'MAT():', Symmetry_i, Truncation, NDIM
+      !Write(*,*) 'MAT():', Symmetry_i, truncation_i, NDIM
       DO LI=LMIN,LMAX,LD
          LPI=LI
          ! Determine L for toroidal (w) field:
@@ -188,7 +210,7 @@ contains
          ELSEIF( Symmetry_i.EQ.0 ) THEN
             LTI=LI
          endIF
-         NIMAX=INT( DBLE(2*Truncation+1-LI+mm_i)/2 )
+         NIMAX=INT( DBLE(2*truncation_i+1-LI+mm_i)/2 )
 
          DO NI=1,NIMAX
             J=0
@@ -201,7 +223,7 @@ contains
                ELSEIF( Symmetry_i.EQ.0 ) THEN
                   LTJ=LJ
                endIF
-               NJMAX=INT( DBLE(2*Truncation+1-LJ+mm_i)/2 )
+               NJMAX=INT( DBLE(2*truncation_i+1-LJ+mm_i)/2 )
 
                !  ******************** I: Equation (Line) ******************
                !  ******************** J: Variable (Column) ****************
@@ -252,39 +274,37 @@ contains
 
    subroutine testMAT(ZA_refFile, ZB_refFile, error)
       implicit none
+      integer, parameter:: Nmodes=220
       character(len=*), intent(in):: ZA_refFile, ZB_refFile
       integer, intent(out):: error
-      integer, parameter:: mm_i=18, Symmetry_i=2, Nmodes=220
       double complex:: ZA(Nmodes,Nmodes),ZB(Nmodes,Nmodes)
       double complex:: ZA_ref,ZB_ref
-      double precision, parameter:: tau_i=1.0d5, Rt_i=3.0d6, Rc_i=1.0d2
-      double precision, parameter:: Pt_i=1.0d0, Le_i=0.30d0
       integer:: i,j,k1, k2
       integer:: lmax
       integer:: ni, nimax, li, lpi, lti
       integer:: nj, njmax, lj, lpj, ltj
+      tau_i=1.0d5
+      Rt_i=3.0d6
+      Rc_i=1.0d2
+      Pt_i=1.0d0
+      Le_i=0.30d0
+      eta_i=0.35
+      mm_i=18 
+      Symmetry_i=2
+      truncation_i=10
       Write(*,*) ZA_refFile,' ', ZB_refFile
       Write(*,*) tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, Nmodes 
-      eta=0.35
-      Rt=Rt_i
-      Pt=Pt_i
-      Rc=Rc_i
-      tau=tau_i
-      Le=Le_i
-      M0=mm_i
-      LMIN = mm_i
-      LD = 2
-      Truncation=10
-      Symmetry=Symmetry_i
-      NEigenModes=Nmodes
-      call GrowthRateInit(Rt_i, Rc_i, Pt_i, Le_i, tau_i,eta, mm_i, Symmetry) 
-      Write(*,*) 'ri =', ri,'ro =', ro
-      CALL MAT(tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB, Nmodes)
+      RI = ETA_i/(1.0d0-ETA_i)
+      RO = 1.0D0 + RI
+      call setLminAndLD(Symmetry_i, mm_i, LMIN, LD)
+      call setEigenProblemSize(LMIN,LD,truncation_i,Mm_i)
+      Write(*,*) 'ri =', ri,'ro =', ro, Nmodes, NEigenmodes
+      CALL MAT(tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB, NEigenmodes)
       Write(*,*) 'Done with MAT.'
 
       I=0
       error=0
-      LMAX = 2*Truncation+mm_i-1
+      LMAX = 2*truncation_i+mm_i-1
       open(unit=444, file=trim(ZA_refFile), status='OLD')
       open(unit=445, file=trim(ZB_refFile), status='OLD')
       DO LI=LMIN,LMAX,LD
@@ -297,7 +317,7 @@ contains
          ELSEIF( Symmetry_i.EQ.0 ) THEN
             LTI=LI
          endIF
-         NIMAX=INT( DBLE(2*Truncation+1-LI+mm_i)/2 )
+         NIMAX=INT( DBLE(2*truncation_i+1-LI+mm_i)/2 )
 
          DO NI=1,NIMAX
             J=0
@@ -310,7 +330,7 @@ contains
                ELSEIF( Symmetry_i.EQ.0 ) THEN
                   LTJ=LJ
                endIF
-               NJMAX=INT( DBLE(2*Truncation+1-LJ+mm_i)/2 )
+               NJMAX=INT( DBLE(2*truncation_i+1-LJ+mm_i)/2 )
 
                !  ******************** I: Equation (Line) ******************
                !  ******************** J: Variable (Column) ****************
@@ -474,18 +494,18 @@ contains
    !***************************************************************************
    ! - DETERMINATION OF DIMENSION of the problem:
    ! - for each value of L the number of possible N-values is added
-   SUBROUTINE setEigenProblemSize(LMIN,LD,Truncation,M)
+   SUBROUTINE setEigenProblemSize(LMIN,LD,truncation,M)
    !***************************************************************************
       implicit none
-      integer, intent(in):: LMIN,LD,Truncation,M
+      integer, intent(in):: LMIN,LD,truncation,M
       integer:: L
       ! - DETERMINATION OF DIMENSION:
       ! - for each value of L the number of possible N-values is added
       !         print*, "Triangular truncation (2.12)"
-      !         print*, LMIN, "...", 2*Truncation+M-1,LD
+      !         print*, LMIN, "...", 2*truncation_i+M-1,LD
       NEigenmodes=0
-      DO L = LMIN, 2*Truncation+M-1, LD
-         NEigenmodes = NEigenmodes + 4*INT( DBLE(2*Truncation+1-L+M)/2 )
+      DO L = LMIN, 2*truncation+M-1, LD
+         NEigenmodes = NEigenmodes + 4*INT( DBLE(2*truncation+1-L+M)/2 )
       endDO
    end subroutine
 
