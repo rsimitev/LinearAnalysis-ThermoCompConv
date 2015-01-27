@@ -506,7 +506,7 @@ contains
       J = JI
       K = KI
       CALL tausch (TRI, I, J, K)
-      ! TODO: COnvert to select case.
+      ! TODO: Convert to select case.
       IF (Symmetry_i.EQ.0) THEN
          IF (TRI.EQ.'SS ') THEN
             IF (I*J.EQ.0) THEN
@@ -790,23 +790,21 @@ contains
       ENDIF
       R = RINT
    END FUNCTION R
-!-----------------------------------------------------------------------
-!     END OF ri
-!-----------------------------------------------------------------------
-!
-!> Returns 1 if N is even or -1 if N is odd
-!-----------------------------------------------------------------------
+   !-----------------------------------------------------------------------
+   !     END OF ri
+   !-----------------------------------------------------------------------
+
+   !-----------------------------------------------------------------------
+   !> Returns 1 if N is even or -1 if N is odd
    pure integer function even_odd (N)
         implicit none
         integer, intent(in):: n
         even_odd = - 1
         IF (MOD (N, 2) .EQ.0) even_odd = 1
    END FUNCTION even_odd
-!-----------------------------------------------------------------------
-!
-!
-!-----------------------------------------------------------------------
-   pure SUBROUTINE TAUSCH (TRI, I, J, K)
+   !-----------------------------------------------------------------------
+   !> Swaps the three indices according to a 3 letter code
+   pure SUBROUTINE tausch (TRI, I, J, K)
       implicit none
       CHARACTER(len=3), intent(inout):: TRI
       integer, intent(inout):: i, j, k
