@@ -266,10 +266,16 @@ contains
       Write(*,*) ZA_refFile,' ', ZB_refFile
       Write(*,*) tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, Nmodes 
       eta=0.35
+      Rt=Rt_i
+      Pt=Pt_i
+      Rc=Rc_i
+      tau=tau_i
+      Le=Le_i
+      M0=mm_i
       LMIN = mm_i
       LD = 2
       Truncation=10
-      Symmetry=2
+      Symmetry=Symmetry_i
       NEigenModes=Nmodes
       call GrowthRateInit(Rt_i, Rc_i, Pt_i, Le_i, tau_i,eta, mm_i, Symmetry) 
       Write(*,*) 'ri =', ri,'ro =', ro
