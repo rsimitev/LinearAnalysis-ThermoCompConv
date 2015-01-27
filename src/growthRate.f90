@@ -27,6 +27,7 @@ contains
       Rt=RtOld
    end function
 
+   !***********************************************************************
    !> Computes the complex frequency for which the growth rate is maximum.
    double complex FUNCTION MaxGrowthRateCmplx(Ra)
       implicit none
@@ -45,6 +46,10 @@ contains
       Rt=RtOld
    end function
 
+   !***********************************************************************
+   !> Computes the eigenvalues and optionally the eigen modes of the
+   !! algebraic problem. The real part of the eigen value is the oscillation
+   !! frequency and the imaginary part is the symmetric of the growth rate.
    subroutine computeGrowthRateModes(sort, zew, zeval)
       implicit none
       !> .True. Sort the eigenvalues and eigenvectors if computed.
@@ -146,6 +151,7 @@ contains
                DO NJ=1,NJMAX
                   IF(J+3.GT.NDIM .OR. I+3.GT.NDIM) THEN
                      write(*,*) 'MAT(): NDIM too small.'
+                     Write(*,*) 'i =',i,'j =', j, 'NDIM =', NDIM
                      stop
                   endIF
                   IF( LI.EQ.LJ ) THEN
@@ -253,7 +259,7 @@ contains
    ! ---- POLOIDAL EQUATION , TIME DERIVATIVE
       implicit none
       integer:: N1, N2, l1, NU1
-      DIII2= -NU1*DL(L1)*(-N2**2*DPI**2*R('SS ',2,N1,N2,0)+2*N2*DPI*R('SC ',1,N1,N2,0)-DL(L1)*R('SS ',0,N1,N2,0) )
+      DIII2= -NU1*DL(L1)*( -N2**2*DPI**2*R('SS ',2,N1,N2,0) + 2*N2*DPI*R('SC ',1,N1,N2,0) - DL(L1)*R('SS ',0,N1,N2,0) )
    end function
 
    double precision function DIII3(N1,N2,L1,NU1)
@@ -310,6 +316,10 @@ contains
       implicit none
       integer:: Truncation,M0,NEigenmodes,LMIN,LD
       integer:: L
+      ! - DETERMINATION OF DIMENSION:
+      ! - for each value of L the number of possible N-values is added
+      !         print*, "Triangular truncation (2.12)"
+      !         print*, LMIN, "...", 2*Truncation+M-1,LD
       NEigenmodes=0
       DO L = LMIN, 2*Truncation+M0-1, LD
          NEigenmodes = NEigenmodes + 4*INT( DBLE(2*Truncation+1-L+M0)/2 )
@@ -333,7 +343,8 @@ contains
       I = II
       J = JI
       K = KI
-      CALL TAUSCH (TRI, I, J, K)
+      CALL tausch (TRI, I, J, K)
+      ! TODO: COnvert to select case.
       IF (Symmetry_i.EQ.0) THEN
          IF (TRI.EQ.'SS ') THEN
             IF (I*J.EQ.0) THEN
@@ -618,7 +629,7 @@ contains
       R = RINT
    END FUNCTION R
 !-----------------------------------------------------------------------
-!     END OF RI
+!     END OF ri
 !-----------------------------------------------------------------------
 !
 !> Returns 1 if N is even or -1 if N is odd
@@ -950,9 +961,9 @@ contains
 !-----------------------------------------------------------------------
       implicit none
       double precision, intent(in):: x
+      double precision, parameter:: GENAU = 1.0D-7
       integer:: Jz, Jn, i, j
-      double precision:: GENAU, SISO,SISN, SISZ
-      GENAU = 1D-7
+      double precision:: SISO,SISN, SISZ
 
       SISO = X
       DO I = 1, 200000
@@ -1033,14 +1044,12 @@ contains
 !
 !-----------------------------------------------------------------------
    pure double precision function CIS (X)
-!-----------------------------------------------------------------------
       implicit none
-      double precision, PARAMETER:: C = 0.5772156649D0
+      double precision, PARAMETER:: C = 0.5772156649D0, GENAU = 1D-7
       integer:: Jz, Jn, i, j
       double precision, intent(in):: x
-      double precision:: GENAU, CISN, CISO, CISZ
-      GENAU = 1D-7
-!
+      double precision:: CISN, CISO, CISZ
+      
       CISO = DLOG (X)+C
       DO I = 1, 200000
          JZ = 0
@@ -1048,20 +1057,20 @@ contains
          CISZ = 1D0
          CISN = 2D0*I
    100   DO J = JZ+1, 2*I
-            CISZ = CISZ*X
-            IF (CISZ.GT.1D20) exit
-         END DO
-         JZ = J
-         DO J = JN+1, 2*I
-            CISN = CISN*J
-            IF (CISN.GT.1D20) exit
-         END DO
-         JN = J
-         CISZ = CISZ / CISN
-         CISN = 1D0
+               CISZ = CISZ*X
+               IF (CISZ.GT.1D20) exit
+            END DO
+            JZ = J
+            DO J = JN+1, 2*I
+               CISN = CISN*J
+               IF (CISN.GT.1D20) exit
+            END DO
+            JN = J
+            CISZ = CISZ / CISN
+            CISN = 1D0
          IF ( (JZ.LT.2*I) .OR. (JN.LT.2*I) ) GOTO 100
 !
-         CIS = CISO+( - 1) **I*CISZ
+         CIS = CISO+(-1)**I*CISZ
          IF (I.GT.1) THEN
             IF (DABS (1D0 - CIS / CISO) .LE.GENAU) exit
          ENDIF
