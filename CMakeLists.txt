@@ -18,7 +18,7 @@ if(${CMAKE_Fortran_COMPILER_ID} MATCHES "GNU")
   # gfortran
   set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp -ffree-line-length-none -fno-f2c")
   set (CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -cpp -ffree-line-length-none -fno-f2c")
-  set (CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} -cpp -ffree-line-length-none -fno-f2c -Wall -Wextra -fcheck=all -finit-real=inf")
+  set (CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} -cpp -ffree-line-length-none -fno-f2c -Wall -Wextra -finit-real=inf")
   set (CMAKE_Fortran_FLAGS_PROFILE "-cpp -ffree-line-length-none -fno-f2c -g -pg -coverage -Wall -Wextra")
 elseif (${CMAKE_Fortran_COMPILER_ID} MATCHES "Intel")
   set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fpp -heap-arrays")
