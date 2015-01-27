@@ -176,8 +176,8 @@ contains
 
       I=0
       LMAX=2*Truncation+mm_i-1
-      Write(*,*) 'MAT():', mm_i, LMIN, LMAX, LD
-      Write(*,*) 'MAT():', Symmetry_i, Truncation, NDIM
+      !Write(*,*) 'MAT():', mm_i, LMIN, LMAX, LD
+      !Write(*,*) 'MAT():', Symmetry_i, Truncation, NDIM
       DO LI=LMIN,LMAX,LD
          LPI=LI
          ! Determine L for toroidal (w) field:
@@ -317,13 +317,13 @@ contains
                      do k2=1, 4
                         Read(444,*) ZA_ref
                         Write(*,*) 'ZA(',i+k1,',',j+k2,')=',ZA(i+k1,j+k2),'.vs.',ZA_ref
-                        if(abs(ZA(i+k1,j+k2)-ZA_ref)/abs(ZA_ref).gt.1.0e-5) then 
+                        if(abs(ZA(i+k1,j+k2)-ZA_ref)/abs(ZA_ref).gt.1.0e-6) then 
                            error=1
                            return
                         endif
                         Read(445,*) ZB_ref
                         Write(*,*) 'ZB(',i+k1,',',j+k2,')=',ZB(i+k1,j+k2),'.vs.',ZB_ref
-                        if(abs(ZB(i+k1,j+k2)-ZB_ref)/abs(ZB_ref).gt.1.0e-5) then 
+                        if(abs(ZB(i+k1,j+k2)-ZB_ref)/abs(ZB_ref).gt.1.0e-6) then 
                            error=2
                            return
                         endif
