@@ -288,7 +288,7 @@ contains
       Rc_i=1.0d2
       Pt_i=1.0d0
       Le_i=0.30d0
-      eta_i=0.35
+      eta_i=0.35d0
       mm_i=18 
       Symmetry_i=2
       truncation_i=10
@@ -343,13 +343,13 @@ contains
                      do k2=1, 4
                         Read(444,*) ZA_ref
                         Write(*,*) 'ZA(',i+k1,',',j+k2,')=',ZA(i+k1,j+k2),'.vs.',ZA_ref
-                        if(abs(ZA(i+k1,j+k2)-ZA_ref)/abs(ZA_ref).gt.1.0e-6) then 
+                        if(abs(ZA(i+k1,j+k2)-ZA_ref)/abs(ZA_ref).gt.1.0e-7) then 
                            error=1
                            return
                         endif
                         Read(445,*) ZB_ref
                         Write(*,*) 'ZB(',i+k1,',',j+k2,')=',ZB(i+k1,j+k2),'.vs.',ZB_ref
-                        if(abs(ZB(i+k1,j+k2)-ZB_ref)/abs(ZB_ref).gt.1.0e-6) then 
+                        if(abs(ZB(i+k1,j+k2)-ZB_ref)/abs(ZB_ref).gt.1.0e-7) then 
                            error=2
                            return
                         endif
