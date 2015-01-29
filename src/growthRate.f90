@@ -59,6 +59,16 @@ contains
       endif
    end subroutine
 
+   subroutine writeAllParameters()
+      implicit none
+      Write(*,*) '---BEGIN'
+      Write(*,*) 'WAP1: ', Rt_i, Rc_i, Pt_i
+      Write(*,*) 'WAP2: ', Le_i, tau_i, eta_i
+      Write(*,*) 'WAP3: ', ri, ro 
+      Write(*,*) 'WAP4: ', mm_i, Symmetry_i, truncation_i
+      Write(*,*) '---END'
+   end subroutine
+
    subroutine setLminAndLD(Sym, mm, LMIN, LD)
       implicit none
       integer, intent(in):: Sym, mm

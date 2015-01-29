@@ -506,6 +506,7 @@ contains
       tau   = tauMin
       tauLoop:do
          !--------searching for zero grothrate by varying Rt and M0: ---------------
+         call GrowthRateUpdatePar(tau=tau, Rt=Rt)
          call fixedParCriticalRaAndM0(CriticalRt)
 !--      increment TAU:
          TAU0 = TAU1
