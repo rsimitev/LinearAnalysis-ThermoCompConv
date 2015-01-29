@@ -28,10 +28,10 @@ contains
       eta_i = eta
       Symmetry_i = Symmetry
       truncation_i = truncation
-      RI = ETA_i/(1.0d0-ETA_i)
-      RO = 1.0D0 + RI
+      ri = eta_i/(1.0d0-eta_i)
+      ro = 1.0D0 + ri
       call setLminAndLD(Symmetry, m, LMIN, LD)
-      call setEigenProblemSize(LMIN,LD,truncation_i,M)
+      call setEigenProblemSize(LMIN,LD,truncation,M)
    end subroutine
 
    !***********************************************************************
@@ -110,7 +110,7 @@ contains
    subroutine setVariableParam(par)
       implicit none
       character(len=3), intent(in):: par
-      select case(par)
+      select case(trim(par))
          case ('Rt','Rc','Pt','Le','tau','eta','m')
             variable = par
          case default
@@ -124,7 +124,7 @@ contains
    subroutine setParameterValue(val)
       implicit none
       double precision, intent(in):: val
-      select case(variable)
+      select case(trim(variable))
          case ('Rt')
             Rt_i = val
          case ('Rc')
@@ -138,43 +138,76 @@ contains
          case ('eta')
             eta_i = val
          case ('m')
-            mm_i = int(val)
+            mm_i = nint(val)
          case default
             Rt_i = val
       end select
    end subroutine
 
    !***********************************************************************
+   !> Saves the value of the internal parameter selected by setVariableParam(par) in
+   !! \a val
+   subroutine saveParameterValue(val)
+      implicit none
+      double precision, intent(out):: val
+      select case(trim(variable))
+         case ('Rt')
+            Write(*,*) 'save:Rt'
+            val = Rt_i
+         case ('Rc')
+            Write(*,*) 'save:Rc'
+            val = Rc_i
+         case ('Pc')
+            val = Pt_i
+         case ('Le')
+            val = Le_i
+         case ('tau')
+            val = tau_i
+         case ('eta')
+            val = eta_i
+         case ('m')
+            val = dble(mm_i)
+         case default
+            val = Rt_i
+      end select
+   end subroutine
+
+   !***********************************************************************
    !> Computes the maximum imaginary part of the frequency,
    !! that is, the maximum growth rate for all eigen modes.
-   !! Whatever parameter is varied will see its value changed to \a val.
    double precision FUNCTION MaxGrowthRate(val)
       implicit none
       double precision, intent(in):: val
+      double precision:: valOld
       double complex:: ZEW(NEigenmodes)
       integer:: imin
+
+      call saveParameterValue(valOld)
       call setParameterValue(val)
       call computeGrowthRateModes(.false., zew)
       ! search for lowest imaginary part:
       IMIN = minloc(DIMAG(ZEW),1)
       MaxGrowthRate = DIMAG(ZEW(imin))
+      call setParameterValue(valOld)
    end function
 
    !***********************************************************************
    !> Computes the complex frequency for which the growth rate is maximum.
-   !! Whatever parameter is varied will see its value changed to \a val.
    double complex FUNCTION MaxGrowthRateCmplx(val)
       implicit none
       double precision, intent(in):: val
+      double precision:: valOld
       double complex:: ZEW(NEigenmodes)
       integer:: imin
 
+      call saveParameterValue(valOld)
       call setParameterValue(val)
       Zew = dcmplx(0.0d0,0.0d0)
       call computeGrowthRateModes(.false., zew)
       ! search for lowest imaginary part:
       IMIN = minloc(DIMAG(ZEW),1)
       MaxGrowthRateCmplx = ZEW(IMIN)
+      call setParameterValue(valOld)
    end function
 
    !***********************************************************************
