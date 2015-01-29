@@ -113,20 +113,18 @@ contains
       ! ----INPUT:
       call readConfigFileNew(inputfile)
 
-      call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
-      call setVariableParam(VariablePar)
-
       ! ---- doesn't work for M=0 !!!!!!
       IF(M0.LT.1) THEN
         write(*,*) 'The code does not work for M0<1. ', M0, ' --> 1'
         M0 = 1
       ENDIF
 
+      call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+      call setVariableParam(VariablePar)
+
       ! ----OUTPUT:
       OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
       call writeOutputHeader(unitOut)
-
-      call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
    END subroutine
 
    !**********************************************************************
@@ -213,7 +211,7 @@ contains
       CriticalRt = 1.0d300
       Write(*,*)  "i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info"
       DO m0=1, Truncation
-         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+         call GrowthRateUpdatePar(m=m0)
          ! Increase the interval, in case we did not find anything.
          do i=1, 5
             RtMin=Rt - 2*i*dabs(Rt)
@@ -268,7 +266,7 @@ contains
       enddo
       DO II=1, nm0
          M0   = M0I(II)
-         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+         call GrowthRateUpdatePar(m=m0)
          ! Increase the interval, in case we did not find anything.
          do i=1, 3
             RtMin = Rt/(2.0d0**dble(i))
@@ -454,7 +452,7 @@ contains
          RtMin = Rt/5.0
          RtMax = Rt*5
          RtOld = Rt
-         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+         call GrowthRateUpdatePar(tau=tau)
          call minimizer(MaxGrowthRate, RtMin, RtMax, RELE, ABSE, 50, CriticalRt, info)
          frequency = MaxGrowthRateCmplx(CriticalRt)
          GROR  = dimag(frequency)
@@ -547,7 +545,7 @@ contains
       MinCriticalRt=100.d10
       MforMinCriticalRt=2000
       do M0=mMin, mMax, INT(StepSize)
-         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+         call GrowthRateUpdatePar(m=m0)
          call minimizer(MaxGrowthRate,Rt/10, Rt*10,RELE,ABSE,NSMAX,CriticalRt, info)
          if(info.NE.0) then
             Write(*,*) 'Failed to find roots: error:', info
@@ -583,7 +581,7 @@ contains
          RtMax = Rt + dRt
          counter = 0
          do
-            call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+            call GrowthRateUpdatePar(Le=Le)
             call minimizer(MaxGrowthRate,RtMin, RtMax,RELE,ABSE,NSMAX,CriticalRt, info)
             if (info==0 .or. counter.gt.20) exit
             counter = counter + 1

@@ -10,7 +10,7 @@ module GrowthRateMod
    integer:: Symmetry_i, mm_i, NEigenmodes, lmin, ld, Truncation_i
    public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes
    public:: setEigenProblemSize, getEigenProblemSize, GrowthRateInit, setVariableParam
-   public:: testMAT, setLminAndLD
+   public:: testMAT, setLminAndLD, GrowthRateUpdatePar
 contains
 
    !***********************************************************************
@@ -34,6 +34,31 @@ contains
       call setEigenProblemSize(LMIN,LD,truncation_i,M)
    end subroutine
 
+   !***********************************************************************
+   !> Updates the specified parameters.
+   subroutine GrowthRateUpdatePar(Rt, Rc, Pt, Le, tau, eta, m, Symmetry, truncation)
+      implicit none
+      double precision, optional, intent(in)::Rt, Rc, Pt, Le, tau, eta
+      integer,optional, intent(in):: m, Symmetry, truncation
+      if(present(Rt))  Rt_i  = Rt
+      if(present(Rc))  Rc_i  = Rc
+      if(present(Pt))  Pt_i  = Pt
+      if(present(Le))  Le_i  = Le
+      if(present(tau)) tau_i = tau
+      if(present(eta)) then
+         eta_i = eta
+         ri = eta_i/(1.0d0-eta_i)
+         ro = 1.0D0 + ri
+      endif
+      if(present(m))          mm_i         = m
+      if(present(Symmetry))   Symmetry_i   = Symmetry
+      if(present(truncation)) truncation_i = truncation
+      if(present(m) .or. present(Symmetry) .or.  present(truncation)) then
+         call setLminAndLD(Symmetry_i, mm_i, LMIN, LD)
+         call setEigenProblemSize(LMIN,LD,truncation_i,mm_i)
+      endif
+   end subroutine
+
    subroutine setLminAndLD(Sym, mm, LMIN, LD)
       implicit none
       integer, intent(in):: Sym, mm
@@ -52,6 +77,30 @@ contains
          LD   = 2
       ENDIF
    end subroutine
+
+   !***************************************************************************
+   ! - DETERMINATION OF DIMENSION of the problem:
+   ! - for each value of L the number of possible N-values is added
+   SUBROUTINE setEigenProblemSize(LMIN,LD,truncation,M)
+   !***************************************************************************
+      implicit none
+      integer, intent(in):: LMIN,LD,truncation,M
+      integer:: L
+      ! - DETERMINATION OF DIMENSION:
+      ! - for each value of L the number of possible N-values is added
+      !         print*, "Triangular truncation (2.12)"
+      !         print*, LMIN, "...", 2*truncation_i+M-1,LD
+      NEigenmodes=0
+      DO L = LMIN, 2*truncation+M-1, LD
+         NEigenmodes = NEigenmodes + 4*INT( DBLE(2*truncation+1-L+M)/2 )
+      endDO
+   end subroutine
+
+   !***************************************************************************
+   integer function getEigenProblemSize()
+      implicit none
+      getEigenProblemSize = NEigenModes 
+   end function
 
 
    !***********************************************************************
@@ -489,29 +538,6 @@ contains
       implicit none
       integer, intent(in):: l
       DL = DBLE(L*(L+1))
-   end function
-
-   !***************************************************************************
-   ! - DETERMINATION OF DIMENSION of the problem:
-   ! - for each value of L the number of possible N-values is added
-   SUBROUTINE setEigenProblemSize(LMIN,LD,truncation,M)
-   !***************************************************************************
-      implicit none
-      integer, intent(in):: LMIN,LD,truncation,M
-      integer:: L
-      ! - DETERMINATION OF DIMENSION:
-      ! - for each value of L the number of possible N-values is added
-      !         print*, "Triangular truncation (2.12)"
-      !         print*, LMIN, "...", 2*truncation_i+M-1,LD
-      NEigenmodes=0
-      DO L = LMIN, 2*truncation+M-1, LD
-         NEigenmodes = NEigenmodes + 4*INT( DBLE(2*truncation+1-L+M)/2 )
-      endDO
-   end subroutine
-
-   integer function getEigenProblemSize()
-      implicit none
-      getEigenProblemSize = NEigenModes 
    end function
 
 !-----------------------------------------------------------------------
