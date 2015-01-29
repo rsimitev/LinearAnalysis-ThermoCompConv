@@ -10,3 +10,4 @@ lo6*
 build*
 BUILD*
 bin
+*-master*
