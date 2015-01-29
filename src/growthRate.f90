@@ -162,10 +162,8 @@ contains
       double precision, intent(out):: val
       select case(trim(variable))
          case ('Rt')
-            Write(*,*) 'save:Rt'
             val = Rt_i
          case ('Rc')
-            Write(*,*) 'save:Rc'
             val = Rc_i
          case ('Pc')
             val = Pt_i
