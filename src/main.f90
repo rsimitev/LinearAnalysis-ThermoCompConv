@@ -101,6 +101,7 @@ program linearOnset
             Write(*,*) 'Chose one of Rt, Rc, tau, Pt, Le or eta'
             stop ERR_UNUSABLE_VARIABLE_PAR
          endif
+         LowerLimit = m0
          call fixedParCriticalParAndM0_v2()
       case default
          Write(*,*) 'Unknown computation type:', LCALC
@@ -215,13 +216,15 @@ contains
 
       info=0
       CriticalPar = 1.0d300
-      saveParameterValue(origParVal)
-      DO m0=1, Truncation
+      call saveParameterValue(origParVal)
+      Write(unitOut,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
+      Write(*      ,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
+      DO m0=nint(LowerLimit), nint(UpperLimit), nint(StepSize)
          call GrowthRateUpdatePar(m=m0)
          ! Increase the interval, in case we did not find anything.
-         do i=1, 5
-            ParMin = origParVal - 2*i*dabs(origParVal)
-            ParMax = origParVal + 2*i*dabs(origParVal)
+         do i=0, 5
+            ParMin = origParVal - 0.5*2**i*dabs(origParVal)
+            ParMax = origParVal + 0.5*2**i*dabs(origParVal)
 
             call minimizer(MaxGrowthRate, ParMin, ParMax, RELE ,ABSE, NSMAX, aux, info)
             if (info.eq.0) exit
@@ -236,7 +239,6 @@ contains
          endif
          write( unitOut,'(1X,1P,E17.6,I4)') aux, M0
          write( *,'(1X,1P,E17.6,I4)') aux, M0
-         !Rt = aux
       enddo
       write( unitOut,'(">",1P,E17.6,I4)')  CriticalPar, CriticalM
       write( *,'(">",1P,E17.6,I4)')    CriticalPar, CriticalM
