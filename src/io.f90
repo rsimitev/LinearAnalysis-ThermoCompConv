@@ -1,5 +1,6 @@
 module io
 #include "errorcodes.h"
+#include "version.h"
    use parameters
    use parser
    implicit none
@@ -65,7 +66,7 @@ contains
       IMPLICIT none
       integer, intent(in):: unitOut
       IF(LCALC.GT.0 .AND. LCALC.LT.4 .or. LCALC.eq.5.or.LCALC.eq.6) THEN
-         WRITE(unitOut,*)  '### Output of Program lo.f Ver.2.1:        ###'
+         WRITE(unitOut,*)  '### Output of Program glo  Ver.', VERSION,':   ###'
          WRITE(unitOut,*)  '### Lin. Onset of Conv. via Galerkinmethod ###'
          WRITE(unitOut,'(A11,E12.5,A2)') '# P     ', Pt,     '#'
          WRITE(unitOut,'(A11,E12.5,A2)') '# Lewis ', Le,     '#'

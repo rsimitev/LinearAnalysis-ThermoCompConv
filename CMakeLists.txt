@@ -33,6 +33,10 @@ SET(CMAKE_BUILD_TYPE RELEASE CACHE STRING "Default to a RELEASE build.")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 
+configure_file (
+  "${GLO_SOURCE_DIR}/version.h.in"
+  "${GLO_BINARY_DIR}/version.h"
+  )
 include_directories(${GLO_BINARY_DIR})
 
 find_package(BLAS REQUIRED)
@@ -53,6 +57,7 @@ add_subdirectory(scripts)
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)
+if(BUILD_DOCS)
 if(DOXYGEN_FOUND)
    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in
       ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
@@ -62,6 +67,7 @@ if(DOXYGEN_FOUND)
       COMMENT "Generating API documentation with Doxygen" VERBATIM
       )
 endif(DOXYGEN_FOUND)
+endif(BUILD_DOCS)
 
 INCLUDE(InstallRequiredSystemLibraries)
 set(CPACK_GENERATOR "TGZ")

@@ -25,6 +25,7 @@
 ! Start:    glo inputfilename outputfilename
 !
 #include "errorcodes.h"
+#include "version.h"
 program linearOnset
    use parameters
    use growthRateMod
