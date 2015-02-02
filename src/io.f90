@@ -65,24 +65,22 @@ contains
       use parameters
       IMPLICIT none
       integer, intent(in):: unitOut
-      IF(LCALC.GT.0 .AND. LCALC.LT.4 .or. LCALC.eq.5.or.LCALC.eq.6) THEN
-         WRITE(unitOut,*)  '### Output of Program glo  Ver.', VERSION,':   ###'
-         WRITE(unitOut,*)  '### Lin. Onset of Conv. via Galerkinmethod ###'
-         WRITE(unitOut,'(A11,E12.5,A2)') '# P     ', Pt,     '#'
-         WRITE(unitOut,'(A11,E12.5,A2)') '# Lewis ', Le,     '#'
-         WRITE(unitOut,'(A11,E12.5,A2)') '# TAU   ', TAU,    '#'
-         WRITE(unitOut,'(A11,E12.5,A2)') '# R     ', Rt,     '#'
-         WRITE(unitOut,'(A11,E12.5,A2)') '# RC    ', Rc,     '#'
-         WRITE(unitOut,'(A11,E12.5,A2)') '# ETA   ', ETA,    '#'
-         WRITE(unitOut,'(A11,G12.5,A2)') '# m     ', M0,     '#'
-         WRITE(unitOut,'(A11,I12,A2)')   '# Symmetry     ', Symmetry,   '#'
-         WRITE(unitOut,'(A11,E12.5,A2)') '# LowerLimit   ', LowerLimit, '#'
-         WRITE(unitOut,'(A11,E12.5,A2)') '# UpperLimit   ', UpperLimit, '#'
-         WRITE(unitOut,'(A11,E12.5,A2)') '# StepSize     ', StepSize,   '#'
-         WRITE(unitOut,'(A11,I12,A2)')   '# Truncation   ', Truncation, '#'
-         WRITE(unitOut,*)  '# see definition of LCALC for output. LCALC:', LCALC,'   #'
-         WRITE(unitOut,*)  '#                                      #'
-      ENDIF
+      WRITE(unitOut,*)  '### Output of Program glo  Ver.', VERSION,':   ###'
+      WRITE(unitOut,*)  '### Lin. Onset of Conv. via Galerkinmethod ###'
+      WRITE(unitOut,'(A11,E12.5,A2)') '# P     ', Pt,     '#'
+      WRITE(unitOut,'(A11,E12.5,A2)') '# Lewis ', Le,     '#'
+      WRITE(unitOut,'(A11,E12.5,A2)') '# TAU   ', TAU,    '#'
+      WRITE(unitOut,'(A11,E12.5,A2)') '# R     ', Rt,     '#'
+      WRITE(unitOut,'(A11,E12.5,A2)') '# RC    ', Rc,     '#'
+      WRITE(unitOut,'(A11,E12.5,A2)') '# ETA   ', ETA,    '#'
+      WRITE(unitOut,'(A11,G12.5,A2)') '# m     ', M0,     '#'
+      WRITE(unitOut,'(A11,I12,A2)')   '# Symmetry     ', Symmetry,   '#'
+      WRITE(unitOut,'(A11,E12.5,A2)') '# LowerLimit   ', LowerLimit, '#'
+      WRITE(unitOut,'(A11,E12.5,A2)') '# UpperLimit   ', UpperLimit, '#'
+      WRITE(unitOut,'(A11,E12.5,A2)') '# StepSize     ', StepSize,   '#'
+      WRITE(unitOut,'(A11,I12,A2)')   '# Truncation   ', Truncation, '#'
+      WRITE(unitOut,*)  '# see definition of LCALC for output. LCALC:', LCALC,'   #'
+      WRITE(unitOut,*)  '#                                      #'
    end subroutine
 
 ! *************************************************************************
