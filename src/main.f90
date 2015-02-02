@@ -99,7 +99,8 @@ program linearOnset
          if(trim(VariablePar)=='m') then
             Write(*,*) 'm is already varied in this computation.'
             Write(*,*) 'Chose one of Rt, Rc, tau, Pt, Le or eta'
-            exit ERR_UNUSABLE_VARIABLE_PAR
+            stop ERR_UNUSABLE_VARIABLE_PAR
+         endif
          call fixedParCriticalParAndM0_v2()
       case default
          Write(*,*) 'Unknown computation type:', LCALC
