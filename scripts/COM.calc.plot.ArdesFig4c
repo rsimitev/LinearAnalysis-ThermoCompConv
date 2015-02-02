@@ -37,21 +37,26 @@ if ( $calc == "true" ) then
 #========================================================== 
 #
 cat > $in << EOT
-  NE (0/1/2) | LCALC (-1/0/1/2/3/4/5/6) |
-            2               4
- |  RAYLEIGH  |  TAU     |  PRANTEL  |  ETA  |  Lewis |   Rconc   |
-      40000.0    9000     0.1       0.4    1.     0.
- |   NTRUNC (>=1) | MODE |
-            12          6
- |   DRA   | ABSERR  |  RELERR  | NMAX |
-   300.00     1.00000E-06 0.0D0  1000 
- |   incr_STEP | incr_END
-       1.0        5000                                             
+Symmetry = 2
+Calculation = 4
+VariablePar = Rt
+Rt = 40000.
+tau = 9000.
+Pt = 0.1
+eta = 0.4
+Le = 1. 
+Rc = 0.
+Truncation = 12
+m0 = 6
+AbsParameterError = 1.00E-06
+RelativeGRError = 1.00E-04 
+MaxIterations = 1000
+StepSize = 1.
+UpperLimit = 5000.
 EOT
 #  
 # Command
-make lo
-lo $in $out
+glo $in $out
 rm $in
 
 endif 

@@ -9,20 +9,26 @@ rm $in
 #========================================================== 
 #
 cat > $in << EOT
-  NE (0/1/2) | LCALC (0/1/2/3/4) |
-            2           4
- |  RAYLEIGH  |  TAU     |  PRANTEL  |  ETA  |  Lewis |   Rconc   |
-     2155.45    $tau.0   0.1       0.4           50.         1.0E+03
- |   NTRUNC (>=1) | MODE |
-             4        3
- |   DRA   | ABSERR  |  RELERR  | NMAX |
-   300.00     1.00000E-06 0.0000E+00  10
- |   TAU_STEP | TAU_END
-     2000.0      50000.                                             
+Symmetry = 2
+Calculation = 4
+VariablePar = Rt
+Rt = 2155.45
+tau = ${tau}.0
+Pt = 0.1
+eta = 0.4
+Le = 50. 
+Rc = 1000.
+Truncation = 4
+m0 = 3
+AbsParameterError = 1.00E-06
+RelativeGRError = 1.00E-04 
+MaxIterations = 10
+StepSize = 2000.0
+UpperLimit = 50000.
 EOT
 #  
 # Command
-/btpa/btpa19/SphericalLinearCode/DATA/NT=4/lo $in $out
+glo $in $out
 rm $in
 
 #* ------- Physical Parameters: ------
