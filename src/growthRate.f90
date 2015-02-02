@@ -11,6 +11,7 @@ module GrowthRateMod
    public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes
    public:: setEigenProblemSize, getEigenProblemSize, GrowthRateInit, setVariableParam
    public:: testMAT, setLminAndLD, GrowthRateUpdatePar
+   public:: setParameterValue,saveParameterValue
 contains
 
    !***********************************************************************
@@ -139,7 +140,7 @@ contains
             Rt_i = val
          case ('Rc')
             Rc_i = val
-         case ('Pc')
+         case ('Pt')
             Pt_i = val
          case ('Le')
             Le_i = val
@@ -165,7 +166,7 @@ contains
             val = Rt_i
          case ('Rc')
             val = Rc_i
-         case ('Pc')
+         case ('Pt')
             val = Pt_i
          case ('Le')
             val = Le_i
