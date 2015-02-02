@@ -95,8 +95,12 @@ program linearOnset
       case(6)
          LowerLimit = Le
          call varyLeCriticalRt(LowerLimit, UpperLimit)
-      case(7) ! Loops through the m's to find the critical Rt_c ans m_c.
-         call fixedParCriticalRaAndM0_v2()
+      case(7) ! Loops through the m's to find the critical Par and m_c.
+         if(trim(VariablePar)=='m') then
+            Write(*,*) 'm is already varied in this computation.'
+            Write(*,*) 'Chose one of Rt, Rc, tau, Pt, Le or eta'
+            exit ERR_UNUSABLE_VARIABLE_PAR
+         call fixedParCriticalParAndM0_v2()
       case default
          Write(*,*) 'Unknown computation type:', LCALC
    end select
@@ -198,44 +202,43 @@ contains
    end subroutine
 
    !**********************************************************************
-   !> Computes the lowest critical thermal Rayleigh number of all m's
+   !> For the specified parameter, finds the global critical value
    !! for all other parameters fixed.
-   subroutine fixedParCriticalRaAndM0_v2()
+   subroutine fixedParCriticalParAndM0_v2()
       implicit none
-      double precision:: Rt_c
-      double precision:: RtMin, RtMax
-      double precision:: CriticalRt
+      double precision:: aux
+      double precision:: ParMin, ParMax
+      double precision:: CriticalPar, origParVal
       INTEGER:: CriticalM
       integer:: info, i
 
       info=0
-      CriticalRt = 1.0d300
-      Write(*,*)  "i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info"
+      CriticalPar = 1.0d300
+      saveParameterValue(origParVal)
       DO m0=1, Truncation
          call GrowthRateUpdatePar(m=m0)
          ! Increase the interval, in case we did not find anything.
          do i=1, 5
-            RtMin=Rt - 2*i*dabs(Rt)
-            RtMax=Rt + 2*i*dabs(Rt)
+            ParMin = origParVal - 2*i*dabs(origParVal)
+            ParMax = origParVal + 2*i*dabs(origParVal)
 
-            call minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info)
-            Write(*,*)  i, Rt, RtMin, RtMax, RELE ,ABSE, NSMAX, Rt_c, info
+            call minimizer(MaxGrowthRate, ParMin, ParMax, RELE ,ABSE, NSMAX, aux, info)
             if (info.eq.0) exit
          enddo
          if(info.NE.0) then
             Write(*,*) 'Failed to find roots: error:', info
             stop 5
          endif
-         if (Rt_c < CriticalRt) then
-            CriticalRt = Rt_c
+         if (aux < CriticalPar) then
+            CriticalPar = aux
             CriticalM  = m0
          endif
-         write( unitOut,'(1X,1P,E17.6,I4)') Rt_c, M0
-         write( *,'(1X,1P,E17.6,I4)') Rt_c, M0
-         !Rt = Rt_c
+         write( unitOut,'(1X,1P,E17.6,I4)') aux, M0
+         write( *,'(1X,1P,E17.6,I4)') aux, M0
+         !Rt = aux
       enddo
-      write( unitOut,'(">",1P,E17.6,I4)')  CriticalRt, CriticalM
-      write( *,'(">",1P,E17.6,I4)')    CriticalRt, CriticalM
+      write( unitOut,'(">",1P,E17.6,I4)')  CriticalPar, CriticalM
+      write( *,'(">",1P,E17.6,I4)')    CriticalPar, CriticalM
    end subroutine
 
 

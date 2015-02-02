@@ -8,5 +8,6 @@
 #define NO_RA_FOUND     120
 #define START_NEXT_RUN  190
 #define FINISHED        199
+#define ERR_UNUSABLE_VARIABLE_PAR 300
 
 #endif
