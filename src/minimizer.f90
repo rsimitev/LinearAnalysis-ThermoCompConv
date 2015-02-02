@@ -31,11 +31,9 @@
 
       info = 0
       if(xmin>xmax) then
-         x0 = xmax
          X1 = Xmax
          X2 = Xmin
       else
-         x0 = xmin
          X1 = Xmin
          X2 = Xmax
       endif
@@ -63,13 +61,15 @@
       endif
 
       do !mainloop
-         ! Use bisection rule for the first step
-         if (n==0) then
-            x3 = 0.5d0*(x2+x1)
+         if(n==0.and.x1*x2<0.0d0) then ! Be slick and try 0
+            x3 = 0.0d0
+         ! Use bisection rule at the start and every other step.
+         elseif (mod(n-1,2)==0.or.n<6) then
+            x3 = (x2 + x1)/2.0d0
          else
             ! Project along the line joining the end points
             dxdf = (x2-x1)/(f2-f1)
-            X3 = X2 - F2 * dxdf
+            x3 = x1 - f1 * dxdf
          endif
          F3 = FN (X3)
          N = N + 1
@@ -94,15 +94,17 @@
          endif
          ! If the relative distance between points is lower than
          ! this limit, assume the zero is in the middle and exit.
-         if (2.0d0*abs(x2-x1)/(x2+x1).lt.rdx) then
+         if (abs((x2-x1)/(x2+x1)).lt.rdx) then
             x0 = (x2+x1)/2.0d0
             info = 0
             exit
          endif
-         ! If we have gone over stepMax iterations, exit
+
+         ! If we have gone over stepMax iterations,
+         ! assume the zero is in the middle and exit.
          IF (N.GT.stepMax) THEN
+            x0 = (x2+x1)/2.0d0
             info = 1
-            x0 = xmin
             exit
          ENDIF
       enddo !mainloop
