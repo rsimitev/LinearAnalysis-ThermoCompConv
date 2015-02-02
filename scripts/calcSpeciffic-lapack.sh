@@ -66,16 +66,22 @@ done
    out="$base.dat"
    rm -vf $out $base-*.dat
 cat > $in << EOT
-  NE (0/1/2) | LCALC (-1/0/1/2/3/4/5/6) |
-       2               3
- |  RAYLEIGH  |  TAU     |  PRANTEL  |  ETA  |  Lewis |   Rconc   |
-     ${Ra}       $Ta        1.0      0.35    ${Le}    $Rc
- |   NTRUNC (>=1) | MODE |
-       10         ${m}
- |   DRA   |  ABSERR  |  RELERR  | NMAX |
-  -100.00    1.00E-08   0.00E-03   1000
- |   incr_STEP | Tau_END
-       -100       1.0e2
+Symmetry = 2
+Calculation = 3
+VariablePar = Rt
+Rt = ${Ra}
+tau = ${ta}
+Pt = 1.0d0
+eta = 0.35d0 
+Le = ${Le} 
+Rc = ${Rc}
+Truncation = 10 
+m0 = ${m}
+AbsParameterError = 1.00E-08 
+RelativeGRError = 1.00E-03 
+MaxIterations = 1000
+StepSize = -100 
+UpperLimit = 1.00d2
 EOT
    #  
    res=10
