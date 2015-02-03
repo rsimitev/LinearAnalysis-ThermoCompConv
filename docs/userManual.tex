@@ -484,6 +484,48 @@ as:
 
 \section{Inputs}
 \label{s:inputs}
+\verb|glo| requires an input file formatted as a "key =  value" set of pairs.
+A typical input file looks like:
+\begin{verbatim}
+Symmetry = 2
+Calculation = 3
+VariablePar = Rt
+Rt = 3.0e6 
+tau = 1.0e5 
+Pt = 1.0 
+eta = 0.35 
+Le = 0.3 
+Rc = 1.0e2
+Truncation = 10 
+m0 = 19
+AbsParameterError = 1.00E-08 
+RelativeGRError = 1.00E-03 
+MaxIterations = 1000
+StepSize = -100 
+UpperLimit = 9.97e4
+\end{verbatim}
+
+Any line started with '\#' or '*' is considered a comment.
+Valid key entries are described below.
+\begin{itemize}
+\item[Symmetry] accepts an integer describibg the required equatorial symmetry for the system. Possible values are 0 for no symmetry; 1 for equatorial anti-symmetry and 2 for equatorial symmetry.
+\item[Calculation] accepts an integer describing whic calculation should be carried out. See section~\ref{s:possibleCalcs} for a description.
+\item[VariablePar] accepts a string of at most 3 characters indicating which of the adimensional parameters should be varied in root finding calculations.
+\item[Rt] accepts the value of the thermal Rayleigh number.
+\item[tau] accepts the value of the Coriolis number.
+\item[Pt] accepts the value o the themal Prandtl number.
+\item[eta] accepts the aspect ratio $r_i/r_o$. 
+\item[Le] accepts the value of the Lewis number.
+\item[Rc] accepts the value of the compositional Rayleigh number.
+\item[Truncation] is an integer describing the truncation. See section~\ref{s:truncation} for a description.
+\item[m0] is the azimuthal mode.
+\item[AbsParameterError] is the absolute error in the parameter when a root finding is performed.
+\item[RelativeGRError] is the relative growth rate error when a root finding is performed.
+\item[MaxIterations] is the maximum number of iterations to be passed to the root finder.
+\item[StepSize] is the step to use when other than the \verb|VariablePar| are varied.
+\item[UpperLimit] is the upper limit to use when other than the \verb|VariablePar| are varied.
+\end{itemize}
+
 
 \appendix
 
