@@ -155,29 +155,31 @@ contains
    end subroutine
 
    !**********************************************************************
-   !> Varies the thermal Rayleigh number and computes the growth rate for
-   !! other parameters fixed.
+   !> Varies the specified parameter and computes the growth rate for
+   !! other parameters fixed. The step size is taken to be the order of
+   !! magnitude of the value of the parameter (for example, if we are steping in
+   !! Rt and Rt is 5*10^3, then the step size is 10^3). The step size is never
+   !! smaller than \a StepSize.
    subroutine fixedParGrowthRate()
       implicit none
       INTEGER:: aux
-      double precision:: GroR, factor
+      double precision:: GroR, factor, par
+      double precision:: dPar
 
-      if (Rt.gt.UpperLimit) then
+      call saveParameterValue(par)
+      if (par.gt.UpperLimit) then
          factor = -1.0d0
       else
          factor = 1.0d0
       endif
-      do while(abs(Rt-UpperLimit) > abs(0.11*UpperLimit))
-         aux = int(log10(abs(Rt)))
-         if(aux.ge.2) then
-            StepSize = factor*10.0d0**(aux-1)
-         else
-            StepSize = factor*10.0d0
-         endif
-         Rt   = Rt + StepSize
-         GROR = MaxGrowthRate(Rt)
-         WRITE(*,*) Rt, GROR
-         Write(unitOut, *) Rt, GroR
+      do while(abs(par-UpperLimit) > abs(0.11*UpperLimit))
+         aux  = int(log10(abs(par)))
+         dPar = factor*10.0d0**(aux-1)
+         if (dPar < StepSize) dPar = StepSize
+         par  = par + dPar
+         GROR = MaxGrowthRate(par)
+         WRITE(*,*) par, GROR
+         Write(unitOut, *) par, GroR
       enddo
 
       WRITE(*,*) 'R=',Rt,' TAU=',TAU,' P=',Pt,' M0=',M0,' eta=',ETA
