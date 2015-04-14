@@ -51,9 +51,9 @@ C      LM=0
 C      DO 100 I=0,M-1
 C100   LM=LM+NML-I+1
 C--   or as closed formula (MA):
-      LM=M*(NML+1) - (M*(M-1))/2
+      LM = M*(NML+1) - (M*(M-1))/2
 C--   add offset for the right L:
-      LM=LM+L-M+1
+      LM = LM+L-M+1
       IF( LM.GT.NMLMS ) THEN
          WRITE(*,*) 'SORRY, PLM HAS NOT BEEN STORED FOR L,M = ',L,M
          STOP
@@ -73,6 +73,7 @@ C
 *   stores the values PLM in PLMST(nmt,nmlm) for theta=theta(1..nmtheta).
 *   storeplm() has to be called once before PLMS() is called.
 c-- THETA HAS TO BE GIVEN IN DEGREES.
+c   The plm's here are fully normalised!
 c--------------------------------------------------------------------
       implicit real*8(a-h,o-z)
       dimension theta(*)
@@ -80,9 +81,9 @@ c--------------------------------------------------------------------
 c
       common/plmc/plmst(nmt,nmlm),nmtc,nmlc,nmts,nmls,nml
 c
-      pi=3.141592653589793d0
-      nmtc=nmt
-      nmlc=nmlm
+      pi   = 3.141592653589793d0
+      nmtc = nmt
+      nmlc = nmlm
 c     max. value of M and L:
       nml=80
 c
@@ -91,58 +92,58 @@ c
         stop
       endif
 
-      do 1000 i=1,nmtheta
-         thetar=pi*theta(i)/180.d0
-         sinth=dsin(thetar)
+c     i is the index of the theta point
+      do i=1, nmtheta
+c        theta in radians
+         thetar = pi*theta(i)/180.d0
+         sinth  = dsin(thetar)
+         costh  = dcos(thetar)
 c        sin(th)**m, m=0:
-         sinthm=1.d0
-         costh =dcos(thetar)
-         lm=0
+         sinthm = 1.d0
+         lm = 0
 c
-         do 300 m=0,nml
+c        indices run on l => m faster and then on m=0...nml
+         do m=0, nml
             fac=1.d0
-            do 100 j=3,2*m+1,2
-100         fac=fac*dble(j)/dble(j-1)
+            do j=3,2*m+1,2
+               fac=fac*dble(j)/dble(j-1)
+            enddo
             plm=dsqrt(fac)
             if( sinth.ne.0.d0 ) then
-      	       plm=plm*sinthm
+               plm = plm*sinthm
 c              sin(th)**m for next m:
                sinthm = sinthm*sinth
             elseif( m.ne.0 ) then
                plm=0.d0
             endif
 c
-c-- plm for l=m:
-            lm=lm+1
+c-- plm for l=m: P_l^l = 
+            lm = lm + 1
 	    if( lm.gt.nmlm ) then
-	       write(*,*) 
-     &		'Too small dimension nmlm in storelpm.',nmlm
+	       write(*,*) 'Too small dimension nmlm in storelpm.',nmlm
 	       stop
 	    endif
-            plmst(i,lm)=plm	
-            plm1=0.d0
+            plmst(i,lm) = plm	
+            plm1 = 0.d0
 c
-c-- plm for l>m:
-            do 200 l=m+1,nml
-               plm2=plm1
-  	       plm1=plm  
-               plm= costh * dsqrt( dble( (2*l-1)*(2*l+1) ) /
-     /                           dble( (l-m)*(l+m) )  ) * plm1 -
-     -                     dsqrt( dble( (2*l+1)*(l+m-1)*(l-m-1) ) /
-     /                           dble( (2*l-3)*(l-m)*(l+m) ) ) * plm2        
+c-- plm for l>m: P_l^m =
+            do l=m+1, nml
+               plm2 = plm1
+               plm1 = plm
+               plm  = costh * dsqrt( dble( (2*l-1)*(2*l+1) ) / dble( (l-m)*(l+m) )  ) * plm1 -
+     -                     dsqrt( dble( (2*l+1)*(l+m-1)*(l-m-1) ) / dble( (2*l-3)*(l-m)*(l+m) ) ) * plm2
                lm=lm+1
                if( lm.gt.nmlm ) then
-                  write(*,*) 
-     &			'Too small dimension nmlm in storelpm.',nmlm
+                  write(*,*) 'Too small dimension nmlm in storelpm.', nmlm
                   stop
                endif
                plmst(i,lm)=plm
-200        continue
-300      continue
-1000  continue
+            enddo
+         enddo
+      enddo
 c
-      nmts=nmtheta
-      nmls=lm
+      nmts = nmtheta
+      nmls = lm
 c
       return
       end
