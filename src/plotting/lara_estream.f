@@ -86,28 +86,28 @@ C   LTIME = -2 : TIMESERIES OF 8 PLOTS WITH TIME GIVEN INDIVIDUALLY,
 C   LTIME = 2 : TIMESERIES OF 8 PLOTS WITH TIME GIVEN BY OM.
 C
       IF( LNUM.LT.0 .OR. LNUM.GT.3 ) THEN
-	 WRITE(*,*) 'WRONG INPUT OF LNUM: ',LNUM
-	 STOP
+         WRITE(*,*) 'WRONG INPUT OF LNUM: ',LNUM
+         STOP
       ENDIF
       IF( LGR.LT.0 .OR. LGR.GT.2 ) THEN
-	 WRITE(*,*) 'WRONG INPUT OF LGR: ',LGR
-	 STOP
+         WRITE(*,*) 'WRONG INPUT OF LGR: ',LGR
+         STOP
       ENDIF
       IF( LHEAD.NE.0 .AND. LHEAD.NE.1 ) THEN
-	 WRITE(*,*) 'WRONG INPUT OF LHEAD: ',LHEAD
-	 STOP
+         WRITE(*,*) 'WRONG INPUT OF LHEAD: ',LHEAD
+         STOP
       ENDIF
       IF( LCL.NE.0 .AND. LCL.NE.1 ) THEN
-	 WRITE(*,*) 'WRONG INPUT OF LCL: ',LCL
-	 STOP
+         WRITE(*,*) 'WRONG INPUT OF LCL: ',LCL
+         STOP
       ENDIF
       IF( LFR.NE.0 .AND. LFR.NE.1 ) THEN
-	 WRITE(*,*) 'WRONG INPUT OF LFR: ',LFR
-	 STOP
+         WRITE(*,*) 'WRONG INPUT OF LFR: ',LFR
+         STOP
       ENDIF
       IF( LTIME.LT.-2 .OR. LTIME.GT.2 ) THEN
-	 WRITE(*,*) 'WRONG INPUT OF LTIME: ',LTIME
-	 STOP
+         WRITE(*,*) 'WRONG INPUT OF LTIME: ',LTIME
+         STOP
       ENDIF
 C
       OPEN(14,FILE=OUTPUTFILE,STATUS='unknown')
@@ -127,16 +127,16 @@ C   THE POLE FOR PROJECTION OF A SPHERE ON A CIRCLE ( CP2='PL','PR','PS' ) .
       endif
 C
       IF( LTIME.GT.0 ) THEN
-	 LGR=0
-	 NP1=1
+         LGR=0
+         NP1=1
       ENDIF
       IF( ( LGR.EQ.0 .AND. NP1.GT.NPM ) .OR. 
      &    ( LGR.EQ.1 .AND. NP1.GT.4 ) .OR.
      &    ( LGR.EQ.2 .AND. NP1.GT.2 ) ) THEN
-	 WRITE(*,*) 'TOO BIG NUMBER OF PLOTS NP1: ',NP1
-	 STOP
+         WRITE(*,*) 'TOO BIG NUMBER OF PLOTS NP1: ',NP1
+         STOP
       ENDIF
-	   
+        
 C
 C
       DO 20 I=1,NP1
@@ -150,10 +150,10 @@ C      TIME IS THE TIME OF THE PLOTTED FIELD FOR TIME DEPENDENCE.
               stop
           endif
 C
-	 IF( NP2(I).GT.NPSM ) THEN
-	    WRITE(*,*) 'TOO BIG NUMBER OF SUBPLOTS NP2:',NP2(I)
-	    STOP
-	 ENDIF
+         IF( NP2(I).GT.NPSM ) THEN
+            WRITE(*,*) 'TOO BIG NUMBER OF SUBPLOTS NP2:',NP2(I)
+            STOP
+         ENDIF
          IF( CP1(I).EQ.'HS' ) THEN
             NR=NR+1
          ELSE
@@ -191,7 +191,7 @@ C      THE NUMBER OF CONTPUR LINES FOR Z>0 OR Z<0.
          DO 10 J=1,NP2(I)
             READ(*,*)
             READ(*,*) CP2(I,J),CC(I,J),XC(I,J),CFE(I,J),
-     &		                        XRMU(I,J),ZD(I,J),ABCNUMI(I,J)
+     &                                        XRMU(I,J),ZD(I,J),ABCNUMI(I,J)
 10       CONTINUE
 20    CONTINUE
 C 
@@ -204,24 +204,24 @@ C
       DO 100 I=1,NP1
       DO 100 J=1,NP2(I)
          IF( CP1(I).NE.'QU' .AND. CP1(I).NE.'HS' .AND.
-     &	 		          CP1(I).NE.'SP'  ) THEN
-      	    WRITE(*,*) 'WRONG INPUT OF CP1.'
-      	    WRITE(*,*) 'CHOOSE BETWEEN QUADRANT : CP1 = QU ,'
-      	    WRITE(*,*) '            HALF SPHERE : CP1 = HS ,'
-      	    WRITE(*,*) '                 SPHERE : CP1 = SP .'
+     &                                   CP1(I).NE.'SP'  ) THEN
+                  WRITE(*,*) 'WRONG INPUT OF CP1.'
+                  WRITE(*,*) 'CHOOSE BETWEEN QUADRANT : CP1 = QU ,'
+                  WRITE(*,*) '            HALF SPHERE : CP1 = HS ,'
+                  WRITE(*,*) '                 SPHERE : CP1 = SP .'
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
          ENDIF
          IF( CP2(I,J).NE.'Q1' .AND. CP2(I,J).NE.'Q2' .AND.
-     &	     CP2(I,J).NE.'Q3' .AND. CP2(I,J).NE.'Q4' .AND.
+     &             CP2(I,J).NE.'Q3' .AND. CP2(I,J).NE.'Q4' .AND.
      &       CP2(I,J).NE.'HU' .AND. CP2(I,J).NE.'HO' .AND.
      &       CP2(I,J).NE.'HL' .AND. CP2(I,J).NE.'HR' .AND.
      &       CP2(I,J).NE.'PL' .AND. CP2(I,J).NE.'PR' .AND.
      &       CP2(I,J).NE.'SP' .AND. CP2(I,J).NE.'PS' ) THEN
-  	  WRITE(*,*) 'WRONG INPUT OF CP2.'
-      	  WRITE(*,*) '  CHOOSE BETWEEN QUADRANTS : CP2 = Q1,Q2,Q3,Q4 ,'
-      	  WRITE(*,*) '              HALF SPHERES : CP2 = HL,HR,HO,HU ,'
-      	  WRITE(*,*) '               FULL SPHERE : CP2 = SP ,'
+            WRITE(*,*) 'WRONG INPUT OF CP2.'
+                WRITE(*,*) '  CHOOSE BETWEEN QUADRANTS : CP2 = Q1,Q2,Q3,Q4 ,'
+                WRITE(*,*) '              HALF SPHERES : CP2 = HL,HR,HO,HU ,'
+                WRITE(*,*) '               FULL SPHERE : CP2 = SP ,'
           WRITE(*,*) '   PROJECTION OF LEFT HALF : CP2 = PL ,'
           WRITE(*,*) '  PROJECTION OF RIGHT HALF : CP2 = PL ,'
           WRITE(*,*) ' PROJECTION OF FULL SPHERE : CP2 = PL .'
@@ -230,11 +230,11 @@ C
          ENDIF
          IF( CC(I,J).NE.'P' .AND. CC(I,J).NE.'T' .AND.
      &       CC(I,J).NE.'R' ) THEN
-      	    WRITE(*,*) 'WRONG INPUT OF CONSTANT COORDINATE CC.'
-      	    WRITE(*,*) '          CHOOSE BETWEEN PHI : CC = P ,'
-      	    WRITE(*,*) '                       THETA : CC = T ,'
-      	    WRITE(*,*) '                           R : CC = R ,'
-      	    WRITE(*,*) ' RADIAL FIELD FOR CONSTANT R : CC = R .'
+                  WRITE(*,*) 'WRONG INPUT OF CONSTANT COORDINATE CC.'
+                  WRITE(*,*) '          CHOOSE BETWEEN PHI : CC = P ,'
+                  WRITE(*,*) '                       THETA : CC = T ,'
+                  WRITE(*,*) '                           R : CC = R ,'
+                  WRITE(*,*) ' RADIAL FIELD FOR CONSTANT R : CC = R .'
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
          ENDIF
@@ -249,20 +249,20 @@ C
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
          ELSEIF(  CC(I,J).EQ.'R' .AND. 
-     &	          ( XC(I,J).LT.0.E0 .OR. XC(I,J).GT.1.E0 )  )THEN
+     &                  ( XC(I,J).LT.0.E0 .OR. XC(I,J).GT.1.E0 )  )THEN
             WRITE(*,*) 'RREL SHOULD BE >=0 , <= 1 .'
             WRITE(*,*) 'RREL IS DEFINED AS: R=RI+RREL*(RO-RI).'
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
          ENDIF
          IF(  CC(I,J).EQ.'P' ) THEN
-      	    IF( XC(I,J).LT.0.E0 ) XC(I,J)=XC(I,J)+360.E0
-     	    IF( ( CP2(I,J).EQ.'Q1' .OR. CP2(I,J).EQ.'Q4' .OR. 
-     &				        CP2(I,J).EQ.'HR' ) .AND.
+                  IF( XC(I,J).LT.0.E0 ) XC(I,J)=XC(I,J)+360.E0
+                 IF( ( CP2(I,J).EQ.'Q1' .OR. CP2(I,J).EQ.'Q4' .OR.
+     &                                        CP2(I,J).EQ.'HR' ) .AND.
      &            XC(I,J).GT.180.E0 .AND. XC(I,J).LT.360.E0 ) THEN
                XC(I,J)=XC(I,J)-180.E0
-     	    ELSEIF( ( CP2(I,J).EQ.'Q2' .OR. CP2(I,J).EQ.'Q3' .OR. 
-     &				        CP2(I,J).EQ.'HL' ) .AND.
+                 ELSEIF( ( CP2(I,J).EQ.'Q2' .OR. CP2(I,J).EQ.'Q3' .OR.
+     &                                        CP2(I,J).EQ.'HL' ) .AND.
      &            XC(I,J).LT.180.E0 .AND. XC(I,J).GT.0.E0 ) THEN
                XC(I,J)=XC(I,J)+180.E0
             ENDIF
@@ -270,32 +270,32 @@ C
          IF( CC(I,J).NE.'P' .AND. CFE(I,J).EQ.'MT' ) THEN
             WRITE(*,*) 'FOR  MT PHI HAS TO BE KEPT KONSTANT.'
             CC(I,J)='P'
-	 ENDIF
+         ENDIF
          IF( CC(I,J).NE.'P' .AND. 
      &       ( CFE(I,J).EQ.'MP' .OR. CFE(I,J).EQ.'BT' ) ) THEN
             WRITE(*,*) 'FOR MP AND BT PHI HAS TO BE KEPT KONSTANT.'
             CC(I,J)='P'
-	 ENDIF
+         ENDIF
          IF( CC(I,J).NE.'P' .AND. CFE(I,J).EQ.'MJ' ) THEN
             WRITE(*,*) 'FOR  MJ PHI HAS TO BE KEPT KONSTANT.'
             CC(I,J)='P'
-	 ENDIF
+         ENDIF
          IF( CC(I,J).NE.'P' .AND. CFE(I,J).EQ.'MC' ) THEN
             WRITE(*,*) 'FOR  MC PHI HAS TO BE KEPT KONSTANT.'
             CC(I,J)='P'
-	 ENDIF
+         ENDIF
          IF( CC(I,J).NE.'P' .AND. CFE(I,J).EQ.'ZF' ) THEN
             WRITE(*,*) 'FOR ZONAL FLOW PHI HAS TO BE KEPT KONSTANT.'
             CC(I,J)='P'
          ENDIF
          IF( CC(I,J).NE.'P' .AND. CFE(I,J).EQ.'MF' ) THEN
             WRITE(*,*) 
-     &		'FOR MERIDIONAL FLOW PHI HAS TO BE KEPT KONSTANT.'
+     &                'FOR MERIDIONAL FLOW PHI HAS TO BE KEPT KONSTANT.'
             CC(I,J)='P'
          ENDIF
          IF( CC(I,J).NE.'R' .AND. CFE(I,J).EQ.'NU' ) THEN
             WRITE(*,*) 
-     &		'FOR NUSSELT NUMBER R HAS TO BE KEPT KONSTANT.'
+     &                'FOR NUSSELT NUMBER R HAS TO BE KEPT KONSTANT.'
             CC(I,J)='R'
          ENDIF
 C
@@ -316,7 +316,7 @@ C
                STOP
             ENDIF
             IF( CP2(I,J).NE.'Q1' .AND. CP2(I,J).NE.'Q2' .AND. 
-     &	        CP2(I,J).NE.'Q3' .AND. CP2(I,J).NE.'Q4' ) THEN
+     &                CP2(I,J).NE.'Q3' .AND. CP2(I,J).NE.'Q4' ) THEN
                WRITE(*,*) 'FOR CP1=QU ONLY CP2=Q1,Q2,Q3,Q4 VALID.'
                WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
                STOP
@@ -333,21 +333,21 @@ C
                STOP
             ENDIF
             IF( CP2(I,J).NE.'Q1' .AND. CP2(I,J).NE.'Q2' .AND. 
-     &	        CP2(I,J).NE.'Q3' .AND. CP2(I,J).NE.'Q4' .AND. 
-     &	        CP2(I,J).NE.'HO' .AND. CP2(I,J).NE.'HU' ) THEN
+     &                CP2(I,J).NE.'Q3' .AND. CP2(I,J).NE.'Q4' .AND.
+     &                CP2(I,J).NE.'HO' .AND. CP2(I,J).NE.'HU' ) THEN
                WRITE(*,*) 'FOR CP1=HS ONLY CP2=Q1,Q2,Q3,Q4,HO,HU VALID.'
                WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
                STOP
             ENDIF
             IF( CP2(I,J).EQ.'HO' .AND. CC(I,J).EQ.'P' ) THEN
                CP2(I,J)='Q1'
-      	       IF( XC(I,J).GT.180.E0 ) THEN
+                     IF( XC(I,J).GT.180.E0 ) THEN
                   XC(I,J)=XC(I,J)-180.E0
                ENDIF
                NP2(I)=NP2(I)+1
                CP2(I,NP2(I))='Q2'
                CC(I,NP2(I))=CC(I,J)
-      	       IF( XC(I,J).LT.180.E0 ) THEN
+                     IF( XC(I,J).LT.180.E0 ) THEN
                   XC(I,NP2(I))=XC(I,NP2(I))+180.E0
                ENDIF
                CFE(I,NP2(I))=CFE(I,J)
@@ -355,13 +355,13 @@ C
                ZD(I,NP2(I))=ZD(I,J)
             ELSEIF( CP2(I,J).EQ.'HU' .AND. CC(I,J).EQ.'P' ) THEN
                CP2(I,J)='Q4'
-      	       IF( XC(I,J).GT.180.E0 ) THEN
+                     IF( XC(I,J).GT.180.E0 ) THEN
                   XC(I,J)=XC(I,J)-180.E0
                ENDIF
                NP2(I)=NP2(I)+1
                CP2(I,NP2(I))='Q3'
                CC(I,NP2(I))=CC(I,J)
-      	       IF( XC(I,J).LT.180.E0 ) THEN
+                     IF( XC(I,J).LT.180.E0 ) THEN
                   XC(I,NP2(I))=XC(I,NP2(I))+180.E0
                ENDIF
                CFE(I,NP2(I))=CFE(I,J)
@@ -376,13 +376,13 @@ C
             ENDIF 
             IF( CP2(I,J).EQ.'HO' .AND. CC(I,J).EQ.'P' ) THEN
                CP2(I,J)='Q1'
-      	       IF( CC(I,J).EQ.'P' .AND. XC(I,J).GT.180.E0 ) THEN
+                     IF( CC(I,J).EQ.'P' .AND. XC(I,J).GT.180.E0 ) THEN
                   XC(I,J)=XC(I,J)-180.E0
                ENDIF
                NP2(I)=NP2(I)+1
                CP2(I,NP2(I))='Q2'
                CC(I,NP2(I))=CC(I,J)
-      	       IF( CC(I,J).EQ.'P' .AND. XC(I,J).LT.180.E0 ) THEN
+                     IF( CC(I,J).EQ.'P' .AND. XC(I,J).LT.180.E0 ) THEN
                   XC(I,NP2(I))=XC(I,J)+180.E0
                ENDIF
                CFE(I,NP2(I))=CFE(I,J)
@@ -390,13 +390,13 @@ C
                ZD(I,NP2(I))=ZD(I,J)
             ELSEIF( CP2(I,J).EQ.'HU' .AND. CC(I,J).EQ.'P' ) THEN
                CP2(I,J)='Q4'
-      	       IF( CC(I,J).EQ.'P' .AND. XC(I,J).GT.180.E0 ) THEN
+                     IF( CC(I,J).EQ.'P' .AND. XC(I,J).GT.180.E0 ) THEN
                   XC(I,J)=XC(I,J)-180.E0
                ENDIF
                NP2(I)=NP2(I)+1
                CP2(I,NP2(I))='Q3'
                CC(I,NP2(I))=CC(I,J)
-      	       IF( CC(I,J).EQ.'P' .AND. XC(I,J).LT.180.E0 ) THEN
+                     IF( CC(I,J).EQ.'P' .AND. XC(I,J).LT.180.E0 ) THEN
                   XC(I,NP2(I))=XC(I,J)+180.E0
                ENDIF
                CFE(I,NP2(I))=CFE(I,J)
@@ -445,109 +445,109 @@ C   IT IS NECESSARY TO CALL IS HERE TO GET PARAMETERS.
       LRB=LRBI
 C
       IF( LTIME.GT.0 ) THEN
-	 NSUBP=NP2(1)
-	 IF( LCALC.NE.3 .AND. LCALC.NE.4 ) THEN
-	    WRITE(*,*) 
+         NSUBP=NP2(1)
+         IF( LCALC.NE.3 .AND. LCALC.NE.4 ) THEN
+            WRITE(*,*)
      &        'TIMESERIES WITH LTIME.GT.0 ONLY FOR TIME EXPANSION.'
-	    STOP
-	 ENDIF 	
+            STOP
+         ENDIF
          IF( OM.LT.0.D-4 ) THEN
-	    WRITE(*,*) 'OM TOO SMALL FOR LTIME.GT.0.'
-	    STOP
-	 ENDIF
-	 IF( LTIME.EQ.1 ) THEN
-	    NP1=6
-	 ELSEIF( LTIME.EQ.2 ) THEN
-	    NP1=8
-	 ENDIF
-	 TPERIOD=2*PI/OM
-	 DT=TPERIOD/NP1
-	 LNUM=3
-	 TIME(1)=0.D0
-	 ABCNUMI(1,1)='(a)'
-	 DO 110 J=2,NP2(1)
+            WRITE(*,*) 'OM TOO SMALL FOR LTIME.GT.0.'
+            STOP
+         ENDIF
+         IF( LTIME.EQ.1 ) THEN
+            NP1=6
+         ELSEIF( LTIME.EQ.2 ) THEN
+            NP1=8
+         ENDIF
+         TPERIOD=2*PI/OM
+         DT=TPERIOD/NP1
+         LNUM=3
+         TIME(1)=0.D0
+         ABCNUMI(1,1)='(a)'
+         DO 110 J=2,NP2(1)
 110      ABCNUMI(1,J)='   '
-	 DO 130 I=2,NP1
-	    CP1(I)=CP1(1)
-	    NP2(I)=NP2(1)
-	    IF( CP1(I).EQ.'HS' ) THEN
-	       NR=NR+1
-	    ELSE
-	       NQ=NQ+1
-	    ENDIF
-	    IF( I.EQ.2 ) THEN
-	       TIME(I)=DT
-	    ELSEIF( I.EQ.3 ) THEN
-	       IF( NP1.EQ.6 ) THEN
-	          TIME(I)=5*DT
-	       ELSEIF( NP1.EQ.8 ) THEN
-	          TIME(I)=2*DT
-	       ENDIF
-	    ELSEIF( I.EQ.4 ) THEN
-	       IF( NP1.EQ.6 ) THEN
-	          TIME(I)=2*DT
-	       ELSEIF( NP1.EQ.8 ) THEN
-	          TIME(I)=7*DT
-	       ENDIF
-	    ELSEIF( I.EQ.5 ) THEN
-	       IF( NP1.EQ.6 ) THEN
-	          TIME(I)=4*DT
-	       ELSEIF( NP1.EQ.8 ) THEN
-	          TIME(I)=3*DT
-	       ENDIF
-	    ELSEIF( I.EQ.6 ) THEN
-	       IF( NP1.EQ.6 ) THEN
-	          TIME(I)=3*DT
-	       ELSEIF( NP1.EQ.8 ) THEN
-	          TIME(I)=6*DT
-	       ENDIF
-	    ELSEIF( I.EQ.7 ) THEN
-	       TIME(I)=5*DT
-	    ELSEIF( I.EQ.8 ) THEN
-	       TIME(I)=4*DT
-	    ENDIF
-	    DO 120 J=1,NP2(1)
-	       CP2(I,J)=CP2(1,J)
-	       CC(I,J)=CC(1,J)
-	       XC(I,J)=XC(1,J)
-	       CFE(I,J)=CFE(1,J)
-	       XRMU(I,J)=XRMU(1,J)
-	       ZD(I,J)=-ZD(1,J)
-	       IF( J.EQ.1 ) THEN
-	          IF( I.EQ.2 ) THEN
-	             ABCNUMI(I,J)='(b)'
-	          ELSEIF( I.EQ.3 ) THEN
-	             IF( NP1.EQ.6 ) THEN
-	                ABCNUMI(I,J)='(f)'
-	             ELSEIF( NP1.EQ.8 ) THEN
-	                ABCNUMI(I,J)='(c)'
-	             ENDIF
-	          ELSEIF( I.EQ.4 ) THEN
-	             IF( NP1.EQ.6 ) THEN
-	                ABCNUMI(I,J)='(c)'
-	             ELSEIF( NP1.EQ.8 ) THEN
-	                ABCNUMI(I,J)='(h)'
-	             ENDIF
-	          ELSEIF( I.EQ.5 ) THEN
-	             IF( NP1.EQ.6 ) THEN
-	                ABCNUMI(I,J)='(e)'
-	             ELSEIF( NP1.EQ.8 ) THEN
-	                ABCNUMI(I,J)='(d)'
-	             ENDIF
-	          ELSEIF( I.EQ.6 ) THEN
-	             IF( NP1.EQ.6 ) THEN
-	                ABCNUMI(I,J)='(d)'
-	             ELSEIF( NP1.EQ.8 ) THEN
-	                ABCNUMI(I,J)='(g)'
-	             ENDIF
-	          ELSEIF( I.EQ.7 ) THEN
-	             ABCNUMI(I,J)='(f)'
-	          ELSEIF( I.EQ.8 ) THEN
-	             ABCNUMI(I,J)='(e)'
-	          ENDIF
-	       ELSE
+         DO 130 I=2,NP1
+            CP1(I)=CP1(1)
+            NP2(I)=NP2(1)
+            IF( CP1(I).EQ.'HS' ) THEN
+               NR=NR+1
+            ELSE
+               NQ=NQ+1
+            ENDIF
+            IF( I.EQ.2 ) THEN
+               TIME(I)=DT
+            ELSEIF( I.EQ.3 ) THEN
+               IF( NP1.EQ.6 ) THEN
+                  TIME(I)=5*DT
+               ELSEIF( NP1.EQ.8 ) THEN
+                  TIME(I)=2*DT
+               ENDIF
+            ELSEIF( I.EQ.4 ) THEN
+               IF( NP1.EQ.6 ) THEN
+                  TIME(I)=2*DT
+               ELSEIF( NP1.EQ.8 ) THEN
+                  TIME(I)=7*DT
+               ENDIF
+            ELSEIF( I.EQ.5 ) THEN
+               IF( NP1.EQ.6 ) THEN
+                  TIME(I)=4*DT
+               ELSEIF( NP1.EQ.8 ) THEN
+                  TIME(I)=3*DT
+               ENDIF
+            ELSEIF( I.EQ.6 ) THEN
+               IF( NP1.EQ.6 ) THEN
+                  TIME(I)=3*DT
+               ELSEIF( NP1.EQ.8 ) THEN
+                  TIME(I)=6*DT
+               ENDIF
+            ELSEIF( I.EQ.7 ) THEN
+               TIME(I)=5*DT
+            ELSEIF( I.EQ.8 ) THEN
+               TIME(I)=4*DT
+            ENDIF
+            DO 120 J=1,NP2(1)
+               CP2(I,J)=CP2(1,J)
+               CC(I,J)=CC(1,J)
+               XC(I,J)=XC(1,J)
+               CFE(I,J)=CFE(1,J)
+               XRMU(I,J)=XRMU(1,J)
+               ZD(I,J)=-ZD(1,J)
+               IF( J.EQ.1 ) THEN
+                  IF( I.EQ.2 ) THEN
+                     ABCNUMI(I,J)='(b)'
+                  ELSEIF( I.EQ.3 ) THEN
+                     IF( NP1.EQ.6 ) THEN
+                        ABCNUMI(I,J)='(f)'
+                     ELSEIF( NP1.EQ.8 ) THEN
+                        ABCNUMI(I,J)='(c)'
+                     ENDIF
+                  ELSEIF( I.EQ.4 ) THEN
+                     IF( NP1.EQ.6 ) THEN
+                        ABCNUMI(I,J)='(c)'
+                     ELSEIF( NP1.EQ.8 ) THEN
+                        ABCNUMI(I,J)='(h)'
+                     ENDIF
+                  ELSEIF( I.EQ.5 ) THEN
+                     IF( NP1.EQ.6 ) THEN
+                        ABCNUMI(I,J)='(e)'
+                     ELSEIF( NP1.EQ.8 ) THEN
+                        ABCNUMI(I,J)='(d)'
+                     ENDIF
+                  ELSEIF( I.EQ.6 ) THEN
+                     IF( NP1.EQ.6 ) THEN
+                        ABCNUMI(I,J)='(d)'
+                     ELSEIF( NP1.EQ.8 ) THEN
+                        ABCNUMI(I,J)='(g)'
+                     ENDIF
+                  ELSEIF( I.EQ.7 ) THEN
+                     ABCNUMI(I,J)='(f)'
+                  ELSEIF( I.EQ.8 ) THEN
+                     ABCNUMI(I,J)='(e)'
+                  ENDIF
+               ELSE
                   ABCNUMI(I,J)='   '
-	       ENDIF
+               ENDIF
 120         CONTINUE
 130      CONTINUE
       ENDIF
@@ -561,7 +561,7 @@ C
 C-- ABG CALCULATES THE ALPHAS AND BETAS IN THE RADIAL FUNCTION
 C   OF THE POLOIDAL MAGNETIC FIELD:
       IF( LCALC.EQ.2 .OR. LCALC.EQ.4 .OR. LCALC.EQ.6 ) 
-     &			CALL ABG(ND,CF,L,N)
+     &                        CALL ABG(ND,CF,L,N)
 C
 C      DO 50 I=1,ND
 C50    WRITE(50,'(I3,A2,A3,4I4)') I,CF(I),CRR(I),L(I),M(I),N(I),K(I)
@@ -580,18 +580,18 @@ C      READ(*,*) NOUT
 C
 C     CALL SYSBUF
 C     IF( NOUT.EQ.0 ) THEN
-C     	 GOTO 9999
+C              GOTO 9999
 C     ELSEIF( NOUT.EQ.1 ) THEN
 C         CALL TEKALL(4010,480,0,0,0)
 C        CALL TEKALL_OLD(4010,480,0,0,0)
 C     ELSEIF( NOUT.EQ.2 ) THEN
-C     	 CALL HP7550(2)
+C              CALL HP7550(2)
 C     ELSEIF( NOUT.EQ.3 ) THEN
 C        CALL HPLJET(300,1)
 C     ELSEIF( NOUT.EQ.4 ) THEN
 C        CALL HPLJET(300,2)
 C     ELSEIF( NOUT.EQ.5 ) THEN
-C     	 CALL PSCRPT(2,1)
+C              CALL PSCRPT(2,1)
 C     ELSE
 C        WRITE(*,*) 'WRONG INPUT OF NOUT.'
 C        WRITE(*,*)
@@ -641,8 +641,8 @@ C   YHPG=HOEHE PLOTGEBIET , XBPG=BREITE PLOTGEBIET ( OHNE KOPF ) .
       NROWQ=NQ/2
       IF( MOD(NQ,2).NE.0 ) NROWQ=NROWQ+1
       IF( LTIME.NE.0 ) THEN 
-	 NROWR=0
-	 NROWQ=3
+         NROWR=0
+         NROWQ=3
       ELSE 
          NROWR=NR
          NROWQ=NQ/2
@@ -650,14 +650,14 @@ C   YHPG=HOEHE PLOTGEBIET , XBPG=BREITE PLOTGEBIET ( OHNE KOPF ) .
       ENDIF
       NROW=NROWR+NROWQ
       IF( LGR.EQ.0 .AND. NROW.GT.3 ) THEN
-	 WRITE(*,*) 'TOO MANY ROWS, ONLY 3 ALLOWED FOR LGR=0.',NROW
-	 STOP 
+         WRITE(*,*) 'TOO MANY ROWS, ONLY 3 ALLOWED FOR LGR=0.',NROW
+         STOP
       ELSEIF( LGR.EQ.1 .AND. NROW.GT.2 ) THEN
-	 WRITE(*,*) 'TOO MANY ROWS, ONLY 2 ALLOWED FOR LGR=1.',NROW
-	 STOP 
+         WRITE(*,*) 'TOO MANY ROWS, ONLY 2 ALLOWED FOR LGR=1.',NROW
+         STOP
       ELSEIF( LGR.EQ.2 .AND. NROW.GT.1 ) THEN
-	 WRITE(*,*) 'TOO MANY ROWS, ONLY 1 ALLOWED FOR LGR=2.',NROW
-	 STOP 
+         WRITE(*,*) 'TOO MANY ROWS, ONLY 1 ALLOWED FOR LGR=2.',NROW
+         STOP
       ENDIF
       IF( NQ.LE.1 ) THEN
          NCOL=1
@@ -665,8 +665,8 @@ C   YHPG=HOEHE PLOTGEBIET , XBPG=BREITE PLOTGEBIET ( OHNE KOPF ) .
          NCOL=2
       ENDIF
       IF( LGR.EQ.2 .AND. NCOL.EQ.2 ) THEN
-	 WRITE(*,*) 'TOO MANY COLUMNS, ONLY 1 ALLOWED FOR LGR=2.',NCOL
-	 STOP 
+         WRITE(*,*) 'TOO MANY COLUMNS, ONLY 1 ALLOWED FOR LGR=2.',NCOL
+         STOP
       ENDIF
       IF( IABS(LTIME).EQ.2 ) NCOL=3
       XTEXT=XLRAND
@@ -674,30 +674,30 @@ C
 C-- GROESSE DER PLOTS:
       IF( LGR.EQ.0 ) THEN
          YHR=5.5D0
-      	 YHQ=5.5D0
-	 XLR=2.0D0
+               YHQ=5.5D0
+         XLR=2.0D0
          XLQ=1.5D0
-	 XINTER=1.D0
-	 YINTER=1.D0
+         XINTER=1.D0
+         YINTER=1.D0
       ELSEIF( LGR.EQ.1 ) THEN 
          YHR=6.75D0
          YHQ=6.75D0
-	 XLR=0.75D0
+         XLR=0.75D0
          XLQ=0.0D0
-	 XINTER=1.5D0
-	 YINTER=1.5D0
+         XINTER=1.5D0
+         YINTER=1.5D0
       ELSEIF( LGR.EQ.2 ) THEN
          YHR=6.75D0
          YHQ=13.0
-	 XLR=1.0D0
-	 XINTER=0.0D0
-	 YINTER=0.0D0
+         XLR=1.0D0
+         XINTER=0.0D0
+         YINTER=0.0D0
       ENDIF
       XBQ=YHQ
       XBR=2*YHR
 C
       IF( LHEAD.EQ.0 ) THEN
-	 YHKOPF=0.0D0
+         YHKOPF=0.0D0
       ELSEIF( LHEAD.EQ.1 ) THEN
          YHKOPF=3.D0
       ENDIF
@@ -708,9 +708,9 @@ C
       ENDIF
       YHPG=NROWR*YHR+NROWQ*YHQ+(NROW-1)*YINTER
       IF( NQ.GT.0 ) THEN
-	 XBPG=2*XLQ+NCOL*XBQ+(NCOL-1)*XINTER
+         XBPG=2*XLQ+NCOL*XBQ+(NCOL-1)*XINTER
       ELSE
-	 XBPG=2*XLR+XBR
+         XBPG=2*XLR+XBR
       ENDIF
       XAREA=XLRAND+XBPG+XRRAND
       YAREA=YHFUSS+YHPG+YHKOPF
@@ -725,158 +725,158 @@ C-- DIE DATEN FUER DIE EINZELNEN PLOTS WERDEN FESTGELEGT UND LINEAR
 C   ABGESPEICHERT: URSPRUNG IN CM = (XORIG,YORIG) ,
 C   PLOTGEBIET IN CM = (XAR,YAR) , RADIEN IN CM = (XRICM,XROCM,XRMCM).
       DO 2000 I=1,NP1
-	 IF( I.EQ.1 ) THEN
-	    NSPA=1
-	    NZEI=1
-	    IF( CP1(I).EQ.'HS' ) THEN 
+         IF( I.EQ.1 ) THEN
+            NSPA=1
+            NZEI=1
+            IF( CP1(I).EQ.'HS' ) THEN
                YHPLOT=YHR
                XBPLOT=XBR
                XLPLOT=XLR
-	    ELSE
+            ELSE
                YHPLOT=YHQ
                XBPLOT=XBQ
                XLPLOT=XLQ
-	    ENDIF
-	 ELSEIF( CP1(I).EQ.'HS' .OR. CP1(I-1).EQ.'HS' ) THEN
-	    NSPA=1
-	    NZEI=NZEI+1
-	    YHPLOT=YHR
-	    XBPLOT=XBR
-	    XLPLOT=XLR
-	 ELSE
-	    IF( NSPA.EQ.NCOL ) THEN
-	       NSPA=1
-	       NZEI=NZEI+1
-	    ELSE
-	       NSPA=NSPA+1 
-	       IF( IABS(LTIME).EQ.2 .AND. I.EQ.5 ) NSPA=NSPA+1
             ENDIF
-	    YHPLOT=YHQ
-	    XBPLOT=XBQ
-	    XLPLOT=XLQ
+         ELSEIF( CP1(I).EQ.'HS' .OR. CP1(I-1).EQ.'HS' ) THEN
+            NSPA=1
+            NZEI=NZEI+1
+            YHPLOT=YHR
+            XBPLOT=XBR
+            XLPLOT=XLR
+         ELSE
+            IF( NSPA.EQ.NCOL ) THEN
+               NSPA=1
+               NZEI=NZEI+1
+            ELSE
+               NSPA=NSPA+1
+               IF( IABS(LTIME).EQ.2 .AND. I.EQ.5 ) NSPA=NSPA+1
+            ENDIF
+            YHPLOT=YHQ
+            XBPLOT=XBQ
+            XLPLOT=XLQ
          ENDIF
-	 XORIG=XLRAND+XLPLOT+(NSPA-1)*(XBPLOT+XINTER)
-	 YORIG=YHFUSS+YHPG-NZEI*YHPLOT-(NZEI-1)*YINTER
+         XORIG=XLRAND+XLPLOT+(NSPA-1)*(XBPLOT+XINTER)
+         YORIG=YHFUSS+YHPG-NZEI*YHPLOT-(NZEI-1)*YINTER
 
-     	 IF( CP1(I).EQ.'QU' .OR. CP1(I).EQ.'SP' .AND. NCOL.GT.1 ) THEN
-	    NQT=NQT+1
-	    IF( NSPA.EQ.1 .AND. NQT.EQ.NQ ) XLQ=XLQ+(XBQ+XINTER)/2
+              IF( CP1(I).EQ.'QU' .OR. CP1(I).EQ.'SP' .AND. NCOL.GT.1 ) THEN
+            NQT=NQT+1
+            IF( NSPA.EQ.1 .AND. NQT.EQ.NQ ) XLQ=XLQ+(XBQ+XINTER)/2
          ENDIF
          DO 1000 J=1,NP2(I)
-      	    NP=NP+1
-      	    CPP(NP)=CP2(I,J)
+                  NP=NP+1
+                  CPP(NP)=CP2(I,J)
             CFP(NP)=CFE(I,J)
             CCP(NP)=CC(I,J)
             ABCN(NP)=ABCNUMI(I,J)
             IF( CC(I,J).EQ.'R' ) THEN
-      	       XCP(NP)=XRI+XC(I,J)
+                     XCP(NP)=XRI+XC(I,J)
             ELSE
-      	       XCP(NP)=XC(I,J)
+                     XCP(NP)=XC(I,J)
             ENDIF
-      	    ZDP(NP)=ZD(I,J)
+                  ZDP(NP)=ZD(I,J)
             TIMEP(NP)=TIME(I)
             IF( CP1(I).EQ.'HS' ) THEN
-      	       IF( CP2(I,J).EQ.'HO' .OR. CP2(I,J).EQ.'HU' ) THEN
-      	          XOR(NP)=XORIG
+                     IF( CP2(I,J).EQ.'HO' .OR. CP2(I,J).EQ.'HU' ) THEN
+                        XOR(NP)=XORIG
                   XAR(NP)=XBR
-      		  YOR(NP)=YORIG
+                        YOR(NP)=YORIG
                   YAR(NP)=YHR
                   XRMCM(NP)=XBR/2
-      	       ELSEIF( CP2(I,J).EQ.'Q1' ) THEN
-      	          XOR(NP)=XORIG+XBR/2
+                     ELSEIF( CP2(I,J).EQ.'Q1' ) THEN
+                        XOR(NP)=XORIG+XBR/2
                   XAR(NP)=XBR/2
-      		  YOR(NP)=YORIG
+                        YOR(NP)=YORIG
                   YAR(NP)=YHR
                   XRMCM(NP)=XBR/2
-      	       ELSEIF( CP2(I,J).EQ.'Q2' ) THEN
-      	          XOR(NP)=XORIG
+                     ELSEIF( CP2(I,J).EQ.'Q2' ) THEN
+                        XOR(NP)=XORIG
                   XAR(NP)=XBR/2
-      		  YOR(NP)=YORIG
+                        YOR(NP)=YORIG
                   YAR(NP)=YHR
                   XRMCM(NP)=XBR/2
-      	       ELSEIF( CP2(I,J).EQ.'Q3' ) THEN
-      	          XOR(NP)=XORIG
+                     ELSEIF( CP2(I,J).EQ.'Q3' ) THEN
+                        XOR(NP)=XORIG
                   XAR(NP)=XBR/2
-      		  YOR(NP)=YORIG
+                        YOR(NP)=YORIG
                   YAR(NP)=YHR
                   XRMCM(NP)=XBR/2
-      	       ELSEIF( CP2(I,J).EQ.'Q4' ) THEN
-      	          XOR(NP)=XORIG+XBR/2
+                     ELSEIF( CP2(I,J).EQ.'Q4' ) THEN
+                        XOR(NP)=XORIG+XBR/2
                   XAR(NP)=XBR/2
-      		  YOR(NP)=YORIG
+                        YOR(NP)=YORIG
                   YAR(NP)=YHR
                   XRMCM(NP)=XBR/2
                ENDIF
             ELSEIF( CP1(I).EQ.'QU' ) THEN
-      	       XOR(NP)=XORIG
+                     XOR(NP)=XORIG
                XAR(NP)=XBQ
-      	       YOR(NP)=YORIG
+                     YOR(NP)=YORIG
                YAR(NP)=YHQ
                XRMCM(NP)=XBQ
             ELSEIF( CP1(I).EQ.'SP' ) THEN
-      	       IF( CP2(I,J).EQ.'Q1' ) THEN
-      	          XOR(NP)=XORIG+XBQ/2
+                     IF( CP2(I,J).EQ.'Q1' ) THEN
+                        XOR(NP)=XORIG+XBQ/2
                   XAR(NP)=XBQ/2
-      	          YOR(NP)=YORIG+YHQ/2
+                        YOR(NP)=YORIG+YHQ/2
                   YAR(NP)=YHQ/2
                   XRMCM(NP)=XBQ/2
-      	       ELSEIF( CP2(I,J).EQ.'Q2' ) THEN
-      	          XOR(NP)=XORIG
+                     ELSEIF( CP2(I,J).EQ.'Q2' ) THEN
+                        XOR(NP)=XORIG
                   XAR(NP)=XBQ/2
-      	          YOR(NP)=YORIG+YHQ/2
+                        YOR(NP)=YORIG+YHQ/2
                   YAR(NP)=YHQ/2
                   XRMCM(NP)=XBQ/2
-      	       ELSEIF( CP2(I,J).EQ.'Q3' ) THEN
-      	          XOR(NP)=XORIG
+                     ELSEIF( CP2(I,J).EQ.'Q3' ) THEN
+                        XOR(NP)=XORIG
                   XAR(NP)=XBQ/2
-      	          YOR(NP)=YORIG
+                        YOR(NP)=YORIG
                   YAR(NP)=YHQ/2
                   XRMCM(NP)=XBQ/2
-      	       ELSEIF( CP2(I,J).EQ.'Q4' ) THEN
-      	          XOR(NP)=XORIG+XBQ/2
+                     ELSEIF( CP2(I,J).EQ.'Q4' ) THEN
+                        XOR(NP)=XORIG+XBQ/2
                   XAR(NP)=XBQ/2
-      	          YORIG=YORIG
-      	          YOR(NP)=YORIG
+                        YORIG=YORIG
+                        YOR(NP)=YORIG
                   YAR(NP)=YHQ/2
                   XRMCM(NP)=XBQ/2
                ELSEIF( CP2(I,J).EQ.'HU' ) THEN
-      	          XOR(NP)=XORIG
+                        XOR(NP)=XORIG
                   XAR(NP)=XBQ
-      	          YOR(NP)=YORIG
-                  YAR(NP)=YHQ/2      	
+                        YOR(NP)=YORIG
+                  YAR(NP)=YHQ/2              
                   XRMCM(NP)=XBQ/2
                ELSEIF( CP2(I,J).EQ.'HO' ) THEN
-      	          XOR(NP)=XORIG
+                        XOR(NP)=XORIG
                   XAR(NP)=XBQ
-      	          YOR(NP)=YORIG+YHQ/2
+                        YOR(NP)=YORIG+YHQ/2
                   YAR(NP)=YHQ/2      
                   XRMCM(NP)=XBQ/2
                ELSEIF( CP2(I,J).EQ.'HL' ) THEN
-      	          XOR(NP)=XORIG
+                        XOR(NP)=XORIG
                   XAR(NP)=XBQ/2
-      	          YOR(NP)=YORIG
+                        YOR(NP)=YORIG
                   YAR(NP)=YHQ
                   XRMCM(NP)=XBQ/2
                ELSEIF( CP2(I,J).EQ.'HR' ) THEN
-      	          XOR(NP)=XORIG+XBQ/2
+                        XOR(NP)=XORIG+XBQ/2
                   XAR(NP)=XBQ/2
-      	          YOR(NP)=YORIG
-                  YAR(NP)=YHQ      		
+                        YOR(NP)=YORIG
+                  YAR(NP)=YHQ              
                   XRMCM(NP)=XBQ/2
                ELSEIF( CP2(I,J).EQ.'SP' .OR. CP2(I,J).EQ.'PS' .OR.
-     &		       CP2(I,J).EQ.'PL' ) THEN
-	          XOR(NP)=XORIG
+     &                       CP2(I,J).EQ.'PL' ) THEN
+                  XOR(NP)=XORIG
                   XAR(NP)=XBQ
-      	          YOR(NP)=YORIG
-                  YAR(NP)=YHQ      		
+                        YOR(NP)=YORIG
+                  YAR(NP)=YHQ              
                   XRMCM(NP)=XBQ/2
                ELSEIF( CP2(I,J).EQ.'PR' ) THEN
-	          XOR(NP)=XORIG
+                  XOR(NP)=XORIG
                   XAR(NP)=XBQ
-      	          YOR(NP)=YORIG
-                  YAR(NP)=YHQ      		
+                        YOR(NP)=YORIG
+                  YAR(NP)=YHQ              
                   XRMCM(NP)=XBQ/2
-               ENDIF	  
+               ENDIF        
             ENDIF
             XRM(NP)=XRMU(I,J)*XRO
             XROCM(NP)=XRMCM(NP)*XRO/XRM(NP)
@@ -886,7 +886,7 @@ C   PLOTGEBIET IN CM = (XAR,YAR) , RADIEN IN CM = (XRICM,XROCM,XRMCM).
 C
 c      DO 2100 I=1,NP
 c2100  WRITE(60,'(X,A3,A2,A2,4E14.4)') CPP(I),CFP(I),CCP(I),XOR(I),
-c     &				      YOR(I),XAR(I),YAR(I)
+c     &                                      YOR(I),XAR(I),YAR(I)
 C 
 C
 C-- SCHREIBEN DES KOPFES:
@@ -948,68 +948,68 @@ C
          ENDIF
 C
          CALL PLO(I,NSUBP,DC,DX,LCL,LGR,LFR,
-     &		  ZDP(I),TIMEP(I),CPP(I),CFP(I),CCP(I),XCP(I),
-     & 		  XOR(I),YOR(I),XAR(I),YAR(I),
-     &		  XRI,XRO,XRM(I),XRICM(I),XROCM(I),XRMCM(I),XP,YP)
+     &                  ZDP(I),TIMEP(I),CPP(I),CFP(I),CCP(I),XCP(I),
+     &                   XOR(I),YOR(I),XAR(I),YAR(I),
+     &                  XRI,XRO,XRM(I),XRICM(I),XROCM(I),XRMCM(I),XP,YP)
 
 C
 C-- BESCHRIFTUNG SUBPLOT: BUCHSTABE IM PLOT AN POSITION (XNUM,YNUM) ,
 C   BESCHRIFTUNG UNTER BUCHSTABE UNTEN AUF SEITE.
- 	 IF( LNUM.GT.0 ) THEN
-c	    CALL HEIGHT(0.3)
+          IF( LNUM.GT.0 ) THEN
+c            CALL HEIGHT(0.3)
              IF( CPP(I).EQ.'Q1' ) THEN
-       	       XNUM=XOR(I)+XAR(I)-0.9E0
-       	       YNUM=YOR(I)+YAR(I)-0.5E0
- 	       XTIME=XNUM-2.E0
- 	       YTIME=YNUM+0.8E0        
+                      XNUM=XOR(I)+XAR(I)-0.9E0
+                      YNUM=YOR(I)+YAR(I)-0.5E0
+                XTIME=XNUM-2.E0
+                YTIME=YNUM+0.8E0
              ELSEIF( CPP(I).EQ.'Q2' ) THEN
-       	       XNUM=XOR(I)+0.25E0
-       	       YNUM=YOR(I)+YAR(I)-0.5E0
- 	       XTIME=XNUM
- 	       YTIME=YNUM+0.8E0        
-             ELSEIF( CPP(I).EQ.'Q3' ) THEN
-       	       XNUM=XOR(I)+0.25E0
-       	       YNUM=YOR(I)+0.2E0
- 	       XTIME=XNUM
- 	       YTIME=YNUM-1.0E0        
-             ELSEIF( CPP(I).EQ.'Q4' ) THEN
-       	       XNUM=XOR(I)+XAR(I)-0.9E0
-       	       YNUM=YOR(I)+0.3E0
- 	       XTIME=XNUM-2.E0
- 	       YTIME=YNUM-1.0E0        
-             ELSEIF( CPP(I).EQ.'HO' ) THEN
-       	       XNUM=XOR(I)+0.25E0
-       	       YNUM=YOR(I)+YAR(I)-0.5E0
- 	       XTIME=XNUM
- 	       YTIME=YNUM+0.8E0        
-             ELSEIF( CPP(I).EQ.'HU' ) THEN
-       	       XNUM=XOR(I)+0.25E0
-       	       YNUM=YOR(I)+0.2E0
+                      XNUM=XOR(I)+0.25E0
+                      YNUM=YOR(I)+YAR(I)-0.5E0
                 XTIME=XNUM
- 	       YTIME=YNUM-1.0E0        
+                YTIME=YNUM+0.8E0
+             ELSEIF( CPP(I).EQ.'Q3' ) THEN
+                      XNUM=XOR(I)+0.25E0
+                      YNUM=YOR(I)+0.2E0
+                XTIME=XNUM
+                YTIME=YNUM-1.0E0
+             ELSEIF( CPP(I).EQ.'Q4' ) THEN
+                      XNUM=XOR(I)+XAR(I)-0.9E0
+                      YNUM=YOR(I)+0.3E0
+                XTIME=XNUM-2.E0
+                YTIME=YNUM-1.0E0
+             ELSEIF( CPP(I).EQ.'HO' ) THEN
+                      XNUM=XOR(I)+0.25E0
+                      YNUM=YOR(I)+YAR(I)-0.5E0
+                XTIME=XNUM
+                YTIME=YNUM+0.8E0
+             ELSEIF( CPP(I).EQ.'HU' ) THEN
+                      XNUM=XOR(I)+0.25E0
+                      YNUM=YOR(I)+0.2E0
+                XTIME=XNUM
+                YTIME=YNUM-1.0E0
              ELSEIF( CPP(I).EQ.'HL' .OR. CPP(I).EQ.'PL' ) THEN
-       	       XNUM=XOR(I)+0.25E0
-       	       YNUM=YOR(I)+YAR(I)-0.5E0
- 	       XTIME=XNUM
- 	       YTIME=YNUM+0.8E0        
+                      XNUM=XOR(I)+0.25E0
+                      YNUM=YOR(I)+YAR(I)-0.5E0
+                XTIME=XNUM
+                YTIME=YNUM+0.8E0
              ELSEIF( CPP(I).EQ.'HR' .OR. CPP(I).EQ.'PR' ) THEN
-       	       XNUM=XOR(I)+XAR(I)-0.9E0
-       	       YNUM=YOR(I)+YAR(I)-0.5E0
- 	       XTIME=XNUM-2.E0
- 	       YTIME=YNUM+0.8E0        
+                      XNUM=XOR(I)+XAR(I)-0.9E0
+                      YNUM=YOR(I)+YAR(I)-0.5E0
+                XTIME=XNUM-2.E0
+                YTIME=YNUM+0.8E0
              ELSEIF( CPP(I).EQ.'SP' .OR. CPP(I).EQ.'PS' ) THEN
-       	       XNUM=XOR(I)+0.25E0
-       	       YNUM=YOR(I)+YAR(I)-0.5E0
- 	       XTIME=XNUM
- 	       YTIME=YNUM+0.8E0                 
+                      XNUM=XOR(I)+0.25E0
+                      YNUM=YOR(I)+YAR(I)-0.5E0
+                XTIME=XNUM
+                YTIME=YNUM+0.8E0
              ENDIF
 c            CALL PHYSOR(0.0E0,0.0E0)
 c            CALL AREA2D(XAREA,YAREA)
-c	    IF( LWRT.EQ.1 .AND. 
-c     &		( TIMEP(I).NE.TIMEO .OR. I.EQ.1 ) ) THEN
+c            IF( LWRT.EQ.1 .AND.
+c     &                ( TIMEP(I).NE.TIMEO .OR. I.EQ.1 ) ) THEN
 c               CALL MESSAG('t= ',100.,XTIME,YTIME)
 c               CALL REALNO(REAL(TIMEP(I)),5,'ABUT','ABUT')
-c	    ENDIF
+c            ENDIF
 c            IF( LNUM.LT.3 ) THEN
 c               IF( I.EQ.1 ) THEN
 c                  ABCNUM='(a)'
@@ -1058,9 +1058,9 @@ c            ELSEIF( LNUM.EQ.3 ) THEN
 c               ABCNUM=ABCN(I)
 c            ENDIF
 c            CALL MESSAG(ABCNUM,3.,XNUM,YNUM)
- 	    IF( LNUM.EQ.1 ) THEN
+             IF( LNUM.EQ.1 ) THEN
 cccc            YTEXT=YHFUSS-1.0E0
-c	       CALL MESSAG(ABCNUM,3.,XTEXT,YTEXT)
+c               CALL MESSAG(ABCNUM,3.,XTEXT,YTEXT)
                 IF( CFP(I).EQ.'BR' ) THEN
                    CTEXT1='  Contours of radial magnetic field for '
                 ELSEIF( CFP(I).EQ.'BR' ) THEN
@@ -1113,10 +1113,10 @@ c                  CALL REALNO(REAL(TIMEP(I)),4,'ABUT','ABUT')
 c               ENDIF
                 write(14,*) CTEXT1,CTEXT2,XCP(I)
                 write(*,*) CTEXT1,CTEXT2,XCP(I)
- 	    ENDIF
+             ENDIF
 c            CALL ENDGR(0)
              YTEXT=YTEXT-0.5E0
- 	 ENDIF
+          ENDIF
           TIMEO=TIMEP(I)
 3000  CONTINUE
 cC
@@ -1201,10 +1201,10 @@ c        CALL RESET('THKCRV')
          XMIN=XRI
          XMAX=XRM
          IF( CC.EQ.'T' ) THEN
-      	    YMIN=90.E0
+                  YMIN=90.E0
             YMAX=180.E0
          ELSEIF( CC.EQ.'P' ) THEN
-      	    YMIN=0.E0
+                  YMIN=0.E0
             YMAX=90.E0
          ENDIF
 c        CALL ARC(0.E0,0.E0,XRICM,0.E0,90.E0,'NONE',0.01E0)
@@ -1212,12 +1212,12 @@ c        CALL ARC(0.E0,0.E0,XROCM,0.E0,90.E0,'NONE',0.01E0)
 c        CALL THKCRV(0.01E0)
       ELSEIF( CP.EQ.'Q2' ) THEN
          XMIN=XRI
-      	 XMAX=XRM
+               XMAX=XRM
          IF( CC.EQ.'T' ) THEN
-      	    YMIN=180.E0
+                  YMIN=180.E0
             YMAX=270.E0
          ELSEIF( CC.EQ.'P' ) THEN
-      	    YMIN=0.E0
+                  YMIN=0.E0
             YMAX=90.E0
          ENDIF
 c        CALL ARC(XRMCM,0.E0,XRICM,90.E0,180.E0,'NONE',0.01E0)
@@ -1237,12 +1237,12 @@ c        CALL CURVE(XML,YML,2,0)
 c        CALL RESET('THKCRV')
       ELSEIF( CP.EQ.'Q3' ) THEN
          XMIN=XRI
-      	 XMAX=XRM
+               XMAX=XRM
          IF( CC.EQ.'T' ) THEN
-      	    YMIN=270.E0
+                  YMIN=270.E0
             YMAX=360.E0
          ELSEIF( CC.EQ.'P' ) THEN
-      	    YMIN=90.E0
+                  YMIN=90.E0
             YMAX=180.E0
          ENDIF
 c        CALL ARC(XRMCM,XRMCM,XRICM,180.E0,270.E0,'NONE',0.01E0)
@@ -1262,12 +1262,12 @@ c        CALL CURVE(XML,YML,2,0)
 c        CALL RESET('THKCRV')
       ELSEIF( CP.EQ.'Q4' ) THEN
          XMIN=XRI
-      	 XMAX=XRM
+               XMAX=XRM
          IF( CC.EQ.'T' ) THEN
-      	    YMIN=0.E0
+                  YMIN=0.E0
             YMAX=90.E0
          ELSEIF( CC.EQ.'P' ) THEN
-      	    YMIN=90.E0
+                  YMIN=90.E0
             YMAX=180.E0
          ENDIF
 c        CALL ARC(0.E0,XRMCM,XRICM,270.E0,360.E0,'NONE',0.01E0)
@@ -1287,12 +1287,12 @@ c        CALL CURVE(XML,YML,2,0)
 c        CALL RESET('THKCRV')
       ELSEIF( CP.EQ.'HO' ) THEN
          XMIN=XRI
-      	 XMAX=XRM
+               XMAX=XRM
          IF( CC.EQ.'T' ) THEN
-      	    YMIN=90.E0-XP
+                  YMIN=90.E0-XP
             YMAX=270.E0-XP
          ELSEIF( CC.EQ.'P' ) THEN
-      	    YMIN=0.E0
+                  YMIN=0.E0
             YMAX=90.E0
          ENDIF
 c        CALL ARC(XRMCM,0.E0,XRICM,0.E0,180.E0,'NONE',0.01E0)
@@ -1312,12 +1312,12 @@ c        CALL CURVE(XML,YML,2,0)
 c        CALL RESET('THKCRV')
       ELSEIF( CP.EQ.'HU' ) THEN
          XMIN=XRI
-      	 XMAX=XRM
+               XMAX=XRM
          IF( CC.EQ.'T' ) THEN
-      	    YMIN=270.E0-XP
+                  YMIN=270.E0-XP
             YMAX=450.E0-XP
          ELSEIF( CC.EQ.'P' ) THEN
-      	    YMIN=90.E0
+                  YMIN=90.E0
             YMAX=180.E0
          ENDIF
 c        CALL ARC(XRMCM,XRMCM,XRICM,180.E0,360.E0,'NONE',0.01E0)
@@ -1337,12 +1337,12 @@ c        CALL CURVE(XML,YML,2,0)
 c        CALL RESET('THKCRV')
       ELSEIF( CP.EQ.'HL' ) THEN
          XMIN=XRI
-      	 XMAX=XRM
+               XMAX=XRM
          IF( CC.EQ.'T' ) THEN
-      	    YMIN=180.E0
+                  YMIN=180.E0
             YMAX=360.E0
          ELSEIF( CC.EQ.'P' ) THEN
-      	    YMIN=0.E0
+                  YMIN=0.E0
             YMAX=180.E0
          ENDIF
 c        CALL ARC(XRMCM,XRMCM,XRICM,90.E0,270.E0,'NONE',0.01E0)
@@ -1362,12 +1362,12 @@ c        CALL CURVE(XML,YML,2,0)
 c        CALL RESET('THKCRV')
       ELSEIF( CP.EQ.'HR' ) THEN
          XMIN=XRI
-      	 XMAX=XRM
+               XMAX=XRM
          IF( CC.EQ.'T' ) THEN
-      	    YMIN=0.E0
+                  YMIN=0.E0
             YMAX=180.E0
          ELSEIF( CC.EQ.'P' ) THEN
-      	    YMIN=0.E0
+                  YMIN=0.E0
             YMAX=180.E0
          ENDIF
 c        CALL ARC(0.E0,XRMCM,XRICM,-90.E0,90.E0,'NONE',0.01E0)
@@ -1387,24 +1387,24 @@ c        CALL CURVE(XML,YML,2,0)
 c        CALL RESET('THKCRV')
       ELSEIF( CP.EQ.'SP' ) THEN
          XMIN=XRI
-      	 XMAX=XRM
+               XMAX=XRM
          IF( CC.EQ.'T' ) THEN
-      	    YMIN=0.E0
+                  YMIN=0.E0
             YMAX=360.E0
          ELSEIF( CC.EQ.'P' ) THEN
-      	    YMIN=0.E0
+                  YMIN=0.E0
             YMAX=180.E0
          ENDIF
 c        CALL ARC(XRMCM,XRMCM,XRICM,0.E0,360.E0,'NONE',0.01E0)
 c        CALL ARC(XRMCM,XRMCM,XROCM,0.E0,360.E0,'NONE',0.01E0)
       ELSEIF( CP.EQ.'PS' ) THEN
          XMIN=-180.E0-XP
-      	 XMAX=180.E0-XP
+               XMAX=180.E0-XP
          YMIN=180.E0-YP
          YMAX=0.E0-YP
       ELSEIF( CP.EQ.'PL' ) THEN
          XMIN=-180.E0-XP
-      	 XMAX=180.E0-XP
+               XMAX=180.E0-XP
          YMIN=180.E0-YP
          YMAX=0.E0-YP
 c        CALL THKCRV(0.01E0)
@@ -1420,7 +1420,7 @@ C      SO WIRD DIE ANDERE DURCH BLANKING ( CALL BLREC ) GESCHUETZT.
 c        CALL BLREC(0.0E0+XRMCM,0.0E0,XRMCM,2*XRMCM,0)
       ELSEIF( CP.EQ.'PR' ) THEN
          XMIN=-180.E0-XP
-      	 XMAX=180.E0-XP
+               XMAX=180.E0-XP
          YMIN=180.E0-YP
          YMAX=0.E0-YP
 c        CALL THKCRV(0.01E0)
@@ -1441,7 +1441,7 @@ C   PLOTGEBIET UND DER URSPRUNG ENTSPRECHEND ANGEPASST WERDEN.
 C   TEILWEISE WIRD ZUDEM DIE X-ACHSE AUF R<=RO EINGESCHRAENKT.
       IF( ( ( CF.NE.'BS' .AND. CF.NE.'MP' ) .OR. 
      &      ( CF.EQ.'BS' .AND. CC.EQ.'R' ) ) .AND.
-     &	   				    XROCM.NE.XRMCM ) THEN
+     &                                               XROCM.NE.XRMCM ) THEN
          IF( CP(:1).EQ.'Q' ) THEN
             XAR=XROCM
             YAR=XROCM
@@ -1455,29 +1455,29 @@ C   TEILWEISE WIRD ZUDEM DIE X-ACHSE AUF R<=RO EINGESCHRAENKT.
                YOR=YOR+XRMCM-XROCM
             ENDIF
          ELSEIF( CP.EQ.'HL' ) THEN
-      	    XAR=XROCM
+                  XAR=XROCM
             YAR=2*XROCM
             XMAX=XRO
             XOR=XOR+XRMCM-XROCM
             YOR=YOR+XRMCM-XROCM
          ELSEIF( CP.EQ.'HR' ) THEN
-      	    XAR=XROCM
+                  XAR=XROCM
             YAR=2*XROCM
             XMAX=XRO
             YOR=YOR+XRMCM-XROCM
          ELSEIF( CP.EQ.'HO' ) THEN
-      	    XAR=2*XROCM
+                  XAR=2*XROCM
             YAR=XROCM
             XMAX=XRO
             XOR=XOR+XRMCM-XROCM
          ELSEIF( CP.EQ.'HU' ) THEN
-      	    XAR=2*XROCM
+                  XAR=2*XROCM
             YAR=XROCM
             XMAX=XRO
             XOR=XOR+XRMCM-XROCM
             YOR=YOR+XRMCM-XROCM   
          ELSEIF( CP.EQ.'SP' .OR. CP(:1).EQ.'P' ) THEN
-      	    XAR=2*XROCM
+                  XAR=2*XROCM
             YAR=2*XROCM
             IF( CP.EQ.'SP' ) XMAX=XRO
             XOR=XOR+XRMCM-XROCM
@@ -1517,7 +1517,7 @@ C
       ZMIN=1.E10
       ZMAX=-1.E10
       DO 2000 I=1,NMX
-      	 X=XMIN+(I-1)*XD
+               X=XMIN+(I-1)*XD
          DO 1000 J=1,NMY
             Y=YMIN+(J-1)*YD
             IF( CC.EQ.'T' ) THEN
@@ -1554,14 +1554,14 @@ c               print*, PHI, THETA(NTHETA)
             
 C
 C-------- R,PHI UND THETA SIND DIE KUGELKOORDINATEN:
-	    IF( CF.EQ.'VS' .OR. CF.EQ.'BS' .OR. CF.EQ.'JS' ) THEN
+            IF( CF.EQ.'VS' .OR. CF.EQ.'BS' .OR. CF.EQ.'JS' ) THEN
                IF(  CC.EQ.'T' ) THEN
                   Z(I,J)=REAL(FT(DX,CF,R,PHI,NTHETA,TIME,DC))
                ELSEIF( CC.EQ.'P' ) THEN
                   Z(I,J)=REAL(FP(DX,CF,R,PHI,NTHETA,TIME,DC))
                ELSEIF( CC.EQ.'R' ) THEN
                   Z(I,J)=REAL(FR(DX,CF,R,PHI,NTHETA,TIME,DC))
-	       ENDIF
+               ENDIF
             ELSEIF( CF.EQ.'VR' .OR. CF.EQ.'BR' ) THEN
                Z(I,J)=REAL(RF(DX,CF,R,PHI,NTHETA,TIME,DC))
             ELSEIF( CF.EQ.'TE' ) THEN
@@ -1584,12 +1584,12 @@ C-------- R,PHI UND THETA SIND DIE KUGELKOORDINATEN:
                Z(I,J)=REAL(UP(DX,CF,R,PHI,NTHETA,TIME,DC))
             ELSEIF( CF.EQ.'NU' ) THEN
                Z(I,J)=REAL(FNU(DX,CF,R,PHI,NTHETA,TIME,DC))
-	    ELSE
-	       WRITE(*,*) 'WRONG INPUT OF CF.'
-	       STOP
+            ELSE
+               WRITE(*,*) 'WRONG INPUT OF CF.'
+               STOP
             ENDIF
-      	    IF( Z(I,J).GT.ZMAX ) ZMAX=Z(I,J)
-      	    IF( Z(I,J).LT.ZMIN ) ZMIN=Z(I,J)
+                  IF( Z(I,J).GT.ZMAX ) ZMAX=Z(I,J)
+                  IF( Z(I,J).LT.ZMIN ) ZMIN=Z(I,J)
 1000     CONTINUE
 2000  CONTINUE
 C
@@ -1606,24 +1606,24 @@ C
             WRITE(14,*) 'NO PLOT POSSIBLE.'
             GOTO 9000
          ELSEIF( ZNULL.LE.ZNULLM ) THEN
-	    ZSCALE=1.E0/ZNULLM
-	    WRITE(14,*) 'SCALED BY ',ZSCALE
-	    ZMIN=ZSCALE*ZMIN
-	    ZMAX=ZSCALE*ZMAX
-	    ZNULL=ZSCALE*ZNULL
-	    DO 2100 IX=1,NMX
-	    DO 2100 IY=1,NMY
+            ZSCALE=1.E0/ZNULLM
+            WRITE(14,*) 'SCALED BY ',ZSCALE
+            ZMIN=ZSCALE*ZMIN
+            ZMAX=ZSCALE*ZMAX
+            ZNULL=ZSCALE*ZNULL
+            DO 2100 IX=1,NMX
+            DO 2100 IY=1,NMY
 2100        Z(IX,IY)=ZSCALE*Z(IX,IY)
          ENDIF
       ELSEIF( ZD.LT.0.E0 ) THEN 
-	 IF( NCPLOT.GT.NSUBP ) THEN
-	    NZD=MOD(NCPLOT,NSUBP)
-	    IF( NZD.EQ.0 ) NZD=NSUBP
-	    ZD=ZSCALE*ZDS(NZD)
-	    LCL=0
-	 ELSE
-	    ZD=ZSCALE*ABS(ZD)
-	 ENDIF
+         IF( NCPLOT.GT.NSUBP ) THEN
+            NZD=MOD(NCPLOT,NSUBP)
+            IF( NZD.EQ.0 ) NZD=NSUBP
+            ZD=ZSCALE*ZDS(NZD)
+            LCL=0
+         ELSE
+            ZD=ZSCALE*ABS(ZD)
+         ENDIF
       ENDIF
       IF( LCL.EQ.1 ) THEN
          NCL=AINT(ZD+0.1E0)
@@ -1913,16 +1913,16 @@ C
         else
          IF( CRR(I).EQ.'RR' ) THEN
             FTT=-FTT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * 
-     *						DCOS(K(I)*OM*TIME)
+     *                                                DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'IR' ) THEN
             FTT=-FTT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * 
-     *					        DCOS(K(I)*OM*TIME)
+     *                                                DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'RI' ) THEN
             FTT=FTT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * 
-     *						DSIN(K(I)*OM*TIME)
+     *                                                DSIN(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'II' ) THEN
             FTT=FTT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * 
-     *						DSIN(K(I)*OM*TIME)
+     *                                                DSIN(K(I)*OM*TIME)
          ENDIF
         endif
          FT=FT-FTT
@@ -2007,27 +2007,27 @@ C
             EPSK=2.D0
          ENDIF
          FPT=EPSM*EPSK*R * (
-     &	    DBLE(L(I))*DSQRT( DBLE( (L(I)-M(I)+1)*(L(I)+M(I)+1) ) /
+     &            DBLE(L(I))*DSQRT( DBLE( (L(I)-M(I)+1)*(L(I)+M(I)+1) ) /
      /    DBLE( (2*L(I)+1)*(2*L(I)+3) ) ) * PLMS(L(I)+1,M(I),NTHETA) -
-     -	    DBLE(L(I)+1)*DSQRT( DBLE( (L(I)-M(I))*(L(I)+M(I)) ) /
+     -            DBLE(L(I)+1)*DSQRT( DBLE( (L(I)-M(I))*(L(I)+M(I)) ) /
      /    DBLE( (2*L(I)+1)*(2*L(I)-1) ) ) * PLMS(L(I)-1,M(I),NTHETA)  )
          IF( CF(I).EQ.'V' .OR. CF(I).EQ.'G' ) THEN
             FPT=FPT*DSIN( N(I)*PI*(R-RI) )
          ELSEIF( CF(I).EQ.'H' ) THEN
             NR=NAB(L(I),N(I))
-	    IF( R.LE.RO ) THEN
+            IF( R.LE.RO ) THEN
                IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
                   WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
                   STOP  
                ENDIF
                FPT=FPT*DCOS( A(NR)*R-B(NR) )
-	    ELSE
+            ELSE
                IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
                   WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
                   STOP  
                ENDIF
                FPT=FPT * (RO/R)**(L(I)+1) * DCOS( A(NR)*RO-B(NR) )
-	    ENDIF
+            ENDIF
          ENDIF
 C
         if(K(I).EQ.0) then
@@ -2041,16 +2041,16 @@ C
         else
          IF( CRR(I).EQ.'RR' ) THEN
             FPT=FPT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * 
-     *						DCOS(K(I)*OM*TIME)
+     *                                                DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'IR' ) THEN
             FPT=-FPT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * 
-     *						DCOS(K(I)*OM*TIME)
+     *                                                DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'RI' ) THEN
             FPT=-FPT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * 
-     *						DSIN(K(I)*OM*TIME)
+     *                                                DSIN(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'II' ) THEN
             FPT=FPT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * 
-     *						DSIN(K(I)*OM*TIME)
+     *                                                DSIN(K(I)*OM*TIME)
          ENDIF
         endif
          FP=FP+FPT
@@ -2139,7 +2139,7 @@ C
                WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
                STOP  
             ENDIF
-	    FRT=FRT*(
+            FRT=FRT*(
      &           ( A(NR)*A(NR)+DBLE(L(I)*(L(I)+1))/(R*R) ) *
      *                                DCOS( A(NR)*R-B(NR) ) +
      +                    2*A(NR)/R * DSIN( A(NR)*R-B(NR) )  )
@@ -2155,16 +2155,16 @@ C
         else
          IF( CRR(I).EQ.'RR' ) THEN
             FRT=FRT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * 
-     *						DCOS(K(I)*OM*TIME)
+     *                                                DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'IR' ) THEN
             FRT=-FRT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * 
-     *						DCOS(K(I)*OM*TIME)
+     *                                                DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'RI' ) THEN
             FRT=-FRT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * 
-     *						DSIN(K(I)*OM*TIME)
+     *                                                DSIN(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'II' ) THEN
             FRT=FRT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * 
-     *						DSIN(K(I)*OM*TIME)
+     *                                                DSIN(K(I)*OM*TIME)
          ENDIF
         endif
          FR=FR+FRT
@@ -2261,16 +2261,16 @@ C
         else
          IF( CRR(I).EQ.'RR' ) THEN
             RFT=RFT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * 
-     *						DCOS(K(I)*OM*TIME)
+     *                                                DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'IR' ) THEN
             RFT=-RFT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * 
-     *						DCOS(K(I)*OM*TIME)
+     *                                                DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'RI' ) THEN
             RFT=-RFT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * 
-     *						DSIN(K(I)*OM*TIME)
+     *                                                DSIN(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'II' ) THEN
             RFT=RFT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * 
-     *						DSIN(K(I)*OM*TIME)
+     *                                                DSIN(K(I)*OM*TIME)
          ENDIF
         endif
          RF=RF+RFT
@@ -2595,16 +2595,16 @@ C
         if(K(I).EQ.0) then
          IF( CRR(I).EQ.'RR' ) THEN
             ZON=ZON * X(I)
-	 ELSE
-	    ZON=0.D0
+         ELSE
+            ZON=0.D0
          ENDIF
         else
          IF( CRR(I).EQ.'RR' ) THEN
             ZON=ZON * X(I) * DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'RI' ) THEN
             ZON=-ZON * X(I) * DSIN(K(I)*OM*TIME)
-	 ELSE
-	    ZON=0.D0
+         ELSE
+            ZON=0.D0
          ENDIF
         endif
          FZONAL=FZONAL+ZON
@@ -2822,7 +2822,7 @@ C
             STOP
          ENDIF
 C
-	 IF( M(I).NE.0 ) GOTO 1000
+         IF( M(I).NE.0 ) GOTO 1000
 C
          IF( K(I).EQ.0 ) THEN
             EPSK=1.D0
@@ -2832,16 +2832,16 @@ C
 
          DMER=EPSK*R * DBLE(L(I)*(L(I)+1)) * (
      &      1.D0/DSQRT( DBLE( (2*L(I)+1)*(2*L(I)+3) ) ) * 
-     *					PLMS(L(I)+1,0,NTHETA) -
+     *                                        PLMS(L(I)+1,0,NTHETA) -
      -      1.D0/DSQRT( DBLE( (2*L(I)+1)*(2*L(I)-1) ) ) * 
-     *					PLMS(L(I)-1,0,NTHETA)  )
+     *                                        PLMS(L(I)-1,0,NTHETA)  )
          DMER=DMER*DSIN( N(I)*PI*(R-RI) )
 C
         if(K(I).EQ.0) then
          IF( CRR(I).EQ.'RR' ) THEN
             DMER=DMER * X(I)
          ELSE
-	    DMER=0.D0
+            DMER=0.D0
          ENDIF
         else
          IF( CRR(I).EQ.'RR' ) THEN
@@ -2849,11 +2849,11 @@ C
          ELSEIF( CRR(I).EQ.'RI' ) THEN
             DMER=-DMER * X(I) * DSIN(K(I)*OM*TIME)
          ELSE
-	    DMER=0.D0
+            DMER=0.D0
          ENDIF
         endif
 C
-	 DMERI=DMERI+DMER
+         DMERI=DMERI+DMER
 1000  CONTINUE
 C
       RETURN
@@ -2910,16 +2910,16 @@ C
         if(K(I).EQ.0) then
          IF( CRR(I).EQ.'RR' ) THEN
             DMT=DMT * X(I)
-	 ELSE
-	    DMT=0.D0
+         ELSE
+            DMT=0.D0
          ENDIF
         else
          IF( CRR(I).EQ.'RR' ) THEN
             DMT=DMT * X(I) * DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'RI' ) THEN
             DMT=-DMT * X(I) * DSIN(K(I)*OM*TIME)
-	 ELSE
-	    DMT=0.D0
+         ELSE
+            DMT=0.D0
          ENDIF
         endif
          DMTOR=DMTOR-DMT
@@ -2997,7 +2997,7 @@ C
      /                      DSQRT( DBLE( (2*L(I)+1)*(2*L(I)+3) ) )  -
      -        PLMS(L(I)-1,M(I),NTHETA) /
      /                      DSQRT( DBLE( (2*L(I)+1)*(2*L(I)-1) ) )   )
-	 IF( CF(I).EQ.'H' ) THEN
+         IF( CF(I).EQ.'H' ) THEN
             NR=NAB(L(I),N(I))
             IF( R.LE.RO ) THEN
                IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
@@ -3012,22 +3012,22 @@ C
                ENDIF
                DMP=DMP * (RO/R)**(L(I)+1) * DCOS( A(NR)*RO-B(NR) )
             ENDIF
-	 ELSEIF( CF(I).EQ.'G' ) THEN
+         ELSEIF( CF(I).EQ.'G' ) THEN
             DMP=DMP*DSIN( N(I)*PI*(R-RI) )
-	 ENDIF
+         ENDIF
         if(K(I).EQ.0) then
          IF( CRR(I).EQ.'RR' ) THEN
             DMP=DMP * X(I)
-         ELSE	
-	    DMP=0.D0
+         ELSE        
+            DMP=0.D0
          ENDIF
         else
          IF( CRR(I).EQ.'RR' ) THEN
             DMP=DMP * X(I) * DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'RI' ) THEN
             DMP=-DMP * X(I) * DSIN(K(I)*OM*TIME)
-         ELSE	
-	    DMP=0.D0
+         ELSE        
+            DMP=0.D0
          ENDIF
         endif
          DMPJ=DMPJ+DMP
@@ -3099,19 +3099,19 @@ C
         if(K(I).EQ.0) then
          IF( CRR(I).EQ.'RR' ) THEN
             DM=DM * X(I)
-	 ELSE
-	    DM=0.D0
+         ELSE
+            DM=0.D0
          ENDIF
         else
          IF( CRR(I).EQ.'RR' ) THEN
             DM=DM * X(I) * DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'RI' ) THEN
             DM=-DM * X(I) * DSIN(K(I)*OM*TIME)
-	 ELSE
-	    DM=0.D0
+         ELSE
+            DM=0.D0
          ENDIF
         endif
-	 DMC=DMC-DM
+         DMC=DMC-DM
 1000  CONTINUE
 C
       RETURN
@@ -3543,7 +3543,7 @@ C
      *                               PLMS(L(I),M(I)-1,NTHETA) -
      -        DSQRT(DBLE((L(I)+M(I)+1)*(L(I)-M(I)))) * 
      *                               PLMS(L(I),M(I)+1,NTHETA) )
-	 DB=DB*DSIN( N(I)*PI*(R-RI) )
+         DB=DB*DSIN( N(I)*PI*(R-RI) )
          IF( CRR(I).EQ.'RR' ) THEN
             DB=DB * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) *
      *                                          DCOS(K(I)*OM*TIME)
