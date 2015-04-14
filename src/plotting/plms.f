@@ -28,7 +28,7 @@ C      ENDIF
 C
 C     IF( NTHETA.GT.NMTS ) THEN
 C        WRITE(*,*) 'SORRY, PLM FOR THIS NTHETA HAS NOT BEEN STORED.',
-C    &		    NTHETA
+C    &                    NTHETA
 C        STOP
 C     ENDIF
 C
@@ -119,11 +119,11 @@ c              sin(th)**m for next m:
 c
 c-- plm for l=m: P_l^l = 
             lm = lm + 1
-	    if( lm.gt.nmlm ) then
-	       write(*,*) 'Too small dimension nmlm in storelpm.',nmlm
-	       stop
-	    endif
-            plmst(i,lm) = plm	
+            if( lm.gt.nmlm ) then
+               write(*,*) 'Too small dimension nmlm in storelpm.',nmlm
+               stop
+            endif
+            plmst(i,lm) = plm        
             plm1 = 0.d0
 c
 c-- plm for l>m: P_l^m =
