@@ -15,23 +15,6 @@
 C
       COMMON/PLMC/PLMST(NMT,NMLM),NMTC,NMLMC,NMTS,NMLMS,NML
 C
-C-- LM GIBT DIE POSITION FUER L UND M IM ARRAY AN ,NTHETA DIE 
-C   POSITION BEZUEGLICH THETA.
-C      IF( NMT.NE.NMTC ) THEN
-C         WRITE(*,*) 'WRONG DIMENSION NMT IN PLM: ',NMT
-C         STOP
-C      ENDIF
-C      IF( NMLM.NE.NMLMC ) THEN
-C         WRITE(*,*) 'WRONG DIMENSION NMT IN PLM: ',NMLM
-C         STOP
-C      ENDIF
-C
-C     IF( NTHETA.GT.NMTS ) THEN
-C        WRITE(*,*) 'SORRY, PLM FOR THIS NTHETA HAS NOT BEEN STORED.',
-C    &                    NTHETA
-C        STOP
-C     ENDIF
-C
       IF( L.GT.NML ) THEN
          WRITE(*,*) 'SORRY, PLM FOR THIS L HAS NOT BEEN STORED.',L
          WRITE(*,*) 'PLEASE INCREASE NML IN SUBROUTINE STOREPLM.'
@@ -44,8 +27,7 @@ C
       ENDIF
 
 C
-C--    calculate position LM:
-C
+C--    calculate positi.on LM:
 C--    first jump to the right M:
 C      LM=0
 C      DO 100 I=0,M-1
@@ -65,16 +47,12 @@ C
       END
 C
 c--------------------------------------------------------------------
-C
-C
-**********************************************************************
-      subroutine storeplm(theta,nmtheta)
-**********************************************************************
-*   stores the values PLM in PLMST(nmt,nmlm) for theta=theta(1..nmtheta).
-*   storeplm() has to be called once before PLMS() is called.
+C   stores the values PLM in PLMST(nmt,nmlm) for theta=theta(1..nmtheta).
+C   storeplm() has to be called once before PLMS() is called.
 c-- THETA HAS TO BE GIVEN IN DEGREES.
 c   The plm's here are fully normalised!
-c--------------------------------------------------------------------
+C   There is no sign change.
+      subroutine storeplm(theta,nmtheta)
       implicit real*8(a-h,o-z)
       dimension theta(*)
       PARAMETER(NMT=512,NMLM=4000)
@@ -117,13 +95,13 @@ c              sin(th)**m for next m:
                plm=0.d0
             endif
 c
-c-- plm for l=m: P_l^l = 
+c-- plm for l=m: P_l^l =
             lm = lm + 1
             if( lm.gt.nmlm ) then
                write(*,*) 'Too small dimension nmlm in storelpm.',nmlm
                stop
             endif
-            plmst(i,lm) = plm        
+            plmst(i,lm) = plm
             plm1 = 0.d0
 c
 c-- plm for l>m: P_l^m =
