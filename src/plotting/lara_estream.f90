@@ -10,22 +10,21 @@
 PROGRAM LARA
       IMPLICIT REAL*8(A-H,O-W)
       IMPLICIT REAL*8(X,Y,Z)
-      PARAMETER (NM = 5500,NAM = 400,NPM = 9,NPSM = 4,NPAM = NPM*NPSM)
+      PARAMETER (NM = 5500,NAM = 400,nPlotsMAX = 9,NPSM = 4,NPAM = nPlotsMAX*NPSM)
       PARAMETER (NLMA = 100)
       PARAMETER (PI = 3.14159265358979D0)
-!      CHARACTER*20 INPUTFILE,PARFILE,OUTPUTFILE
       CHARACTER*40 INPUTFILE,OUTPUTFILE
       CHARACTER*30 CTEXT1
       CHARACTER*10 CTEXT2
-      CHARACTER*1 CF,CFS,CC,CCP
-      CHARACTER*2 CRR,whatToPlot,CFP,CP1,quadrant,CPP
+      CHARACTER*1 CF,CFS,constantCoordinate,CCP
+      CHARACTER*2 CRR,whatToPlot,CFP,domain,quadrant,CPP
       CHARACTER*3 ABCNUM,ABCNUMI,ABCN
 ! 
       DIMENSION DX(NM)
-      DIMENSION CP1(NPM),nSubPlots(NPM)
-      DIMENSION quadrant(NPM,NPSM),CC(NPM,NPSM),XC(NPM,NPSM)
-      DIMENSION whatToPlot(NPM,NPSM),XRMU(NPM,NPSM)
-      DIMENSION TIME(NPM),ZD(NPM,NPSM),ABCNUMI(NPM,NPSM)
+      DIMENSION domain(nPlotsMAX),nSubPlots(nPlotsMAX)
+      DIMENSION quadrant(nPlotsMAX,NPSM),constantCoordinate(nPlotsMAX,NPSM),XC(nPlotsMAX,NPSM)
+      DIMENSION whatToPlot(nPlotsMAX,NPSM),XRMU(nPlotsMAX,NPSM)
+      DIMENSION TIME(nPlotsMAX),ZD(nPlotsMAX,NPSM),ABCNUMI(nPlotsMAX,NPSM)
       DIMENSION CPP(NPAM),CFP(NPAM),XCP(NPAM),CCP(NPAM)
       DIMENSION ZDP(NPAM),TIMEP(NPAM)
       DIMENSION XOR(NPAM),YOR(NPAM),XAR(NPAM),YAR(NPAM),ABCN(NPAM)
@@ -59,28 +58,27 @@ PROGRAM LARA
       READ(*,*)
       READ(*,*) timeSeriesControl,LHEAD,drawPlotNum,drawTime,plotSize,contourDistanceOrNumber,drawFrame
 ! 
-!-- LHEAD CONTROLLS THE HEAD:
-!   LHEAD = 0 : NHEAD,
-!   LHEAD = 1 : NHEAD WRITTEN,
-!   drawPlotNum = 0 : NO PLOTNUMBERS
-!   drawPlotNum = 1 : PLOTNUMBERS WITH DESCRIPTION,
-!   drawPlotNum = 2 : PLOTNUMBERS WITHOUT DESCRIPTION,
-!   drawPlotNum = 3 : PLOTNUMBERS GIVEN BY ABCNUMI,
-!   drawTime CONTROLLS WETHER THE TIME IS WRITTEN (0/1).
-!   plotSize DETERMINS THE SIZE OF THE PLOT:
-!   plotSize = 0 : SMALL
-!   plotSize = 1 : MEDIUM
-!   plotSize = 2 : BIG
-!   contourDistanceOrNumber CONTROLLS WETHER ZD IS THE NUMBER OF CONTOURLINES (contourDistanceOrNumber = 1) OR
-!   THE DIFFERENCE BETWEEN THE CONTOUR LEVELS (contourDistanceOrNumber = 0).
-!   FOR drawFrame = 1 A FRAME IS DRAWN AROUND EACH SUBPLOT.
-!   timeSeriesControl CONTROLLS TIMESERIES
-!   timeSeriesControl = 0  : NORMAL
-!   timeSeriesControl = -1 : TIMESERIES OF 6 PLOTS WITH TIME GIVEN INDIVIDUALLY, 
-!   timeSeriesControl = 1  : TIMESERIES OF 6 PLOTS WITH TIME GIVEN BY OM,
-!   timeSeriesControl = -2 : TIMESERIES OF 8 PLOTS WITH TIME GIVEN INDIVIDUALLY,
-!   timeSeriesControl = 2  : TIMESERIES OF 8 PLOTS WITH TIME GIVEN BY OM.
-! 
+      !-- LHEAD CONTROLLS THE HEAD:
+      !   LHEAD = 0 : NHEAD,
+      !   LHEAD = 1 : NHEAD WRITTEN,
+      !   drawPlotNum = 0 : NO PLOTNUMBERS
+      !   drawPlotNum = 1 : PLOTNUMBERS WITH DESCRIPTION,
+      !   drawPlotNum = 2 : PLOTNUMBERS WITHOUT DESCRIPTION,
+      !   drawPlotNum = 3 : PLOTNUMBERS GIVEN BY ABCNUMI,
+      !   drawTime CONTROLLS WETHER THE TIME IS WRITTEN (0/1).
+      !   plotSize DETERMINS THE SIZE OF THE PLOT:
+      !   plotSize = 0 : SMALL
+      !   plotSize = 1 : MEDIUM
+      !   plotSize = 2 : BIG
+      !   contourDistanceOrNumber CONTROLLS WETHER ZD IS THE NUMBER OF CONTOURLINES (contourDistanceOrNumber = 1) OR
+      !   THE DIFFERENCE BETWEEN THE CONTOUR LEVELS (contourDistanceOrNumber = 0).
+      !   FOR drawFrame = 1 A FRAME IS DRAWN AROUND EACH SUBPLOT.
+      !   timeSeriesControl CONTROLLS TIMESERIES
+      !   timeSeriesControl = 0  : NORMAL
+      !   timeSeriesControl = -1 : TIMESERIES OF 6 PLOTS WITH TIME GIVEN INDIVIDUALLY, 
+      !   timeSeriesControl = 1  : TIMESERIES OF 6 PLOTS WITH TIME GIVEN BY OM,
+      !   timeSeriesControl = -2 : TIMESERIES OF 8 PLOTS WITH TIME GIVEN INDIVIDUALLY,
+      !   timeSeriesControl = 2  : TIMESERIES OF 8 PLOTS WITH TIME GIVEN BY OM.
       IF( drawPlotNum.LT.0 .OR. drawPlotNum.GT.3 ) THEN
          WRITE(*,*) 'WRONG INPUT OF drawPlotNum: ',drawPlotNum
          STOP
@@ -126,21 +124,21 @@ PROGRAM LARA
          plotSize = 0
          nPlots = 1
       ENDIF
-      IF( ( plotSize.EQ.0 .AND. nPlots.GT.NPM ) .OR. 
-     &    ( plotSize.EQ.1 .AND. nPlots.GT.4 ) .OR.
-     &    ( plotSize.EQ.2 .AND. nPlots.GT.2 ) ) THEN
+      IF( ( plotSize.EQ.0 .AND. nPlots.GT.nPlotsMAX ) .OR. &
+          ( plotSize.EQ.1 .AND. nPlots.GT.4 )   .OR. &
+          ( plotSize.EQ.2 .AND. nPlots.GT.2 ) ) THEN
          WRITE(*,*) 'TOO BIG NUMBER OF PLOTS nPlots: ',nPlots
          STOP
       ENDIF
         
 ! 
 ! 
-      DO 20 I = 1,nPlots
-!----- nSubPlots IS NUMBER OF SUBPLOTS, CP1 DESTINGUISHES BETWEEN 
-!      QUADRANT (CP1 = 'QU'), HALFSPHERE (CP1 = 'HS') AND FULL SPHERE (CP1 = 'SP').
-!      TIME IS THE TIME OF THE PLOTTED FIELD FOR TIME DEPENDENCE.
+      DO I = 1,nPlots
+         !----- nSubPlots IS NUMBER OF SUBPLOTS, domain DESTINGUISHES BETWEEN 
+         !      QUADRANT (domain = 'QU'), HALFSPHERE (domain = 'HS') AND FULL SPHERE (domain = 'SP').
+         !      TIME IS THE TIME OF THE PLOTTED FIELD FOR TIME DEPENDENCE.
          READ(*,*)
-         READ(*,*) CP1(I),TIME(I),nSubPlots(I)
+         READ(*,*) domain(I),TIME(I),nSubPlots(I)
          if(nSubPlots(I).ne.1) then
               write(*,*) 'wrong number of plots.'
               stop
@@ -150,43 +148,43 @@ PROGRAM LARA
             WRITE(*,*) 'TOO BIG NUMBER OF SUBPLOTS nSubPlots:',nSubPlots(I)
             STOP
          ENDIF
-         IF( CP1(I).EQ.'HS' ) THEN
+         IF( domain(I).EQ.'HS' ) THEN
             NR = NR+1
          ELSE
             NQ = NQ+1
          ENDIF
 ! 
-!----- quadrant DESTINGUSHES BETWEEN QUADRANTS (quadrant = 'Q1','Q2','Q3','Q4') ,
-!      HALF SPHERES ( quadrant = 'HL','HR','HU','HO') ,SPHERE ( quadrant = 'SP' ) 
-!      PROJECTION ON A SPHERE ( quadrant = ' PS','PL','PR' ) .
-!      CC DETERMINS WETHER R = XC (CC = 'R') , PHI = XC (CC = 'P') OR 
-!      THETA = XC (CC = 'T') IS KEPT CONSTANT ,
-!      whatToPlot DETERMINS THE FIELD TO BE PLOTTED:
-!      'VS' : STREAMFUNCTIONS OF VELOCITY FIELD IN BUSSE NOTATION,
-!      'BS' : STREAMFUNCTIONS OF MAGNETIC FIELD IN BUSSE NOTATION,
-!      'JS' : STREAMFUNCTIONS OF ELECTRIC CURRENT IN BUSSE NOTATION,
-!      'VR' : RADIAL VELOCITY FIELD,
-!      'BR' : RADIAL MAGNETIC FIELD,
-!      'TE' : TEMPERATURE FIELD Theta,
-!      'ZF' : ZONAL FLOW ( Mean part of phi comp. of velocity),
-!      'MF' : MERIDIONAL FLOW ( MEAN STREAM FUNCTION IN PHI = CONST. PLANE ),
-!      'MT' : MEAN TOROIDAL MAGNETIC FIELD FOR PHI = CONST,
-!      'BT' : TOROIDAL MAGNETIC FIELD FOR PHI = CONST,
-!      'MP' : STREAMLINES OF MEAN POLOIDAL MAGNETIC FIELD FOR PHI = CONST,
-!      'MJ' : STREAMLINES OF MEAN ELECTRIC CURRENT FOR PHI = CONST,
-!      'MC' : CONTOUR LINES OF MEAN PHI COMPONENT OF ELECTRIC CURRENT FOR PHI = CONST,
-!      'TT' : Temperature field Theta+Ts,
-!      'UP' : Phi component of velocity,
-!      'NU' : local Nusselt number for r = ri.
-! 
-!      XRMU IS A MULTIPLIER FOR THE LARGEST RADIUS TO BE PLOTTED: RM = XRMU*RO.
-!      ZD IS THE STEP FOR THE CONTOURS FOR contourDistanceOrNumber = 0 OR
-!      THE NUMBER OF CONTPUR LINES FOR Z>0 OR Z<0.
+         !----- quadrant DESTINGUSHES BETWEEN QUADRANTS (quadrant = 'Q1','Q2','Q3','Q4') ,
+         !      HALF SPHERES ( quadrant = 'HL','HR','HU','HO') ,SPHERE ( quadrant = 'SP' ) 
+         !      PROJECTION ON A SPHERE ( quadrant = ' PS','PL','PR' ) .
+         !      constantCoordinate DETERMINS WETHER R = XC (constantCoordinate = 'R') , PHI = XC (constantCoordinate = 'P') OR 
+         !      THETA = XC (constantCoordinate = 'T') IS KEPT CONSTANT ,
+         !      whatToPlot DETERMINS THE FIELD TO BE PLOTTED:
+         !      'VS' : STREAMFUNCTIONS OF VELOCITY FIELD IN BUSSE NOTATION,
+         !      'BS' : STREAMFUNCTIONS OF MAGNETIC FIELD IN BUSSE NOTATION,
+         !      'JS' : STREAMFUNCTIONS OF ELECTRIC CURRENT IN BUSSE NOTATION,
+         !      'VR' : RADIAL VELOCITY FIELD,
+         !      'BR' : RADIAL MAGNETIC FIELD,
+         !      'TE' : TEMPERATURE FIELD Theta,
+         !      'ZF' : ZONAL FLOW ( Mean part of phi comp. of velocity),
+         !      'MF' : MERIDIONAL FLOW ( MEAN STREAM FUNCTION IN PHI = CONST. PLANE ),
+         !      'MT' : MEAN TOROIDAL MAGNETIC FIELD FOR PHI = CONST,
+         !      'BT' : TOROIDAL MAGNETIC FIELD FOR PHI = CONST,
+         !      'MP' : STREAMLINES OF MEAN POLOIDAL MAGNETIC FIELD FOR PHI = CONST,
+         !      'MJ' : STREAMLINES OF MEAN ELECTRIC CURRENT FOR PHI = CONST,
+         !      'MC' : CONTOUR LINES OF MEAN PHI COMPONENT OF ELECTRIC CURRENT FOR PHI = CONST,
+         !      'TT' : Temperature field Theta+Ts,
+         !      'UP' : Phi component of velocity,
+         !      'NU' : local Nusselt number for r = ri.
+         ! 
+         !      XRMU IS A MULTIPLIER FOR THE LARGEST RADIUS TO BE PLOTTED: RM = XRMU*RO.
+         !      ZD IS THE STEP FOR THE CONTOURS FOR contourDistanceOrNumber = 0 OR
+         !      THE NUMBER OF CONTPUR LINES FOR Z>0 OR Z<0.
          DO J = 1,nSubPlots(I)
             READ(*,*)
-            READ(*,*) quadrant(I,J),CC(I,J),XC(I,J),whatToPlot(I,J), XRMU(I,J),ZD(I,J),ABCNUMI(I,J)
+            READ(*,*) quadrant(I,J),constantCoordinate(I,J),XC(I,J),whatToPlot(I,J), XRMU(I,J),ZD(I,J),ABCNUMI(I,J)
          enddo
-20    CONTINUE
+      enddo
 ! 
 ! 
 !-- END OF PARAMETER INPUT.
@@ -194,22 +192,22 @@ PROGRAM LARA
 ! 
 !-- INPUT CHECK:
 ! 
-      DO 100 I = 1,nPlots
-      DO 100 J = 1,nSubPlots(I)
-         IF( CP1(I).NE.'QU' .AND. CP1(I).NE.'HS' .AND.  CP1(I).NE.'SP' ) THEN
-                  WRITE(*,*) 'WRONG INPUT OF CP1.'
-                  WRITE(*,*) 'CHOOSE BETWEEN QUADRANT : CP1 = QU ,'
-                  WRITE(*,*) '            HALF SPHERE : CP1 = HS ,'
-                  WRITE(*,*) '                 SPHERE : CP1 = SP .'
+   DO I = 1,nPlots
+      DO J = 1,nSubPlots(I)
+         IF( domain(I).NE.'QU' .AND. domain(I).NE.'HS' .AND.  domain(I).NE.'SP' ) THEN
+                  WRITE(*,*) 'WRONG INPUT OF domain.'
+                  WRITE(*,*) 'CHOOSE BETWEEN QUADRANT : domain = QU ,'
+                  WRITE(*,*) '            HALF SPHERE : domain = HS ,'
+                  WRITE(*,*) '                 SPHERE : domain = SP .'
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
          ENDIF
-         IF( quadrant(I,J).NE.'Q1' .AND. quadrant(I,J).NE.'Q2' .AND.
-     &       quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' .AND.
-     &       quadrant(I,J).NE.'HU' .AND. quadrant(I,J).NE.'HO' .AND.
-     &       quadrant(I,J).NE.'HL' .AND. quadrant(I,J).NE.'HR' .AND.
-     &       quadrant(I,J).NE.'PL' .AND. quadrant(I,J).NE.'PR' .AND.
-     &       quadrant(I,J).NE.'SP' .AND. quadrant(I,J).NE.'PS' ) THEN
+         IF( quadrant(I,J).NE.'Q1' .AND. quadrant(I,J).NE.'Q2' .AND. &
+             quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' .AND. &
+             quadrant(I,J).NE.'HU' .AND. quadrant(I,J).NE.'HO' .AND. &
+             quadrant(I,J).NE.'HL' .AND. quadrant(I,J).NE.'HR' .AND. &
+             quadrant(I,J).NE.'PL' .AND. quadrant(I,J).NE.'PR' .AND. &
+             quadrant(I,J).NE.'SP' .AND. quadrant(I,J).NE.'PS' ) THEN
             WRITE(*,*) 'WRONG INPUT OF quadrant.'
             WRITE(*,*) '  CHOOSE BETWEEN QUADRANTS : quadrant = Q1,Q2,Q3,Q4 ,'
             WRITE(*,*) '              HALF SPHERES : quadrant = HL,HR,HO,HU ,'
@@ -220,130 +218,136 @@ PROGRAM LARA
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
          ENDIF
-         IF( CC(I,J).NE.'P' .AND. CC(I,J).NE.'T' .AND. CC(I,J).NE.'R' ) THEN
-            WRITE(*,*) 'WRONG INPUT OF CONSTANT COORDINATE CC.'
-            WRITE(*,*) '          CHOOSE BETWEEN PHI : CC = P ,'
-            WRITE(*,*) '                       THETA : CC = T ,'
-            WRITE(*,*) '                           R : CC = R ,'
-            WRITE(*,*) ' RADIAL FIELD FOR CONSTANT R : CC = R .'
+         IF( constantCoordinate(I,J).NE.'P' .AND. constantCoordinate(I,J).NE.'T' .AND. constantCoordinate(I,J).NE.'R' ) THEN
+            WRITE(*,*) 'WRONG INPUT OF CONSTANT COORDINATE constantCoordinate.'
+            WRITE(*,*) '          CHOOSE BETWEEN PHI : constantCoordinate = P ,'
+            WRITE(*,*) '                       THETA : constantCoordinate = T ,'
+            WRITE(*,*) '                           R : constantCoordinate = R ,'
+            WRITE(*,*) ' RADIAL FIELD FOR CONSTANT R : constantCoordinate = R .'
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
          ENDIF
-         IF( CC(I,J).EQ.'R' ) XRMU(I,J) = 1.E0
+         IF( constantCoordinate(I,J).EQ.'R' ) XRMU(I,J) = 1.E0
 ! 
-         IF( CC(I,J).EQ.'P' .AND. XC(I,J).GT.360.E0 ) THEN
+         IF( constantCoordinate(I,J).EQ.'P' .AND. XC(I,J).GT.360.E0 ) THEN
             WRITE(*,*) 'PHI SHOULD BE GIVEN IN DEGREES < =  360.'
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
-         ELSEIF( CC(I,J).EQ.'T' .AND. XC(I,J).GT.180.E0 ) THEN
+         ELSEIF( constantCoordinate(I,J).EQ.'T' .AND. XC(I,J).GT.180.E0 ) THEN
             WRITE(*,*) 'THETA SHOULD BE GIVEN IN DEGREES < =  180.'
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
-         ELSEIF(  CC(I,J).EQ.'R' .AND. ( XC(I,J).LT.0.E0 .OR. XC(I,J).GT.1.E0 )  )THEN
+         ELSEIF(  constantCoordinate(I,J).EQ.'R' .AND. ( XC(I,J).LT.0.E0 .OR. XC(I,J).GT.1.E0 )  )THEN
             WRITE(*,*) 'RREL SHOULD BE > = 0 , < =  1 .'
             WRITE(*,*) 'RREL IS DEFINED AS: R = RI+RREL*(RO-RI).'
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
          ENDIF
-         IF(  CC(I,J).EQ.'P' ) THEN
+         IF(  constantCoordinate(I,J).EQ.'P' ) THEN
             IF( XC(I,J).LT.0.E0 ) XC(I,J) = XC(I,J)+360.E0
-            IF(     ( quadrant(I,J).EQ.'Q1' .OR. quadrant(I,J).EQ.'Q4' .OR. quadrant(I,J).EQ.'HR' ) .AND.
-     &            XC(I,J).GT.180.E0 .AND. XC(I,J).LT.360.E0 ) THEN
-               XC(I,J) = XC(I,J)-180.E0
-            ELSEIF( ( quadrant(I,J).EQ.'Q2' .OR. quadrant(I,J).EQ.'Q3' .OR. quadrant(I,J).EQ.'HL' ) .AND.
-     &            XC(I,J).LT.180.E0 .AND. XC(I,J).GT.0.E0 ) THEN
-               XC(I,J) = XC(I,J)+180.E0
+            IF(( quadrant(I,J).EQ.'Q1' .OR. &
+                 quadrant(I,J).EQ.'Q4' .OR. &
+                 quadrant(I,J).EQ.'HR' ) .AND. &
+                 XC(I,J).GT.180.E0 .AND. &
+                 XC(I,J).LT.360.E0 ) THEN
+               XC(I,J) = XC(I,J) - 180.E0
+            ELSEIF(( quadrant(I,J).EQ.'Q2' .OR. & 
+                     quadrant(I,J).EQ.'Q3' .OR. &
+                     quadrant(I,J).EQ.'HL' ) .AND. &
+                     XC(I,J).LT.180.E0 .AND. &
+                     XC(I,J).GT.0.E0 ) THEN
+               XC(I,J) = XC(I,J) + 180.E0
             ENDIF
          ENDIF
-         IF( CC(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MT' ) THEN
-            WRITE(*,*) 'FOR  MT PHI HAS TO BE KEPT KONSTANT.'
-            CC(I,J) = 'P'
+         IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MT' ) THEN
+            WRITE(*,*) 'FOR MT PHI HAS TO BE KEPT CONSTANT.'
+            constantCoordinate(I,J) = 'P'
          ENDIF
-         IF( CC(I,J).NE.'P' .AND. ( whatToPlot(I,J).EQ.'MP' .OR. whatToPlot(I,J).EQ.'BT' ) ) THEN
-            WRITE(*,*) 'FOR MP AND BT PHI HAS TO BE KEPT KONSTANT.'
-            CC(I,J) = 'P'
+         IF( constantCoordinate(I,J).NE.'P' .AND. ( whatToPlot(I,J).EQ.'MP' .OR. whatToPlot(I,J).EQ.'BT' ) ) THEN
+            WRITE(*,*) 'FOR MP AND BT PHI HAS TO BE KEPT CONSTANT.'
+            constantCoordinate(I,J) = 'P'
          ENDIF
-         IF( CC(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MJ' ) THEN
-            WRITE(*,*) 'FOR  MJ PHI HAS TO BE KEPT KONSTANT.'
-            CC(I,J) = 'P'
+         IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MJ' ) THEN
+            WRITE(*,*) 'FOR  MJ PHI HAS TO BE KEPT CONSTANT.'
+            constantCoordinate(I,J) = 'P'
          ENDIF
-         IF( CC(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MC' ) THEN
-            WRITE(*,*) 'FOR  MC PHI HAS TO BE KEPT KONSTANT.'
-            CC(I,J) = 'P'
+         IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MC' ) THEN
+            WRITE(*,*) 'FOR  MC PHI HAS TO BE KEPT CONSTANT.'
+            constantCoordinate(I,J) = 'P'
          ENDIF
-         IF( CC(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'ZF' ) THEN
-            WRITE(*,*) 'FOR ZONAL FLOW PHI HAS TO BE KEPT KONSTANT.'
-            CC(I,J) = 'P'
+         IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'ZF' ) THEN
+            WRITE(*,*) 'FOR ZONAL FLOW PHI HAS TO BE KEPT CONSTANT.'
+            constantCoordinate(I,J) = 'P'
          ENDIF
-         IF( CC(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MF' ) THEN
-            WRITE(*,*) 'FOR MERIDIONAL FLOW PHI HAS TO BE KEPT KONSTANT.'
-            CC(I,J) = 'P'
+         IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MF' ) THEN
+            WRITE(*,*) 'FOR MERIDIONAL FLOW PHI HAS TO BE KEPT CONSTANT.'
+            constantCoordinate(I,J) = 'P'
          ENDIF
-         IF( CC(I,J).NE.'R' .AND. whatToPlot(I,J).EQ.'NU' ) THEN
-            WRITE(*,*) 'FOR NUSSELT NUMBER R HAS TO BE KEPT KONSTANT.'
-            CC(I,J) = 'R'
+         IF( constantCoordinate(I,J).NE.'R' .AND. whatToPlot(I,J).EQ.'NU' ) THEN
+            WRITE(*,*) 'FOR NUSSELT NUMBER R HAS TO BE KEPT CONSTANT.'
+            constantCoordinate(I,J) = 'R'
          ENDIF
-         if( CC(I,J).EQ.'R' .and. quadrant(I,J)(:1).NE.'P' ) then
+         if( constantCoordinate(I,J).EQ.'R' .and. quadrant(I,J)(:1).NE.'P' ) then
             write(*,*) 'For R = const the subplot must be a projection.'
             stop
          endif
-         IF( CP1(I).EQ.'QU' ) THEN
+         IF( domain(I).EQ.'QU' ) THEN
             IF( nSubPlots(I).GT.1 ) THEN
-               WRITE(*,*) 'ONLY ONE SUBPLOT ALLOWED FOR CP1 = QU.'
+               WRITE(*,*) 'ONLY ONE SUBPLOT ALLOWED FOR domain = QU.'
                WRITE(*,*) 'nSubPlots ASSUMED TO BE 1.'
                nSubPlots(I) = 1
             ENDIF
-            IF( CC(I,J).NE.'P' .AND. CC(I,J).NE.'T' ) THEN
-               WRITE(*,*) 'FOR CP1 = QU ONLY CC = P OR CC = T VALID.'
+            IF( constantCoordinate(I,J).NE.'P' .AND. constantCoordinate(I,J).NE.'T' ) THEN
+               WRITE(*,*) 'FOR domain = QU ONLY constantCoordinate = P OR constantCoordinate = T VALID.'
                WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
                STOP
             ENDIF
             IF( quadrant(I,J).NE.'Q1' .AND. quadrant(I,J).NE.'Q2' .AND. 
      &          quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' ) THEN
-               WRITE(*,*) 'FOR CP1 = QU ONLY quadrant = Q1,Q2,Q3,Q4 VALID.'
+               WRITE(*,*) 'FOR domain = QU ONLY quadrant = Q1,Q2,Q3,Q4 VALID.'
                WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
                STOP
             ENDIF
-         ELSEIF( CP1(I).EQ.'HS' ) THEN
+         ELSEIF( domain(I).EQ.'HS' ) THEN
             IF( nSubPlots(I).GT.2 ) THEN
-               WRITE(*,*) 'ONLY TWO SUBPLOT MAXIMUM ALLOWED FOR CP1 = HS.'
+               WRITE(*,*) 'ONLY TWO SUBPLOT MAXIMUM ALLOWED FOR domain = HS.'
                WRITE(*,*) 'nSubPlots ASSUMED TO BE 2.'
                nSubPlots(I) = 2
             ENDIF
-            IF( CC(I,J).NE.'P' .AND. CC(I,J).NE.'T' ) THEN
-               WRITE(*,*) 'FOR CP1 = HS ONLY CC = P OR CC = T VALID.'
+            IF( constantCoordinate(I,J).NE.'P' .AND. constantCoordinate(I,J).NE.'T' ) THEN
+               WRITE(*,*) 'FOR domain = HS ONLY constantCoordinate = P OR constantCoordinate = T VALID.'
                WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
                STOP
             ENDIF
             IF( quadrant(I,J).NE.'Q1' .AND. quadrant(I,J).NE.'Q2' .AND. 
      &          quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' .AND.
      &          quadrant(I,J).NE.'HO' .AND. quadrant(I,J).NE.'HU' ) THEN
-               WRITE(*,*) 'FOR CP1 = HS ONLY quadrant = Q1,Q2,Q3,Q4,HO,HU VALID.'
+               WRITE(*,*) 'FOR domain = HS ONLY quadrant = Q1,Q2,Q3,Q4,HO,HU VALID.'
                WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
                STOP
             ENDIF
-            IF( quadrant(I,J).EQ.'HO' .AND. CC(I,J).EQ.'P' ) THEN
+            IF( quadrant(I,J).EQ.'HO' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
                quadrant(I,J) = 'Q1'
                IF( XC(I,J).GT.180.E0 ) THEN
                   XC(I,J) = XC(I,J)-180.E0
                ENDIF
                nSubPlots(I) = nSubPlots(I)+1
                quadrant(I,nSubPlots(I)) = 'Q2'
-               CC(I,nSubPlots(I)) = CC(I,J)
+               constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
                IF( XC(I,J).LT.180.E0 ) THEN
                   XC(I,nSubPlots(I)) = XC(I,nSubPlots(I))+180.E0
                ENDIF
                whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
                XRMU(I,nSubPlots(I)) = XRMU(I,J)
                ZD(I,nSubPlots(I)) = ZD(I,J)
-            ELSEIF( quadrant(I,J).EQ.'HU' .AND. CC(I,J).EQ.'P' ) THEN
+            ELSEIF( quadrant(I,J).EQ.'HU' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
                quadrant(I,J) = 'Q4'
                      IF( XC(I,J).GT.180.E0 ) THEN
                   XC(I,J) = XC(I,J)-180.E0
                ENDIF
                nSubPlots(I) = nSubPlots(I)+1
                quadrant(I,nSubPlots(I)) = 'Q3'
-               CC(I,nSubPlots(I)) = CC(I,J)
+               constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
                      IF( XC(I,J).LT.180.E0 ) THEN
                   XC(I,nSubPlots(I)) = XC(I,nSubPlots(I))+180.E0
                ENDIF
@@ -351,35 +355,35 @@ PROGRAM LARA
                XRMU(I,nSubPlots(I)) = XRMU(I,J)
                ZD(I,nSubPlots(I)) = ZD(I,J)
             ENDIF
-         ELSEIF( CP1(I).EQ.'SP' ) THEN
+         ELSEIF( domain(I).EQ.'SP' ) THEN
             IF( nSubPlots(I).GT.4 ) THEN
-             WRITE(*,*) 'ONLY FOUR SUBPLOT MAXIMUM ALLOWED FOR CP1 = SP.'
+             WRITE(*,*) 'ONLY FOUR SUBPLOT MAXIMUM ALLOWED FOR domain = SP.'
                WRITE(*,*) 'nSubPlots ASSUMED TO BE 4.'
                nSubPlots(I) = 4
             ENDIF 
-            IF( quadrant(I,J).EQ.'HO' .AND. CC(I,J).EQ.'P' ) THEN
+            IF( quadrant(I,J).EQ.'HO' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
                quadrant(I,J) = 'Q1'
-                     IF( CC(I,J).EQ.'P' .AND. XC(I,J).GT.180.E0 ) THEN
+                     IF( constantCoordinate(I,J).EQ.'P' .AND. XC(I,J).GT.180.E0 ) THEN
                   XC(I,J) = XC(I,J)-180.E0
                ENDIF
                nSubPlots(I) = nSubPlots(I)+1
                quadrant(I,nSubPlots(I)) = 'Q2'
-               CC(I,nSubPlots(I)) = CC(I,J)
-                     IF( CC(I,J).EQ.'P' .AND. XC(I,J).LT.180.E0 ) THEN
+               constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
+                     IF( constantCoordinate(I,J).EQ.'P' .AND. XC(I,J).LT.180.E0 ) THEN
                   XC(I,nSubPlots(I)) = XC(I,J)+180.E0
                ENDIF
                whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
                XRMU(I,nSubPlots(I)) = XRMU(I,J)
                ZD(I,nSubPlots(I)) = ZD(I,J)
-            ELSEIF( quadrant(I,J).EQ.'HU' .AND. CC(I,J).EQ.'P' ) THEN
+            ELSEIF( quadrant(I,J).EQ.'HU' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
                quadrant(I,J) = 'Q4'
-                     IF( CC(I,J).EQ.'P' .AND. XC(I,J).GT.180.E0 ) THEN
+                     IF( constantCoordinate(I,J).EQ.'P' .AND. XC(I,J).GT.180.E0 ) THEN
                   XC(I,J) = XC(I,J)-180.E0
                ENDIF
                nSubPlots(I) = nSubPlots(I)+1
                quadrant(I,nSubPlots(I)) = 'Q3'
-               CC(I,nSubPlots(I)) = CC(I,J)
-                     IF( CC(I,J).EQ.'P' .AND. XC(I,J).LT.180.E0 ) THEN
+               constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
+                     IF( constantCoordinate(I,J).EQ.'P' .AND. XC(I,J).LT.180.E0 ) THEN
                   XC(I,nSubPlots(I)) = XC(I,J)+180.E0
                ENDIF
                whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
@@ -387,7 +391,8 @@ PROGRAM LARA
                ZD(I,nSubPlots(I)) = ZD(I,J)
             ENDIF
          ENDIF
-100   CONTINUE
+      enddo
+   enddo
 ! 
 ! 
 !-- SETTING OF CONSTANTS:
@@ -450,9 +455,9 @@ PROGRAM LARA
             ABCNUMI(1,J) = '   '
          enddo
          DO 130 I = 2,nPlots
-            CP1(I) = CP1(1)
+            domain(I) = domain(1)
             nSubPlots(I) = nSubPlots(1)
-            IF( CP1(I).EQ.'HS' ) THEN
+            IF( domain(I).EQ.'HS' ) THEN
                NR = NR+1
             ELSE
                NQ = NQ+1
@@ -490,7 +495,7 @@ PROGRAM LARA
             ENDIF
             DO 120 J = 1,nSubPlots(1)
                quadrant(I,J) = quadrant(1,J)
-               CC(I,J) = CC(1,J)
+               constantCoordinate(I,J) = constantCoordinate(1,J)
                XC(I,J) = XC(1,J)
                whatToPlot(I,J) = whatToPlot(1,J)
                XRMU(I,J) = XRMU(1,J)
@@ -614,8 +619,8 @@ PROGRAM LARA
 ! 
 !-- XLRAND = LINKER RAND , XRRAND = RECHTER RAND , YURAND = UNTERER RAND ,
 !   XINTER,YINTER = ZWISCHENRAUM ZWISCHEN PLOTS , 
-!   YHR = HOEHE RECHTECK , XBR = BREITE RECHTECK ( FUER CP1 = 'HS' ) ,
-!   YHQ = HOEHE QUADRAT , BXQ = BREITE QUADRAT ( FUER CP1 = 'QU' ODER CP1 = 'SP' ) ,
+!   YHR = HOEHE RECHTECK , XBR = BREITE RECHTECK ( FUER domain = 'HS' ) ,
+!   YHQ = HOEHE QUADRAT , BXQ = BREITE QUADRAT ( FUER domain = 'QU' ODER domain = 'SP' ) ,
 !   YHPG = HOEHE PLOTGEBIET , XBPG = BREITE PLOTGEBIET ( OHNE KOPF ) .
       XLRAND = 3.0D0
       XRRAND = 3.0D0
@@ -710,7 +715,7 @@ PROGRAM LARA
          IF( I.EQ.1 ) THEN
             NSPA = 1
             NZEI = 1
-            IF( CP1(I).EQ.'HS' ) THEN
+            IF( domain(I).EQ.'HS' ) THEN
                YHPLOT = YHR
                XBPLOT = XBR
                XLPLOT = XLR
@@ -719,7 +724,7 @@ PROGRAM LARA
                XBPLOT = XBQ
                XLPLOT = XLQ
             ENDIF
-         ELSEIF( CP1(I).EQ.'HS' .OR. CP1(I-1).EQ.'HS' ) THEN
+         ELSEIF( domain(I).EQ.'HS' .OR. domain(I-1).EQ.'HS' ) THEN
             NSPA = 1
             NZEI = NZEI+1
             YHPLOT = YHR
@@ -740,7 +745,7 @@ PROGRAM LARA
          XORIG = XLRAND+XLPLOT+(NSPA-1)*(XBPLOT+XINTER)
          YORIG = YHFUSS+YHPG-NZEI*YHPLOT-(NZEI-1)*YINTER
 
-              IF( CP1(I).EQ.'QU' .OR. CP1(I).EQ.'SP' .AND. NCOL.GT.1 ) THEN
+              IF( domain(I).EQ.'QU' .OR. domain(I).EQ.'SP' .AND. NCOL.GT.1 ) THEN
             NQT = NQT+1
             IF( NSPA.EQ.1 .AND. NQT.EQ.NQ ) XLQ = XLQ+(XBQ+XINTER)/2
          ENDIF
@@ -748,16 +753,16 @@ PROGRAM LARA
                   NP = NP+1
                   CPP(NP) = quadrant(I,J)
             CFP(NP) = whatToPlot(I,J)
-            CCP(NP) = CC(I,J)
+            CCP(NP) = constantCoordinate(I,J)
             ABCN(NP) = ABCNUMI(I,J)
-            IF( CC(I,J).EQ.'R' ) THEN
+            IF( constantCoordinate(I,J).EQ.'R' ) THEN
                      XCP(NP) = XRI+XC(I,J)
             ELSE
                      XCP(NP) = XC(I,J)
             ENDIF
                   ZDP(NP) = ZD(I,J)
             TIMEP(NP) = TIME(I)
-            IF( CP1(I).EQ.'HS' ) THEN
+            IF( domain(I).EQ.'HS' ) THEN
                      IF( quadrant(I,J).EQ.'HO' .OR. quadrant(I,J).EQ.'HU' ) THEN
                         XOR(NP) = XORIG
                   XAR(NP) = XBR
@@ -789,13 +794,13 @@ PROGRAM LARA
                   YAR(NP) = YHR
                   XRMCM(NP) = XBR/2
                ENDIF
-            ELSEIF( CP1(I).EQ.'QU' ) THEN
+            ELSEIF( domain(I).EQ.'QU' ) THEN
                      XOR(NP) = XORIG
                XAR(NP) = XBQ
                      YOR(NP) = YORIG
                YAR(NP) = YHQ
                XRMCM(NP) = XBQ
-            ELSEIF( CP1(I).EQ.'SP' ) THEN
+            ELSEIF( domain(I).EQ.'SP' ) THEN
                      IF( quadrant(I,J).EQ.'Q1' ) THEN
                         XOR(NP) = XORIG+XBQ/2
                   XAR(NP) = XBQ/2
@@ -1119,7 +1124,7 @@ PROGRAM LARA
 ! 
 ! 
 !**********************************************************************
-      SUBROUTINE PLO(NPLOT,NSUBP,DC,DX,contourDistanceOrNumber,plotSize,drawFrame,ZD,TIME,CP,CF,CC,XC,
+      SUBROUTINE PLO(NPLOT,NSUBP,DC,DX,contourDistanceOrNumber,plotSize,drawFrame,ZD,TIME,CP,CF,constantCoordinate,XC,
      &        XOR,YOR,XAR,YAR,XRI,XRO,XRM,XRICM,XROCM,XRMCM,XP,YP)
 !
 !     calculates the field Z and makes one subplot.
@@ -1129,7 +1134,7 @@ PROGRAM LARA
 !----------------------------------------------------------------------
       IMPLICIT REAL*8(A-H,O-W)
       IMPLICIT REAL*8(X,Y,Z)
-      CHARACTER*1 CC,CCC
+      CHARACTER*1 constantCoordinate,CCC
       CHARACTER*2 CP,CF,CPC
       character*20 filez,filex,filey
       PARAMETER(NMX = 65,NMY = 128)
@@ -1151,7 +1156,7 @@ PROGRAM LARA
       WRITE(14,'(2X,''TIME =  '',2D16.6)') TIME
 ! 
 !-- UEBERGABE AN COMMONBLOCK FUER TRANS:
-      CCC = CC
+      CCC = constantCoordinate
       CPC = CP
       XCC = XC
 ! 
@@ -1182,10 +1187,10 @@ PROGRAM LARA
 !        CALL RESET('THKCRV')
          XMIN = XRI
          XMAX = XRM
-         IF( CC.EQ.'T' ) THEN
+         IF( constantCoordinate.EQ.'T' ) THEN
                   YMIN = 90.E0
             YMAX = 180.E0
-         ELSEIF( CC.EQ.'P' ) THEN
+         ELSEIF( constantCoordinate.EQ.'P' ) THEN
                   YMIN = 0.E0
             YMAX = 90.E0
          ENDIF
@@ -1195,10 +1200,10 @@ PROGRAM LARA
       ELSEIF( CP.EQ.'Q2' ) THEN
          XMIN = XRI
                XMAX = XRM
-         IF( CC.EQ.'T' ) THEN
+         IF( constantCoordinate.EQ.'T' ) THEN
                   YMIN = 180.E0
             YMAX = 270.E0
-         ELSEIF( CC.EQ.'P' ) THEN
+         ELSEIF( constantCoordinate.EQ.'P' ) THEN
                   YMIN = 0.E0
             YMAX = 90.E0
          ENDIF
@@ -1220,10 +1225,10 @@ PROGRAM LARA
       ELSEIF( CP.EQ.'Q3' ) THEN
          XMIN = XRI
                XMAX = XRM
-         IF( CC.EQ.'T' ) THEN
+         IF( constantCoordinate.EQ.'T' ) THEN
                   YMIN = 270.E0
             YMAX = 360.E0
-         ELSEIF( CC.EQ.'P' ) THEN
+         ELSEIF( constantCoordinate.EQ.'P' ) THEN
                   YMIN = 90.E0
             YMAX = 180.E0
          ENDIF
@@ -1245,10 +1250,10 @@ PROGRAM LARA
       ELSEIF( CP.EQ.'Q4' ) THEN
          XMIN = XRI
                XMAX = XRM
-         IF( CC.EQ.'T' ) THEN
+         IF( constantCoordinate.EQ.'T' ) THEN
                   YMIN = 0.E0
             YMAX = 90.E0
-         ELSEIF( CC.EQ.'P' ) THEN
+         ELSEIF( constantCoordinate.EQ.'P' ) THEN
                   YMIN = 90.E0
             YMAX = 180.E0
          ENDIF
@@ -1270,10 +1275,10 @@ PROGRAM LARA
       ELSEIF( CP.EQ.'HO' ) THEN
          XMIN = XRI
                XMAX = XRM
-         IF( CC.EQ.'T' ) THEN
+         IF( constantCoordinate.EQ.'T' ) THEN
                   YMIN = 90.E0-XP
             YMAX = 270.E0-XP
-         ELSEIF( CC.EQ.'P' ) THEN
+         ELSEIF( constantCoordinate.EQ.'P' ) THEN
                   YMIN = 0.E0
             YMAX = 90.E0
          ENDIF
@@ -1295,10 +1300,10 @@ PROGRAM LARA
       ELSEIF( CP.EQ.'HU' ) THEN
          XMIN = XRI
                XMAX = XRM
-         IF( CC.EQ.'T' ) THEN
+         IF( constantCoordinate.EQ.'T' ) THEN
                   YMIN = 270.E0-XP
             YMAX = 450.E0-XP
-         ELSEIF( CC.EQ.'P' ) THEN
+         ELSEIF( constantCoordinate.EQ.'P' ) THEN
                   YMIN = 90.E0
             YMAX = 180.E0
          ENDIF
@@ -1320,10 +1325,10 @@ PROGRAM LARA
       ELSEIF( CP.EQ.'HL' ) THEN
          XMIN = XRI
                XMAX = XRM
-         IF( CC.EQ.'T' ) THEN
+         IF( constantCoordinate.EQ.'T' ) THEN
                   YMIN = 180.E0
             YMAX = 360.E0
-         ELSEIF( CC.EQ.'P' ) THEN
+         ELSEIF( constantCoordinate.EQ.'P' ) THEN
                   YMIN = 0.E0
             YMAX = 180.E0
          ENDIF
@@ -1345,10 +1350,10 @@ PROGRAM LARA
       ELSEIF( CP.EQ.'HR' ) THEN
          XMIN = XRI
                XMAX = XRM
-         IF( CC.EQ.'T' ) THEN
+         IF( constantCoordinate.EQ.'T' ) THEN
                   YMIN = 0.E0
             YMAX = 180.E0
-         ELSEIF( CC.EQ.'P' ) THEN
+         ELSEIF( constantCoordinate.EQ.'P' ) THEN
                   YMIN = 0.E0
             YMAX = 180.E0
          ENDIF
@@ -1370,10 +1375,10 @@ PROGRAM LARA
       ELSEIF( CP.EQ.'SP' ) THEN
          XMIN = XRI
                XMAX = XRM
-         IF( CC.EQ.'T' ) THEN
+         IF( constantCoordinate.EQ.'T' ) THEN
                   YMIN = 0.E0
             YMAX = 360.E0
-         ELSEIF( CC.EQ.'P' ) THEN
+         ELSEIF( constantCoordinate.EQ.'P' ) THEN
                   YMIN = 0.E0
             YMAX = 180.E0
          ENDIF
@@ -1422,7 +1427,7 @@ PROGRAM LARA
 !   PLOTGEBIET UND DER URSPRUNG ENTSPRECHEND ANGEPASST WERDEN.
 !   TEILWEISE WIRD ZUDEM DIE X-ACHSE AUF R< = RO EINGESCHRAENKT.
       IF( ( ( CF.NE.'BS' .AND. CF.NE.'MP' ) .OR. 
-     &      ( CF.EQ.'BS' .AND. CC.EQ.'R' ) ) .AND.
+     &      ( CF.EQ.'BS' .AND. constantCoordinate.EQ.'R' ) ) .AND.
      &                                               XROCM.NE.XRMCM ) THEN
          IF( CP(:1).EQ.'Q' ) THEN
             XAR = XROCM
@@ -1477,17 +1482,17 @@ PROGRAM LARA
 !   THETA WIRD EIN INTEGER NTHETA ZUGEORDNET UNTER DEM PLM(THETA)
 !   ABGESPEICHERT WIRD, NMTHETA IST DIE ANZAHL DER BENOETIGTEN THETA.
 ! 
-      IF( CC.EQ.'T' ) THEN
+      IF( constantCoordinate.EQ.'T' ) THEN
          NMTHETA = 1
          THETA(NMTHETA) = DBLE(XC)
-      ELSEIF( CC.EQ.'P' ) THEN
+      ELSEIF( constantCoordinate.EQ.'P' ) THEN
          PHI = DBLE(XC)
-      ELSEIF( CC.EQ.'R' ) THEN
+      ELSEIF( constantCoordinate.EQ.'R' ) THEN
          R = DBLE(XC)      
       ENDIF
       XD = (XMAX-XMIN)/(NMX-1)
       YD = (YMAX-YMIN)/(NMY-1)
-      IF( CC.NE.'T' ) THEN
+      IF( constantCoordinate.NE.'T' ) THEN
          NMTHETA = NMY
          DO 100 I = 1,NMTHETA
  100        THETA(I) = DBLE(YMIN+(I-1)*YD)
@@ -1502,14 +1507,14 @@ PROGRAM LARA
                X = XMIN+(I-1)*XD
          DO 1000 J = 1,NMY
             Y = YMIN+(J-1)*YD
-            IF( CC.EQ.'T' ) THEN
+            IF( constantCoordinate.EQ.'T' ) THEN
                R = DBLE(X)
                PHI = DBLE(Y)
                NTHETA = 1
-            ELSEIF( CC.EQ.'P' ) THEN
+            ELSEIF( constantCoordinate.EQ.'P' ) THEN
                R = DBLE(X)
                NTHETA = J
-            ELSEIF( CC.EQ.'R' ) THEN
+            ELSEIF( constantCoordinate.EQ.'R' ) THEN
                PHI = DBLE(X)
                NTHETA = J
             ENDIF
@@ -1537,11 +1542,11 @@ PROGRAM LARA
 ! 
 !-------- R,PHI UND THETA SIND DIE KUGELKOORDINATEN:
             IF( CF.EQ.'VS' .OR. CF.EQ.'BS' .OR. CF.EQ.'JS' ) THEN
-               IF(  CC.EQ.'T' ) THEN
+               IF(  constantCoordinate.EQ.'T' ) THEN
                   Z(I,J) = REAL(FT(DX,CF,R,PHI,NTHETA,TIME,DC))
-               ELSEIF( CC.EQ.'P' ) THEN
+               ELSEIF( constantCoordinate.EQ.'P' ) THEN
                   Z(I,J) = REAL(FP(DX,CF,R,PHI,NTHETA,TIME,DC))
-               ELSEIF( CC.EQ.'R' ) THEN
+               ELSEIF( constantCoordinate.EQ.'R' ) THEN
                   Z(I,J) = REAL(FR(DX,CF,R,PHI,NTHETA,TIME,DC))
                ENDIF
             ELSEIF( CF.EQ.'VR' .OR. CF.EQ.'BR' ) THEN
@@ -1643,7 +1648,7 @@ PROGRAM LARA
 ! 
       TENSN = 0.D0
 ! 
-!     IF( CC.EQ.'T' .OR. CC.EQ.'P' ) THEN
+!     IF( constantCoordinate.EQ.'T' .OR. constantCoordinate.EQ.'P' ) THEN
 ! 
 !-- NEUE FESTLEGUNG VON URSPRUNG UND PLOTGEBIET:
 !        CALL PHYSOR(XOR,YOR)
@@ -1657,7 +1662,7 @@ PROGRAM LARA
 !-- GRAF INITIALISIERT X UND Y ACHSE:
 !        CALL GRAF(XMIN,XD,XMAX,YMIN,YD,YMAX)
 ! 
-!     ELSEIF( CC.EQ.'R' ) THEN
+!     ELSEIF( constantCoordinate.EQ.'R' ) THEN
 ! 
 !-- AUFRUFEN DEN PROJEKTION VON KUGEL AUF KREIS:
 !        CALL PROJCT('ORTH')
@@ -3467,4 +3472,4 @@ PROGRAM LARA
       enddo
    END
 !---------------------------------------------------------------------
-! vim: tabstop = 3:softtabstop = 3:shiftwidth = 3:expandtab
+! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
