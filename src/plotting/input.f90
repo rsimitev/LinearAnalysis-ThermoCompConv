@@ -1,3 +1,4 @@
+   !--------------------------------------------------------------------------
    subroutine READH(unit_out,LTR,NUDSR,TIMER,NUDS,TIME,LDR)
       IMPLICIT REAL*8(A-H,O-Z)
       CHARACTER*2 C2
@@ -17,20 +18,16 @@
       IF( LTR.EQ.1 ) THEN
          READ(unit_out,'(1X,A2,I6,D16.6)') C2,NUDS,TIME
       ENDIF
-      IF( ( LT.EQ.1 .AND. TIME.EQ.TIMER ) .OR.
-     &    ( LT.EQ.0 .AND. NUDS.EQ.NUDSR )  ) THEN
+      IF( ( LT.EQ.1 .AND. TIME.EQ.TIMER ) .OR. ( LT.EQ.0 .AND. NUDS.EQ.NUDSR )  ) THEN
          LDR=1
-         IF( LTR.EQ.1 ) THEN
-            TIME0=TIME
-         ELSE
-            TIME0=0.D0
-         ENDIF
+         TIME0=0.D0
+         IF( LTR.EQ.1 ) TIME0=TIME
       ELSE
          LDR=0
       ENDIF
-   END subroutine
+   END subroutine readh
 
-   !----------------------------------------------------------------
+   !--------------------------------------------------------------------------
    subroutine READD(unit_out,LDR,NKR,XR,CFR,CRRR,LR,MR,NR,KR,
      &                       EVPM,EVPF,EVTM,DNU,EVTF,EMPM,EMPF,EMTM,EMTF)
 
@@ -103,15 +100,14 @@
                ENDIF
             case default
                BACKSPACE(unit_out)
-               exit 
+               exit
           end select
        enddo
 1100  CONTINUE
    END subroutine
 
-   !-------------------------------------------------------------------------
+   !--------------------------------------------------------------------------
    subroutine READP(unit_out,LST,LTR,NUDSR,TIMER,NUDS,TIME,LDR,LEND)
-
       IMPLICIT REAL*8(A-H,O-Z)
       CHARACTER*2 C2
       PARAMETER(NMT=50)
@@ -130,8 +126,7 @@
          READ(unit_out,*) CI,OMI,NUCI,NUOMI
          TAI=DSQRT(TAI)
       ENDIF
-      IF( ( LT.EQ.1 .AND. TIME.EQ.TIMER ) .OR.
-     &    ( LT.EQ.0 .AND. NUDS.EQ.NUDSR )  ) THEN
+      IF( ( LT.EQ.1 .AND. TIME.EQ.TIMER ) .OR. ( LT.EQ.0 .AND. NUDS.EQ.NUDSR )  ) THEN
          LDR=1
          IF( LTR.EQ.1 ) THEN
             TIME0=TIME
@@ -147,11 +142,9 @@
 
 2000  CONTINUE
       LEND=1
+   END subroutine readp
 
-   END
-
-
-   !----------------------------------------------------------------
+   !--------------------------------------------------------------------------
    subroutine RDIM(ND,CF,CRR,L,M,N,K,CFS,LS,MS,NS,
      &      NDV,NDW,NDT,NDH,NDG,NDVS,NDWS,NDTS,NDHS,NDGS,NDS)
 
@@ -201,9 +194,8 @@
       enddo
    END subroutine
 
-   !-------------------------------------------------------------------
+   !--------------------------------------------------------------------------
    subroutine KOEFF(LOU)
-
       IMPLICIT REAL*8(A-H,O-Z)
       CHARACTER*1 CF,CFS,CFI,CFSI
       CHARACTER*2 CRR,CRRI
@@ -226,7 +218,6 @@
       ENDIF
 
       IF( LOU.EQ.0 ) THEN
-
          IF( ND.GT.NM ) THEN
             WRITE(*,*) 'DIMENSION NM OF CALCULATION TOO SMALL.',ND
             STOP
@@ -257,25 +248,27 @@
          WRITE(21,*) 'NDHS= ',NDHS
          WRITE(21,*) 'NDGS= ',NDGS
 
-!-- AUSSCHREIBEN DER BENUTZTEN KOEFFITIENTEN
+         !-- AUSSCHREIBEN DER BENUTZTEN KOEFFITIENTEN
          WRITE(21,*) 'BENUTZTE KOEFFITIENTEN FUER RECHNUNG:'
-         DO 100 I=1,ND
-100      WRITE(21,'(I5,A2,A3,4I4)') I,CF(I),CRR(I),L(I),M(I),N(I),K(I)
+         DO I=1,ND
+            WRITE(21,'(I5,A2,A3,4I4)') I,CF(I),CRR(I),L(I),M(I),N(I),K(I)
+         enddo
          WRITE(21,*)
          WRITE(21,*) 'REDUZIERTE KOEFFITIENTEN:'
-         DO 200 I=1,NDS
-200      WRITE(21,'(I5,A2,3I4)') I,CFS(I),LS(I),MS(I),NS(I)
+         DO I=1,NDS
+            WRITE(21,'(I5,A2,3I4)') I,CFS(I),LS(I),MS(I),NS(I)
+         enddo
 
-!-- SETZEN DER NUMMERN DER AUSZUSCHREIBENDEN KOEFFITIENTEN:
+         !-- SETZEN DER NUMMERN DER AUSZUSCHREIBENDEN KOEFFITIENTEN:
          IF( LCALC.EQ.5 .OR. LCALC.EQ.6 ) THEN
             CALL SETWT(ND)
             WRITE(21,*)
             WRITE(21,*) 'NUMMERN DER AUSGESCHRIEBENEN KOEFFITIENTEN:'
-            DO 300 I=1,NKWT
- 300        WRITE(21,*) I,IKWT(I)
+            DO I=1,NKWT
+               WRITE(21,*) I,IKWT(I)
+            enddo
          ENDIF
          CLOSE(21)
-
       ELSEIF( LOU.EQ.1 ) THEN
 
          IF( NDI.GT.NM ) THEN
@@ -305,24 +298,21 @@
          WRITE(21,*) 'NDHS= ',NDHSI
          WRITE(21,*) 'NDGS= ',NDGSI
 
-!-- AUSSCHREIBEN DER BENUTZTEN KOEFFITIENTEN
+         !-- AUSSCHREIBEN DER BENUTZTEN KOEFFITIENTEN
          WRITE(21,*) 'BENUTZTE KOEFFITIENTEN DES INPUTS:'
-         DO 400 I=1,NDI
-400      WRITE(21,'(I5,A2,A3,4I4)')
-     &                        I,CFI(I),CRRI(I),LI(I),MI(I),NI(I),KI(I)
+         DO I=1,NDI
+            WRITE(21,'(I5,A2,A3,4I4)') I,CFI(I),CRRI(I),LI(I),MI(I),NI(I),KI(I)
+         enddo
          WRITE(21,*)
          WRITE(21,*) 'REDUZIERTE KOEFFITIENTEN DES INPUTS:'
-         DO 500 I=1,NDSI
-500      WRITE(21,'(I5,A2,3I4)') I,CFSI(I),LSI(I),MSI(I),NSI(I)
-
+         DO I=1,NDSI
+            WRITE(21,'(I5,A2,3I4)') I,CFSI(I),LSI(I),MSI(I),NSI(I)
+         enddo
       ENDIF
+   END subroutine KOEFF
 
-      RETURN
-      END
-
-   !---------------------------------------------------------------------
+   !--------------------------------------------------------------------------
    subroutine SETWT(ND)
-
       IMPLICIT REAL*8(A-H,O-Z)
       CHARACTER*1 CF,CFWT
       CHARACTER*2 CRR,CRRWT
@@ -330,37 +320,32 @@
 
       COMMON/QNU/NMQC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
       COMMON/TINT/DT,TIME0,NST,NTW,NDTW,NDTPW,NKWT,IKWT(NMT)
-      COMMON/COEW/NMKTC,NKT,LWT(NMT),MWT(NMT),NWT(NMT),KWT(NMT),
-     &                  CFWT(NMT),CRRWT(NMT)
+      COMMON/COEW/NMKTC,NKT,LWT(NMT),MWT(NMT),NWT(NMT),KWT(NMT), CFWT(NMT),CRRWT(NMT)
 
       IF( NMT.NE.NMKTC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NMT IN SETWT (SK).'
          STOP
       ENDIF
 
-      DO 200 J=1,NKT
-      DO 100 I=1,ND
-         IF( CF(I).EQ.CFWT(J) .AND. CRR(I).EQ.CRRWT(J) .AND.
-     &             L(I).EQ.LWT(J) .AND. M(I).EQ.MWT(J) .AND.
-     &                        N(I).EQ.NWT(J) .AND. K(I).EQ.KWT(J) )  THEN
+      DO J=1,NKT
+         DO I=1,ND
+            IF( CF(I).EQ.CFWT(J) .AND. CRR(I).EQ.CRRWT(J) ) then
+               if( L(I).EQ.LWT(J) .AND. M(I).EQ.MWT(J) .AND. N(I).EQ.NWT(J) .AND. K(I).EQ.KWT(J) )  THEN
                   NKWT=NKWT+1
                   IKWT(NKWT)=I
-            GOTO 200
-         ENDIF
-100   CONTINUE
-200   CONTINUE
+                  return
+               endif
+            ENDIF
+         enddo
+      enddo
+   END subroutine SETWT
 
-      RETURN
-      END
-
-   !--------------------------------------------------------------------
+   !--------------------------------------------------------------------------
    subroutine DIMEN
-
       IMPLICIT REAL*8(A-H,O-Z)
       CHARACTER*1 CF,CFQ,CFS
       CHARACTER*2 CRR,CRRQ
       PARAMETER (NM=5000)
-
       DIMENSION X(NM)
 
       COMMON/LOG/LCALC,LWRITE,LTR,LVAR,LDY,L6,L7,L8,L9,L10
@@ -370,7 +355,6 @@
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
       COMMON/DIMS/NDVS,NDWS,NDTS,NDHS,NDGS,NDS
       COMMON/QNUV/NUC,NUOM
-
       COMMON/QNU/NMQC,LQ(NM),MQ(NM),NQ(NM),KQ(NM),CFQ(NM),CRRQ(NM)
       COMMON/QNUS/NMSC,LS(NM),MS(NM),NS(NM),CFS(NM)
 
@@ -387,123 +371,130 @@
 
       IF( LCALC.NE.2 ) THEN
          CF='V'
-         DO 100 M=MMIN(CF,LRB,M0,MF,NTV,LTV,LTR,LCALC),
-     &                        MMAX(M0,MF,NTV,LTV,LTR,LCALC),M0
-         DO 100 L=LMIN(CF,M,LEV,LCALC),LMAX(M,M0,NTV,LTV,LTR),LDI
-         DO 100 N=1,NMAX(CF,FTW,FTG,L,M,M0,NTV,LTR)
-         DO 100 K=0,KTV
-            CRR='RR'
-                  CALL SETQU(ND,CF,CRR,L,M,N,K)
-            IF( M.NE.0 ) THEN
-               CRR='IR'
+         DO M=MMIN(CF,LRB,M0,MF,NTV,LTV,LTR,LCALC), MMAX(M0,MF,NTV,LTV,LTR,LCALC),M0
+            DO L=LMIN(CF,M,LEV,LCALC),LMAX(M,M0,NTV,LTV,LTR),LDI
+               DO N=1,NMAX(CF,FTW,FTG,L,M,M0,NTV,LTR)
+                  DO K=0,KTV
+                     CRR='RR'
                      CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-            IF( K.NE.0 ) THEN
-               CRR='RI'
-                     CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-            IF( M.NE.0 .AND. K.NE.0 ) THEN
-               CRR='II'
-                     CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-100      CONTINUE
+                     IF( M.NE.0 ) THEN
+                        CRR='IR'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                     ENDIF
+                     IF( K.NE.0 ) THEN
+                        CRR='RI'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                     ENDIF
+                     IF( M.NE.0 .AND. K.NE.0 ) THEN
+                        CRR='II'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                     ENDIF
+                  enddo
+               enddo
+            enddo
+         enddo
 
-         IF( LCALC.EQ.1 .AND. TA.LT.EPS ) GOTO 250
-   !-------  ONSET IN NON ROTATING CASE HAS NO TOROIDAL COMPONENT.
-
-         CF='W'
-         DO 200 M=MMIN(CF,LRB,M0,MF,NTV,LTV,LTR,LCALC),
-     &                        MMAX(M0,MF,NTV,LTV,LTR,LCALC),M0
-         DO 200 L=LMIN(CF,M,LEV,LCALC),LMAX(M,M0,NTV,LTV,LTR),LDI
-         DO 200 N=1,NMAX(CF,FTW,FTG,L,M,M0,NTV,LTR)
-         DO 200 K=0,KTV
-         IF( LRIBOUN(CF,L,M,N).EQ.1 ) GOTO 200
-            CRR='RR'
-                  CALL SETQU(ND,CF,CRR,L,M,N,K)
-            IF( M.NE.0 ) THEN
-               CRR='IR'
-                     CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-            IF( K.NE.0 ) THEN
-               CRR='RI'
-                     CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-            IF( M.NE.0 .AND. K.NE.0 ) THEN
-               CRR='II'
-                     CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-200      CONTINUE
-
-250      CONTINUE
+         !-------  ONSET IN NON ROTATING CASE HAS NO TOROIDAL COMPONENT.
+         IF(.not.( LCALC.EQ.1 .AND. TA.LT.EPS )) then
+            CF='W'
+            DO M=MMIN(CF,LRB,M0,MF,NTV,LTV,LTR,LCALC), MMAX(M0,MF,NTV,LTV,LTR,LCALC),M0
+               DO L=LMIN(CF,M,LEV,LCALC),LMAX(M,M0,NTV,LTV,LTR),LDI
+                  DO N=1,NMAX(CF,FTW,FTG,L,M,M0,NTV,LTR)
+                     DO K=0,KTV
+                        IF( LRIBOUN(CF,L,M,N).EQ.1 ) cycle
+                        CRR='RR'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                        IF( M.NE.0 ) THEN
+                           CRR='IR'
+                           CALL SETQU(ND,CF,CRR,L,M,N,K)
+                        ENDIF
+                        IF( K.NE.0 ) THEN
+                           CRR='RI'
+                           CALL SETQU(ND,CF,CRR,L,M,N,K)
+                        ENDIF
+                        IF( M.NE.0 .AND. K.NE.0 ) THEN
+                           CRR='II'
+                           CALL SETQU(ND,CF,CRR,L,M,N,K)
+                        ENDIF
+                     enddo
+                  enddo
+               enddo
+            enddo
+         endif
 
          CF='T'
-         DO 300 M=MMIN(CF,LRB,M0,MF,NTV,LTV,LTR,LCALC),
-     &                        MMAX(M0,MF,NTV,LTV,LTR,LCALC),M0
-         DO 300 L=LMIN(CF,M,LEV,LCALC),LMAX(M,M0,NTV,LTV,LTR),LDI
-         DO 300 N=1,NMAX(CF,FTW,FTG,L,M,M0,NTV,LTR)
-         DO 300 K=0,KTV
-            CRR='RR'
-                  CALL SETQU(ND,CF,CRR,L,M,N,K)
-            IF( M.NE.0 ) THEN
-               CRR='IR'
+         DO M=MMIN(CF,LRB,M0,MF,NTV,LTV,LTR,LCALC), MMAX(M0,MF,NTV,LTV,LTR,LCALC),M0
+            DO L=LMIN(CF,M,LEV,LCALC),LMAX(M,M0,NTV,LTV,LTR),LDI
+               DO N=1,NMAX(CF,FTW,FTG,L,M,M0,NTV,LTR)
+                  DO K=0,KTV
+                     CRR='RR'
                      CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-            IF( K.NE.0 ) THEN
-               CRR='RI'
-                     CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-            IF( M.NE.0 .AND. K.NE.0 ) THEN
-               CRR='II'
-                     CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-300      CONTINUE
+                     IF( M.NE.0 ) THEN
+                        CRR='IR'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                     ENDIF
+                     IF( K.NE.0 ) THEN
+                        CRR='RI'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                     ENDIF
+                     IF( M.NE.0 .AND. K.NE.0 ) THEN
+                        CRR='II'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                     ENDIF
+                  enddo
+               enddo
+            enddo
+         enddo
       ENDIF
 
-      IF( LCALC.EQ.2 .OR. LCALC.EQ.4 .OR. LCALC.EQ.6 .OR.
-     &                                          LCALC.EQ.8 ) THEN
+      IF( LCALC.EQ.2 .OR. LCALC.EQ.4 .OR. LCALC.EQ.6 .OR. LCALC.EQ.8 ) THEN
          CF='H'
-         DO 400 M=MMIN(CF,LRB,M0,MF,NTH,LTV,LTR,LCALC),
-     &                        MMAX(M0,MF,NTH,LTH,LTR,LCALC),M0
-         DO 400 L=LMIN(CF,M,LEV,LCALC),LMAX(M,M0,NTH,LTH,LTR),LDI
-         DO 400 N=1,NMAX(CF,FTW,FTG,L,M,M0,NTH,LTR)
-         DO 400 K=0,KTH
-            CRR='RR'
-                  CALL SETQU(ND,CF,CRR,L,M,N,K)
-            IF( M.NE.0 ) THEN
-               CRR='IR'
+         DO M=MMIN(CF,LRB,M0,MF,NTH,LTV,LTR,LCALC), MMAX(M0,MF,NTH,LTH,LTR,LCALC),M0
+            DO L=LMIN(CF,M,LEV,LCALC),LMAX(M,M0,NTH,LTH,LTR),LDI
+               DO N=1,NMAX(CF,FTW,FTG,L,M,M0,NTH,LTR)
+                  DO K=0,KTH
+                     CRR='RR'
                      CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-            IF( K.NE.0 ) THEN
-               CRR='RI'
-                     CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-            IF( M.NE.0 .AND. K.NE.0 ) THEN
-               CRR='II'
-                     CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-400      CONTINUE
+                     IF( M.NE.0 ) THEN
+                        CRR='IR'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                     ENDIF
+                     IF( K.NE.0 ) THEN
+                        CRR='RI'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                     ENDIF
+                     IF( M.NE.0 .AND. K.NE.0 ) THEN
+                        CRR='II'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                     ENDIF
+                  enddo
+               enddo
+            enddo
+         enddo
 
          CF='G'
-         DO 500 M=MMIN(CF,LRB,M0,MF,NTH,LTV,LTR,LCALC),
-     &                        MMAX(M0,MF,NTH,LTH,LTR,LCALC),M0
-         DO 500 L=LMIN(CF,M,LEV,LCALC),LMAX(M,M0,NTH,LTH,LTR),LDI
-         DO 500 N=1,NMAX(CF,FTW,FTG,L,M,M0,NTH,LTR)
-         DO 500 K=0,KTH
-            CRR='RR'
-                  CALL SETQU(ND,CF,CRR,L,M,N,K)
-            IF( M.NE.0 ) THEN
-               CRR='IR'
+         DO M=MMIN(CF,LRB,M0,MF,NTH,LTV,LTR,LCALC), MMAX(M0,MF,NTH,LTH,LTR,LCALC),M0
+            DO L=LMIN(CF,M,LEV,LCALC),LMAX(M,M0,NTH,LTH,LTR),LDI
+               DO N=1,NMAX(CF,FTW,FTG,L,M,M0,NTH,LTR)
+                  DO  K=0,KTH
+                     CRR='RR'
                      CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-            IF( K.NE.0 ) THEN
-               CRR='RI'
-                     CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-            IF( M.NE.0 .AND. K.NE.0 ) THEN
-               CRR='II'
-                     CALL SETQU(ND,CF,CRR,L,M,N,K)
-            ENDIF
-500      CONTINUE
+                     IF( M.NE.0 ) THEN
+                        CRR='IR'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                     ENDIF
+                     IF( K.NE.0 ) THEN
+                        CRR='RI'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                     ENDIF
+                     IF( M.NE.0 .AND. K.NE.0 ) THEN
+                        CRR='II'
+                        CALL SETQU(ND,CF,CRR,L,M,N,K)
+                     ENDIF
+                  enddo
+               enddo
+            enddo
+         enddo
 
       ENDIF
 
@@ -512,10 +503,9 @@
       CALL RDIM(ND,CFQ,CRRQ,LQ,MQ,NQ,KQ,CFS,LS,MS,NS,
      &           NDV,NDW,NDT,NDH,NDG,NDVS,NDWS,NDTS,NDHS,NDGS,NDS)
 
-      RETURN
-      END
+   END subroutine DIMEN
 
-   !----------------------------------------------------------------
+   !--------------------------------------------------------------------------
    subroutine SETQU(ND,CFI,CRRI,LI,MI,NI,KI)
       IMPLICIT REAL*8(A-H,O-Z)
       CHARACTER*1 CF,CFI
@@ -541,163 +531,148 @@
          N(ND)=NI
          K(ND)=KI
       ENDIF
+   END subroutine SETQU
 
-      RETURN
-   END
-
-   !--------------------------------------------------------------------
-!  DETERMINES WETHER (L,M,N) IS THE POSTION OF W(L=1,M=0,N=1),
-!  DESCRIBING RIGID BODY ROTATION.
+   !--------------------------------------------------------------------------
+   !  DETERMINES WETHER (L,M,N) IS THE POSTION OF W(L=1,M=0,N=1),
+   !  DESCRIBING RIGID BODY ROTATION.
    FUNCTION LRIBOUN(CT,L,M,N)
-
       IMPLICIT REAL*8(A-H,O-Z)
       CHARACTER*1 CT
-
       COMMON/LOG/LCALC,LWRITE,LTR,LVAR,LDY,L6,L7,L8,L9,L10
 
-!      IF( CT.EQ.'W' .AND. L.EQ.1 .AND. M.EQ.0 .AND. N.EQ.1 .AND.
-!     &          LCALC.NE.1 .AND. LCALC.NE.2 ) THEN
       IF( CT.EQ.'W' .AND. L.EQ.1 .AND. N.EQ.1 ) THEN
-               LRIBOUN=1
+         LRIBOUN=1
       ELSE
-               LRIBOUN=0
+         LRIBOUN=0
       ENDIF
-   END function
+   END function LRIBOUN
 
    !--------------------------------------------------------------------------
    FUNCTION NMAX(CF,FTW,FTG,L,M,M0,NT,LTR)
-   !--------------------------------------------------------------------------
-
       IMPLICIT REAL*8(A-H,O-Z)
       CHARACTER*1 CF
 
-      IF( LTR.EQ.0 ) THEN
-         IF( CF.EQ.'W' ) THEN
-            NMAX=IDINT(FTW*NT)
-         ELSEIF( CF.EQ.'G' ) THEN
-            NMAX=IDINT(FTG*NT)
-         ELSE
-            NMAX=NT
-         ENDIF
-      ELSEIF( LTR.EQ.1 ) THEN
-   !----- DIESE BEDINGUNG GIBT KANN FUER (3-L+IABS(M))/2 ANDERE ERGEBNISSE
-!      LIEFERN.
-        NMAX=NT-IABS(M)/M0-L/2+IABS(M)/2+1
-      ELSEIF( LTR.EQ.2 ) THEN
-         IF( CF.EQ.'W' ) THEN
-            NMAX=IDINT( FTW*( NT-IABS(M)/M0+IABS(M)/2-L/2+1 ) )
-         ELSEIF( CF.EQ.'G' ) THEN
-            NMAX=IDINT( FTG*( NT-IABS(M)/M0+IABS(M)/2-L/2+1 ) )
-         ELSE
-            NMAX=NT-IABS(M)/M0+IABS(M)/2-L/2+1
-               ENDIF
-      ELSEIF( LTR.EQ.3 ) THEN
-         IF( CF.EQ.'W' ) THEN
-            NMAX=IDINT( FTW*( NT-L/M0+1 ) )
-         ELSEIF( CF.EQ.'G' ) THEN
-            NMAX=IDINT( FTG*( NT-L/M0+1 ) )
-         ELSE
-            NMAX=NT-L/M0+1
-               ENDIF
-      ENDIF
-
-      RETURN
-      END
-   !--------------------------------------------------------------------------
-
+      select case(LTR)
+         case(0)
+            IF( CF.EQ.'W' ) THEN
+               NMAX=IDINT(FTW*NT)
+            ELSEIF( CF.EQ.'G' ) THEN
+               NMAX=IDINT(FTG*NT)
+            ELSE
+               NMAX=NT
+            ENDIF
+         case(1)
+            !----- DIESE BEDINGUNG GIBT KANN FUER (3-L+IABS(M))/2 ANDERE ERGEBNISSE LIEFERN.
+            NMAX=NT-IABS(M)/M0-L/2+IABS(M)/2+1
+         case(2)
+            IF( CF.EQ.'W' ) THEN
+               NMAX=IDINT( FTW*( NT-IABS(M)/M0+IABS(M)/2-L/2+1 ) )
+            ELSEIF( CF.EQ.'G' ) THEN
+               NMAX=IDINT( FTG*( NT-IABS(M)/M0+IABS(M)/2-L/2+1 ) )
+            ELSE
+               NMAX=NT-IABS(M)/M0+IABS(M)/2-L/2+1
+            ENDIF
+         case(3)
+            IF( CF.EQ.'W' ) THEN
+               NMAX=IDINT( FTW*( NT-L/M0+1 ) )
+            ELSEIF( CF.EQ.'G' ) THEN
+               NMAX=IDINT( FTG*( NT-L/M0+1 ) )
+            ELSE
+               NMAX=NT-L/M0+1
+            ENDIF
+      END select
+   END function NMAX
 
    !--------------------------------------------------------------------------
-      FUNCTION LMIN(CF,M,LEV,LCALC)
-   !--------------------------------------------------------------------------
+   FUNCTION LMIN(CF,M,LEV,LCALC)
       CHARACTER*1 CF
-
       IF( LEV.EQ.0 ) THEN
-   !----- KEINE SYMMETRIE AUSGEZEICHNET:
+         !----- KEINE SYMMETRIE AUSGEZEICHNET:
          IF( CF.EQ.'T' ) THEN
-   !-------- NUR FUER T AUCH L=0 ERLAUBT:
-                  LMIN=IABS(M)
+            !-------- NUR FUER T AUCH L=0 ERLAUBT:
+            LMIN=IABS(M)
          ELSE
             LMIN=MAX0(IABS(M),1)
          ENDIF
       ELSE
-   !----- DIFFERENZIERTE SYMMETRIE:
+         !----- DIFFERENZIERTE SYMMETRIE:
          IF( CF.EQ.'V' ) THEN
-   !-------- POLOIDALES GESCHWINDIGKEITSFELD:
+            !-------- POLOIDALES GESCHWINDIGKEITSFELD:
             IF( LCALC.EQ.1 .AND. LEV.EQ.1 ) THEN
-   !----------- ASYMMETRIE NUR FUER ONSET DER KONVEKTION MOEGLICH:
+               !----------- ASYMMETRIE NUR FUER ONSET DER KONVEKTION MOEGLICH:
                LMIN=IABS(M)+1
             ELSE
-   !----------- SYMMETRISCHES ODER GEMISCHTES FELD:
+               !----------- SYMMETRISCHES ODER GEMISCHTES FELD:
                IF( M.NE.0 ) THEN
                   LMIN=IABS(M)
                ELSE
                   LMIN=2
                ENDIF
-                  ENDIF
+            ENDIF
          ELSEIF( CF.EQ.'W' ) THEN
-   !-------- TOROIDALES GESCHWINDIGKEITSFELD:
+            !-------- TOROIDALES GESCHWINDIGKEITSFELD:
             IF( LEV.EQ.0 .OR. ( LCALC.EQ.1 .AND. LEV.EQ.1 ) ) THEN
-   !----------- SYMMETRISCHES ( FUER ONSET ) ODER GEMISCHTES FELD:
+                  !----------- SYMMETRISCHES ( FUER ONSET ) ODER GEMISCHTES FELD:
                IF( M.NE.0 ) THEN
                   LMIN=IABS(M)
                ELSEIF( M.EQ.0 ) THEN
-   !-------------- M=0 NICHT ERLAUBT:
+                  !-------------- M=0 NICHT ERLAUBT:
                   LMIN=2
                ENDIF
             ELSE
-   !----------- ASYMMETRISCHES FELD:
+               !----------- ASYMMETRISCHES FELD:
                LMIN=IABS(M)+1
-                  ENDIF
+            ENDIF
          ELSEIF( CF.EQ.'T' ) THEN
-   !-------- TEMPERATUR FELD:
+            !-------- TEMPERATUR FELD:
             IF( LCALC.EQ.1 .AND. LEV.EQ.1 ) THEN
-   !----------- ASYMMETRIE NUR FUER ONSET DER KONVEKTION MOEGLICH:
+               !----------- ASYMMETRIE NUR FUER ONSET DER KONVEKTION MOEGLICH:
                LMIN=IABS(M)+1
-                  ELSE
-   !----------- SYMMETRISCHES ODER GEMISCHTES FELD , L=0 MOEGLICH:
+            ELSE
+               !----------- SYMMETRISCHES ODER GEMISCHTES FELD , L=0 MOEGLICH:
                LMIN=IABS(M)
-                  ENDIF
+            ENDIF
          ELSEIF( CF.EQ.'H' ) THEN
-   !-------- POLOIDALES MAGNETFELD:
+            !-------- POLOIDALES MAGNETFELD:
             IF( LEV.EQ.1 ) THEN
-   !----------- ASYMMETRISCHES FELD:
+               !----------- ASYMMETRISCHES FELD:
                LMIN=IABS(M)+1
             ELSEIF( LEV.EQ.2 ) THEN
-   !----------- SYMMETRISCHES FELD:
+               !----------- SYMMETRISCHES FELD:
                IF( M.NE.0 ) THEN
                   LMIN=IABS(M)
                ELSEIF( M.EQ.0 ) THEN
-   !-------------- M=0 NICHT ERLAUBT:
+                  !-------------- M=0 NICHT ERLAUBT:
                   LMIN=2
                ENDIF
-                  ELSE
-   !----------- KEINE SYMMETRIE AUSGEZEICHNET , M=0 VERBOTEN:
-                     LMIN=MAX0(IABS(M),1)
+            ELSE
+               !----------- KEINE SYMMETRIE AUSGEZEICHNET , M=0 VERBOTEN:
+               LMIN=MAX0(IABS(M),1)
             ENDIF
          ELSEIF( CF.EQ.'G' ) THEN
-   !-------- TOROIDALES MAGNETFELD:
+            !-------- TOROIDALES MAGNETFELD:
             IF( LEV.EQ.2 ) THEN
-   !----------- ASYMMETRISCHES FELD:
+               !----------- ASYMMETRISCHES FELD:
                LMIN=IABS(M)+1
             ELSEIF( LEV.EQ.1 ) THEN
-   !----------- SYMMETRISCHES FELD , M=0 NICHT ERLAUBT:
+               !----------- SYMMETRISCHES FELD , M=0 NICHT ERLAUBT:
                IF( M.NE.0 ) THEN
                   LMIN=IABS(M)
                ELSE
                   LMIN=2
                ENDIF
-                  ELSE
-   !----------- KEINE SYMMETRIE AUSGEZEICHNET , M=0 VERBOTEN:
-                     LMIN=MAX0(IABS(M),1)
+            ELSE
+               !----------- KEINE SYMMETRIE AUSGEZEICHNET , M=0 VERBOTEN:
+               LMIN=MAX0(IABS(M),1)
             ENDIF
          ENDIF
       ENDIF
-
-      RETURN
-   END function
+   END function LMIN
 
    !--------------------------------------------------------------------------
    FUNCTION LMAX(M,M0,NT,LT,LTR)
+      implicit none
       IF( LTR.EQ.0 ) THEN
          LMAX=2*(LT/2)+1
       ELSEIF( LTR.EQ.1 ) THEN
@@ -709,47 +684,45 @@
       ENDIF
 
       RETURN
-   END function
+   END function lmax
 
    !--------------------------------------------------------------------------
    FUNCTION MMIN(CF,LRB,M0,MF,NT,LT,LTR,LCALC)
       CHARACTER*1 CF
 
       IF( LCALC.EQ.1 ) THEN
-   !----- ONSET OF CONVECTION
+         !----- ONSET OF CONVECTION
          MMIN=M0
       ELSE
          IF( MF.EQ.0 ) THEN
-            IF( ( CF.EQ.'H' .OR. CF.EQ.'G' ) .AND.
-     &                   LRB.EQ.1 .AND. MOD(M0,2).EQ.0 ) THEN
-   !----------- SUBHARMONISCHES MAGNETFELD:
+            IF( ( CF.EQ.'H' .OR. CF.EQ.'G' ) .AND. LRB.EQ.1 .AND. MOD(M0,2).EQ.0 ) THEN
+               !----------- SUBHARMONISCHES MAGNETFELD:
                MMIN=M0/2
             ELSE
-   !----------- HARMONISCHES MAGNETFELD UND ANDERE FELDER:
+               !----------- HARMONISCHES MAGNETFELD UND ANDERE FELDER:
                MMIN=0
             ENDIF
          ELSE
-   !--------- FLOQUET STOERUNG , SUBTRAKTION VON M0 ERMOEGLICHT VERGLEICH
-!          ZWISCHEN (M0=2,MF=0) UND (M0=2,MF=2)
-            IF( ( CF.EQ.'H' .OR. CF.EQ.'G' ) .AND.
-     &                  LRB.EQ.1 .AND. MOD(M0,2).EQ.0 ) THEN
-   !----------- SUBHARMONISCHES MAGNETFELD:
+            !--------- FLOQUET STOERUNG , SUBTRAKTION VON M0 ERMOEGLICHT VERGLEICH
+            !          ZWISCHEN (M0=2,MF=0) UND (M0=2,MF=2)
+            IF( ( CF.EQ.'H' .OR. CF.EQ.'G' ) .AND. LRB.EQ.1 .AND. MOD(M0,2).EQ.0 ) THEN
+               !----------- SUBHARMONISCHES MAGNETFELD:
                IF( LTR.EQ.0 .OR. LTR.EQ.2 .OR. LTR.EQ.3 ) THEN
-                        MMIN=-LT-M0+MF-M0/2
-                     ELSEIF( LTR.EQ.1 ) THEN
+                  MMIN=-LT-M0+MF-M0/2
+               ELSEIF( LTR.EQ.1 ) THEN
                   MMIN=-NT*M0-M0+MF-M0/2
-                     ENDIF
+               ENDIF
             ELSE
-   !----------- HARMONISCHES MAGNETFELD:
-                     IF( LTR.EQ.0 .OR. LTR.EQ.2 .OR. LTR.EQ.3 ) THEN
-                        MMIN=-LT-M0+MF
-                     ELSEIF( LTR.EQ.1 ) THEN
+               !----------- HARMONISCHES MAGNETFELD:
+               IF( LTR.EQ.0 .OR. LTR.EQ.2 .OR. LTR.EQ.3 ) THEN
+                  MMIN=-LT-M0+MF
+               ELSEIF( LTR.EQ.1 ) THEN
                   MMIN=-NT*M0-M0+MF
-                     ENDIF
+               ENDIF
             ENDIF
          ENDIF
       ENDIF
-   END function
+   END function MMIN
 
    !--------------------------------------------------------------------------
    FUNCTION MMAX(M0,MF,NT,LT,LTR,LCALC)
@@ -763,62 +736,53 @@
                   MMAX=NT*M0+MF
          ENDIF
       ENDIF
-   END function
+   END function MMAX
 
    !--------------------------------------------------------------------------
-!-- SORTS THE KOEFFITIENTS IN THE REQUIRED ORDER.
-!   IF MF.NE.0 THERE HAVE TO BE KOEFFITIENTS WITH M<0 , IF THERE
-!   ARE NOT , THE KOEFFITIENTS FOR M>0 ARE STORED AS KOEFFITIENTS
-!   M<0 WITH CC X AS WELL.
-!   THE X VALUES ARE ONLY TOUCHED FOR LSX.EQ.1 .
-   subroutine SORTK(NK,LSX,X,CF,CRR,L,M,N,K,NUC,NUOM)
+   !-- SORTS THE KOEFFITIENTS IN THE REQUIRED ORDER.
+   !   IF MF.NE.0 THERE HAVE TO BE KOEFFITIENTS WITH M<0 , IF THERE
+   !   ARE NOT , THE KOEFFITIENTS FOR M>0 ARE STORED AS KOEFFITIENTS
+   !   M<0 WITH CC X AS WELL.
+   !   THE X VALUES ARE ONLY TOUCHED FOR LSX.EQ.1 .
+   subroutine SORTK(NK,LSX,X,quantity,CRR,L,M,N,K,NUC,NUOM)
       IMPLICIT REAL*8(A-H,O-Z)
-      CHARACTER*1 CF,CFH
+      CHARACTER*1 quantity,CFH
       CHARACTER*2 CRR,CRRH
-      DIMENSION X(*),CF(*),CRR(*),L(*),M(*),N(*),K(*)
+      DIMENSION X(*),quantity(*),CRR(*),L(*),M(*),N(*),K(*)
 
-      DO 2000 I=2,NK
-         DO 1000 J=1,I-1
-            IF( ( CF(I).EQ.'V' .AND. CF(J).NE.'V' )                 .OR.
-     &                ( CF(I).EQ.'W' .AND.
-     &                  ( CF(J).NE.'V' .AND. CF(J).NE.'W' ) )                .OR.
-     &                ( CF(I).EQ.'T' .AND.
-     &                  ( CF(J).EQ.'H' .OR. CF(J).EQ.'G' ) )                .OR.
-     &                ( CF(I).EQ.'H' .AND. CF(J).EQ.'G' )                 .OR.
-     &              ( CF(J).EQ.CF(I) .AND. L(J).GT.L(I) )                 .OR.
-     &                ( CF(J).EQ.CF(I) .AND. L(J).EQ.L(I) .AND.
-     &                                       M(J).GT.M(I) )                 .OR.
-     &                ( CF(J).EQ.CF(I) .AND. L(J).EQ.L(I) .AND.
-     &                   M(J).EQ.M(I) .AND. N(J).GT.N(I) )                 .OR.
-     &          ( CF(J).EQ.CF(I) .AND. L(J).EQ.L(I) .AND.
-     &                  M(J).EQ.M(I) .AND. N(J).EQ.N(I)  .AND.
-     &                                     K(J).GT.K(I) )                 .OR.
-     &          ( CF(J).EQ.CF(I) .AND. L(J).EQ.L(I) .AND.
-     &                  M(J).EQ.M(I) .AND. N(J).EQ.N(I)  .AND.
-     &                                          K(J).EQ.K(I)  .AND.
-     &                  ( CRR(I).EQ.'RR'  .OR. CRR(J).EQ.'II'  .OR.
-     &                    ( CRR(J).EQ.'RI' .AND. CRR(I).EQ.'IR' ) ) ) ) THEN
+      DO I=2,NK
+         DO J=1,I-1
+            IF( ( quantity(I).EQ.'V' .AND. quantity(J).NE.'V' )                              .OR. &
+                ( quantity(I).EQ.'W' .AND. ( quantity(J).NE.'V' .AND. quantity(J).NE.'W' ) ) .OR. &
+                ( quantity(I).EQ.'T' .AND. ( quantity(J).EQ.'H' .OR. quantity(J).EQ.'G' ) )  .OR. &
+                ( quantity(I).EQ.'H' .AND. quantity(J).EQ.'G' )                              .OR. &
+                ( quantity(J).EQ.quantity(I) .AND. L(J).GT.L(I) )                            .OR. &
+                ( quantity(J).EQ.quantity(I) .AND. L(J).EQ.L(I) .AND. M(J).GT.M(I) )         .OR. &
+                ( quantity(J).EQ.quantity(I) .AND. L(J).EQ.L(I) .AND. M(J).EQ.M(I) .AND. N(J).GT.N(I) )  .OR.&
+                ( quantity(J).EQ.quantity(I) .AND. L(J).EQ.L(I) .AND. M(J).EQ.M(I) .AND. N(J).EQ.N(I)  .AND. K(J).GT.K(I) )  .OR.&
+                ( quantity(J).EQ.quantity(I) .AND. L(J).EQ.L(I) .AND. M(J).EQ.M(I) .AND. N(J).EQ.N(I)  .AND. K(J).EQ.K(I)  .AND. &
+                ( CRR(I).EQ.'RR'  .OR. CRR(J).EQ.'II'  .OR. ( CRR(J).EQ.'RI' .AND. CRR(I).EQ.'IR' ) ) ) ) THEN
                IF( LSX.EQ.1 ) XH=X(I)
-                     CFH=CF(I)
-                     CRRH=CRR(I)
-                     LH=L(I)
-                     MH=M(I)
-                     NH=N(I)
-                     KH=K(I)
-                     IF( LSX.EQ.1 ) X(I)=X(J)
-                     CF(I)=CF(J)
-                     CRR(I)=CRR(J)
-                     L(I)=L(J)
-                     M(I)=M(J)
-                     N(I)=N(J)
-                     K(I)=K(J)
-                     IF( LSX.EQ.1 ) X(J)=XH
-                     CF(J)=CFH
-                     CRR(J)=CRRH
-                     L(J)=LH
-                     M(J)=MH
-                     N(J)=NH
-                     K(J)=KH
+               CFH=quantity(I)
+               CRRH=CRR(I)
+               LH=L(I)
+               MH=M(I)
+               NH=N(I)
+               KH=K(I)
+               IF( LSX.EQ.1 ) X(I)=X(J)
+               quantity(I)=quantity(J)
+               CRR(I)=CRR(J)
+               L(I)=L(J)
+               M(I)=M(J)
+               N(I)=N(J)
+               K(I)=K(J)
+               IF( LSX.EQ.1 ) X(J)=XH
+               quantity(J)=CFH
+               CRR(J)=CRRH
+               L(J)=LH
+               M(J)=MH
+               N(J)=NH
+               K(J)=KH
                IF( LSX.EQ.1 ) THEN
                   IF( I.EQ.NUC ) THEN
                      NUC=J
@@ -832,33 +796,27 @@
                   ENDIF
                ENDIF
                   ENDIF
-1000     CONTINUE
-2000  CONTINUE
+         enddo
+      enddo
+   END subroutine SORTK
 
-      RETURN
-   END subroutine
-
-   !----------------------------------------------------------------------
-
-
-   !----------------------------------------------------------------------
+   !--------------------------------------------------------------------------
+   !-- BESTIMMUNG DER SYMMETRIE DES EINGABEVEKTORS:
+   !   EINE SEPARATION IN E-SYMMETRISCHES ODER E-ASYMMETRISCHES MAGNETFELD
+   !   IST NUR MOEGLICH, WENN DAS GESCHWINDIGKEITSFELD REIN E-SYMMETRISCH IST.
+   !   SONST MUESSEN SOWOHL IM MAGNETFELD ALS AUCH IN V ALLE SYMMETRISCHEN WIE
+   !   AUCH ANTISYMMETRISCHEN KOMPONENTEN MITGENOMMEN WERDEN.
+   !   FUER GERADES M0 KANN DAS MAGNETFELD ROTATIONSSYMMETRISCH (LRB=2 ) ODER
+   !   ROTATIONSANTISYMMETRISCH (LRB=1 ) SEIN. IST KEIN MAGNETFELD VORHANDEN,
+   !   SO WIRD LRB=0 GESETZ. FERNER GIBT DANN LEV DIE SYMMETRIE DES V-FELDES
+   !   AN MIT LEV=1 :E-ASYMMETRISCH UND LEV=2:E-SYMMETRISCH SOWIE LEV=0:
+   !   KEINE SYMMETRIE AUSGEZEICHNET. MIT MAGNETFELD WIRD IM FALLE LEV>0
+   !   IN E-SYMMETRISCHES V-FELD VORRAUSGESETZT, LEV GIBT DANN AUSKUNFT UEBER
+   !   DIE SYMMETRIE DES MAGNETFELDES: LEV=1:E-ASYMMETRISCH USW. .
    subroutine GETSYM(LCALC,ND,CF,L,M,M0,LEV,LRB,LD)
-   !----------------------------------------------------------------------
       CHARACTER*1 CF
       DIMENSION CF(*),L(*),M(*)
 
-!-- BESTIMMUNG DER SYMMETRIE DES EINGABEVEKTORS:
-!   EINE SEPARATION IN E-SYMMETRISCHES ODER E-ASYMMETRISCHES MAGNETFELD
-!   IST NUR MOEGLICH, WENN DAS GESCHWINDIGKEITSFELD REIN E-SYMMETRISCH IST.
-!   SONST MUESSEN SOWOHL IM MAGNETFELD ALS AUCH IN V ALLE SYMMETRISCHEN WIE
-!   AUCH ANTISYMMETRISCHEN KOMPONENTEN MITGENOMMEN WERDEN.
-!   FUER GERADES M0 KANN DAS MAGNETFELD ROTATIONSSYMMETRISCH (LRB=2 ) ODER
-!   ROTATIONSANTISYMMETRISCH (LRB=1 ) SEIN. IST KEIN MAGNETFELD VORHANDEN,
-!   SO WIRD LRB=0 GESETZ. FERNER GIBT DANN LEV DIE SYMMETRIE DES V-FELDES
-!   AN MIT LEV=1 :E-ASYMMETRISCH UND LEV=2:E-SYMMETRISCH SOWIE LEV=0:
-!   KEINE SYMMETRIE AUSGEZEICHNET. MIT MAGNETFELD WIRD IM FALLE LEV>0
-!   IN E-SYMMETRISCHES V-FELD VORRAUSGESETZT, LEV GIBT DANN AUSKUNFT UEBER
-!   DIE SYMMETRIE DES MAGNETFELDES: LEV=1:E-ASYMMETRISCH USW. .
       LVSYM=0
       LVASYM=0
       LHSYM=0
@@ -913,11 +871,9 @@
          LRB=2
       ENDIF
       IF( LCALC.EQ.3 .OR. LCALC.EQ.5 .OR. LCALC.EQ.7 ) LRB=0
+   END subroutine GETSYM
 
-      RETURN
-      END
-
-   !-----------------------------------------------------------------------
+   !--------------------------------------------------------------------------
    subroutine INPUTCHECK(LCALCI,LIC,TIME0)
       IMPLICIT REAL*8(A-H,O-Z)
 
@@ -929,16 +885,16 @@
       COMMON/GAL/LL,LLC,LLM,LNL,LNLC,LNLM,LNLS,LDJ,LDK,LZ
       COMMON/CALLS/NCNONLIN,NCLIN,NCSETBL,NCINPUT
 
-!-- LDIFF INDICATES WETHER A DIFFERENCE IS FOUND ORE NOT:
+      !-- LDIFF INDICATES WETHER A DIFFERENCE IS FOUND ORE NOT:
       LDIFFPAR=0
       LDIFFTRUNC=0
 
-!-- FOR STAIBILITY ANALYSIS THE PARAMETERS OF THE INPUTFILE ARE
-!   NOT INTERISTING:
+      !-- FOR STAIBILITY ANALYSIS THE PARAMETERS OF THE INPUTFILE ARE
+      !   NOT INTERISTING:
       IF( ( LCALC.EQ.7 .OR. LCALC.EQ.8 ) .AND. NCINPUT.EQ.1 ) GOTO 10
 
-!-- ARE THE PARAMETERS CONCERNING THE MAGNETIC FIELD
-!   HAVE TO BE CHECKED?
+      !-- ARE THE PARAMETERS CONCERNING THE MAGNETIC FIELD
+      !   HAVE TO BE CHECKED?
       IF( ( LCALCI.EQ.2 .OR. LCALCI.EQ.4 .OR. LCALCI.EQ.6 ) .AND.
      &    ( LCALC.EQ.2  .OR. LCALC.EQ.4  .OR. LCALC.EQ.6  ) ) THEN
          LMAG=1
@@ -954,11 +910,11 @@
          LMAG=0
       ENDIF
 
-!-- THE TRUNCATION PARAMETERS ARE ONLY CHECKED IF LREAD.EQ.0 ,
-!   OTHERWISE THEY WILL BE OVERWRITTEN BY THE TRUNCATION OF THE
-!   INPUTFILE ANYWAY.
+      !-- THE TRUNCATION PARAMETERS ARE ONLY CHECKED IF LREAD.EQ.0 ,
+      !   OTHERWISE THEY WILL BE OVERWRITTEN BY THE TRUNCATION OF THE
+      !   INPUTFILE ANYWAY.
 
-!-- FOR LIC=1 THE PROGRAM IS STOPED IF A DIFFERENCE IS FOUND.
+      !-- FOR LIC=1 THE PROGRAM IS STOPED IF A DIFFERENCE IS FOUND.
 
       IF( M0.NE.M0I ) THEN
          WRITE(*,*) 'NEW GROUND MODE (OLD,NEW):.',M0,M0I
@@ -1011,16 +967,13 @@
          LDIFFTRUNC=1
       ENDIF
       IF( LMAG.EQ.-1 .AND. LEV.EQ.LEVI .AND. LEV*LEVI.NE.0 ) THEN
-
-!-- GOING FROM THE NON MAGNETIC TO THE MAGNETIC CASE, ORE VICE
-!   VERSA, LEV CHANGES IT MEANING, SO A CHANGE IS NECESARRY IF
-!   LEV.NE.0 .
-         WRITE(*,*) 'WRONG EQUATORIAL SYMMETRY (OLD,NEW):',
-     &                                                  LEV,LEVI
+         !-- GOING FROM THE NON MAGNETIC TO THE MAGNETIC CASE, ORE VICE
+         !   VERSA, LEV CHANGES IT MEANING, SO A CHANGE IS NECESARRY IF
+         !   LEV.NE.0 .
+         WRITE(*,*) 'WRONG EQUATORIAL SYMMETRY (OLD,NEW):', LEV,LEVI
          STOP
       ELSEIF( LMAG.NE.-1 .AND. LEV.NE.LEVI ) THEN
-         WRITE(*,*) 'WRONG EQUATORIAL SYMMETRY (OLD,NEW):',
-     &                                                  LEV,LEVI
+         WRITE(*,*) 'WRONG EQUATORIAL SYMMETRY (OLD,NEW):', LEV,LEVI
          STOP
       ENDIF
       IF( LRB.NE.LRBI .AND. LMAG.EQ.1 ) THEN
@@ -1028,17 +981,15 @@
          LDIFFTRUNC=1
       ENDIF
       IF( FTW.NE.FTWI .AND. LREAD.EQ.0 ) THEN
-         WRITE(*,*) 'NEW TRUNCATION FACTOR FOR W (OLD,NEW):',
-     &                                                        FTWI,FTW
+         WRITE(*,*) 'NEW TRUNCATION FACTOR FOR W (OLD,NEW):', FTWI,FTW
          LDIFFTRUNC=1
       ENDIF
       IF( FTG.NE.FTGI .AND. LMAG.EQ.1 ) THEN
-         WRITE(*,*) 'NEW TRUNCATION FACTOR FOR G (OLD,NEW):',
-     &                                                        FTGI,FTG
+         WRITE(*,*) 'NEW TRUNCATION FACTOR FOR G (OLD,NEW):', FTGI,FTG
          LDIFFTRUNC=1
       ENDIF
 
-!-- FOR STABILITY ANALYSIS THE PARAMETERS OF THE INPUTFILE ARE TAKEN:
+      !-- FOR STABILITY ANALYSIS THE PARAMETERS OF THE INPUTFILE ARE TAKEN:
 10    CONTINUE
       IF( LCALC.EQ.7 .OR. LCALC.EQ.8 ) THEN
          ETA=ETAI
@@ -1059,10 +1010,10 @@
          PM=PMI
       ENDIF
 
-!-- IF THE DIMENSION CHANGES FOR A NEW INPUTFILE, ALL TERMS
-!   HAVE TO BE RECALCULATED, BECAUSE THEIR ORDER IN THE VECTOR x
-!   CHANGES, FOR A CHANGE IN THE PARAMETERS ONLY LINEAR TERMS
-!   MUST BE CALCULATED NEW:
+      !-- IF THE DIMENSION CHANGES FOR A NEW INPUTFILE, ALL TERMS
+      !   HAVE TO BE RECALCULATED, BECAUSE THEIR ORDER IN THE VECTOR x
+      !   CHANGES, FOR A CHANGE IN THE PARAMETERS ONLY LINEAR TERMS
+      !   MUST BE CALCULATED NEW:
       IF( NCINPUT.GT.1 ) THEN
          IF( LDIFFTRUNC.EQ.1 ) THEN
             LL=1
@@ -1078,8 +1029,5 @@
          WRITE(*,*) 'NEW DATASET'
          TIME0=0.D0
       ENDIF
-
-      RETURN
-   END
-
+   END subroutine INPUTCHECK
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
