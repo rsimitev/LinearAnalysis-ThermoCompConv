@@ -78,7 +78,7 @@ program linearOnset
       case(3)
          LowerLimit = tau
          call varyTauCriticalState(LowerLimit, UpperLimit)
-      !> Computes the eigen vector (equatorial render)
+      !> Computes the eigen vector
       !! Corresponding to the critical value of Rt with all other parameters 
       !! fixed.
 !      case(4)
