@@ -81,8 +81,8 @@ program linearOnset
       !> Computes the eigen vector
       !! Corresponding to the critical value of Rt with all other parameters 
       !! fixed.
-!      case(4)
-!         call fixedParCriticalEigenVector()
+      case(4)
+         call fixedParCriticalEigenVector()
       !> Computes the critical thermal Rayleigh number for a range of
       !! azimuthal wave-numbers m.
       case(5)
@@ -322,123 +322,122 @@ contains
       ENDIF
    end subroutine
 
-!   !**********************************************************************
-!   !> Computes and Writes out the eigen vector (equatorial render)
-!   !! Corresponding to the critical value of Rt with all other parameters 
-!   !! fixed.
-!   subroutine fixedParCriticalEigenVector()
-!      implicit none
-!      double precision:: GroR, Omega, Ta
-!      complex(8), allocatable:: ZEVEC(:), zew(:), ZEVAL(:,:)
-!      integer:: info, i, ni, li, lti, lpi, Nmodes
-!      integer:: NTH, KTV, KTH, LTV, LTH, lst, NUC
-!      double precision:: GRR, GRI, Pm, C0,CriticalRt, OMM
-!      integer:: nuds, nuom, MF, LMAX, NIMAX
+   !**********************************************************************
+   !> Computes and Writes out the eigen vector (equatorial render)
+   !! Corresponding to the critical value of Rt with all other parameters 
+   !! fixed.
+   subroutine fixedParCriticalEigenVector()
+      implicit none
+      double precision:: GroR, Omega, Ta
+      complex(8), allocatable:: ZEVEC(:), zew(:), ZEVAL(:,:)
+      integer:: info, i, ni, li, lti, lpi, Nmodes
+      integer:: NTH, KTV, KTH, LTV, LTH, lst, NUC
+      double precision:: GRR, GRI, Pm, C0,CriticalRt, OMM
+      integer:: nuds, nuom, MF, LMAX, NIMAX
+
+      Ta = TAU*TAU
+      ! find the zero grothrate:
+      call fixedParCriticalParAndM0_v2()
+      Nmodes = getEigenProblemSize()
+      allocate( ZEVEC(Nmodes), zew(Nmodes), ZEVAL(Nmodes,Nmodes))
+      call computeGrowthRateModes(.TRUE.,zew,zeval)
+      GROR  = DIMAG(zew(1))
+      Omega = -dble(zew(1))
+      zevec(:) = zeval(:,1)
+
+      IF(info.NE.0) THEN
+         WRITE(unitOut,*) 'NO CRITICAL RAYLEIGH NUMBER FOUND.'
+         STOP NO_RA_FOUND
+      endif 
+      ! print eigenvector
+      ! Fileformat for outputfile:
+      ! outputFormat=0 formatted Wicht
+      ! outputFormat=1 formatted Hirsching
+      ! outputFormat=3 unformatted
+      outputFormat=0
+      WRITE(unitOut,'(2I2,'' LINEAR ONSET '')')  outputFormat,LCALC
+      NTH=0
+      KTV=0
+      KTH=0
+      LTV=0
+      LTH=0
+      GRR=0.D0
+      GRI=0.D0
+      WRITE(unitOut,'(I2,7I3,2D16.8,'' M0,TRUNC,LD,GROTH,DRIFT'')')  M0,Truncation,NTH,KTV,KTH,LTV,LTH,LD,GRR,GRI
+      NUDS=1
+      PM=0.D0
+      WRITE(unitOut, '(I5,2D14.6,D9.2,D13.6,D9.2,'' I,Ta,Rt,Pt,PM,E'')') NUDS,Ta,CriticalRt,Pt,PM,ETA
+      C0 = OMEGA/M0
+      OMM=0.D0
+      NUC=0
+      NUOM=0
+      MF=0
+      WRITE(unitOut,9100) C0,OMM,NUC,NUOM,MF
+9100      FORMAT(2D17.10,3I4,'    C,OM, WHERE?,FLOQUET')
+
+      LMAX=2*Truncation+M0-1
+      I=0
+      DO LI=LMIN,LMAX,LD
+         !  L for poloidal (v) field:
+         LPI = LI
+         NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
+         DO NI=1,NIMAX
+            IF( outputFormat.EQ.0 ) THEN
+               WRITE(unitOut,'(1X,A1,4I3,4D16.8)') 'V',LPI,M0,NI,0, DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),0.D0,0.D0
+            ELSEIF(outputFormat.EQ.3) THEN
+               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''V ''',LPI,M0,NI,0,' ', DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),' .0D+00 .0D+00 '
+            ENDIF
+            I=I+4
+         enddo
+      enddo
 !
-!      Ta = TAU*TAU
-!      ! find the zero grothrate:
-!      CriticalRt = Rt
-!      call minimizer(MaxGrowthRate, Rt/10, Rt*10, RELE ,ABSE, NSMAX, CriticalRt, info)
-!      Rt = CriticalRt
-!      Nmodes = getEigenProblemSize()
-!      allocate( ZEVEC(Nmodes), zew(Nmodes), ZEVAL(Nmodes,Nmodes))
-!      call computeGrowthRateModes(.TRUE.,zew,zeval)
-!      GROR  = DIMAG(zew(1))
-!      Omega = -dble(zew(1))
-!      zevec(:) = zeval(:,1)
+      I=0
+      DO LI=LMIN,LMAX,LD
+!           L for toroidal (w) field:
+         IF( Symmetry.EQ.2 ) THEN
+         LTI=LI+1
+         ELSEIF( Symmetry.EQ.1 ) THEN
+         LTI=LI-1
+         ELSEIF( Symmetry.EQ.0 ) THEN
+         LTI=LI
+         ENDIF
+         NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
+         DO NI=1,NIMAX
+            IF( outputFormat.EQ.0 ) THEN
+               WRITE(unitOut,'(1X,A1,4I3,4D16.8)') 'W',LTI,M0,NI,0, DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),0.D0,0.D0
+            ELSEIF(outputFormat.EQ.3) THEN
+               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''W ''',LTI,M0,NI,0,' ', DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),' .0D+00 .0D+00 '
+            ENDIF
+            I=I+4
+         enddo
+      enddo
 !
-!      IF(info.EQ.0) THEN
-!         ! print eigenvector
-!         ! Fileformat for outputfile:
-!         ! LST=0 formatted Wicht
-!         ! LST=1 formatted Hirsching
-!         ! LST=3 unformatted
-!          LST=0
-!          WRITE(unitOut,'(2I2,'' LINEAR ONSET '')')  LST,LCALC
-!          NTH=0
-!          KTV=0
-!          KTH=0
-!          LTV=0
-!          LTH=0
-!          GRR=0.D0
-!          GRI=0.D0
-!          WRITE(unitOut,'(I2,7I3,2D16.8,'' M0,TRUNC,LD,GROTH,DRIFT'')')  M0,Truncation,NTH,KTV,KTH,LTV,LTH,LD,GRR,GRI
-!          NUDS=1
-!          PM=0.D0
-!          WRITE(unitOut, '(I5,2D14.6,D9.2,D13.6,D9.2,'' I,Ta,Rt,Pt,PM,E'')') NUDS,Ta,CriticalRt,Pt,PM,ETA
-!          C0 = OMEGA/M0
-!          OMM=0.D0
-!          NUC=0
-!          NUOM=0
-!          MF=0
-!          WRITE(unitOut,9100) C0,OMM,NUC,NUOM,MF
-!9100      FORMAT(2D17.10,3I4,'    C,OM, WHERE?,FLOQUET')
+      I=0
+      DO LI=LMIN,LMAX,LD
+         NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
+         DO NI=1,NIMAX
+            IF( outputFormat.EQ.0 ) THEN
+               WRITE(unitOut,'(1X,A1,4I3,4D16.8)') 'T',LI,M0,NI,0, DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),0.D0,0.D0
+            ELSEIF(outputFormat.EQ.3) THEN
+               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''T ''',LI,M0,NI,0,' ', DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),' .0D+00 .0D+00 '
+            ENDIF
+            I=I+4
+         enddo
+      enddo
 !
-!          LMAX=2*Truncation+M0-1
-!          I=0
-!          DO 3000 LI=LMIN,LMAX,LD
-!!           L for poloidal (v) field:
-!            LPI = LI
-!            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
-!            DO 3000 NI=1,NIMAX
-!              IF( LST.EQ.0 ) THEN
-!               WRITE(unitOut,9200) 'V',LPI,M0,NI,0, DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),0.D0,0.D0
-!              ELSEIF(LST.EQ.3) THEN
-!               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''V ''',LPI,M0,NI,0,' ', DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),' .0D+00 .0D+00 '
-!              ENDIF
-!             I=I+4
-!3000      CONTINUE
-!!
-!          I=0
-!          DO 3200 LI=LMIN,LMAX,LD
-!!           L for toroidal (w) field:
-!            IF( Symmetry.EQ.2 ) THEN
-!             LTI=LI+1
-!            ELSEIF( Symmetry.EQ.1 ) THEN
-!             LTI=LI-1
-!            ELSEIF( Symmetry.EQ.0 ) THEN
-!             LTI=LI
-!            ENDIF
-!            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
-!            DO 3200 NI=1,NIMAX
-!              IF( LST.EQ.0 ) THEN
-!               WRITE(unitOut,9200) 'W',LTI,M0,NI,0, DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),0.D0,0.D0
-!              ELSEIF(LST.EQ.3) THEN
-!               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''W ''',LTI,M0,NI,0,' ', DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),' .0D+00 .0D+00 '
-!              ENDIF
-!              I=I+4
-!3200      CONTINUE
-!!
-!          I=0
-!          DO 3400 LI=LMIN,LMAX,LD
-!            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
-!            DO 3400 NI=1,NIMAX
-!              IF( LST.EQ.0 ) THEN
-!               WRITE(unitOut,9200) 'T',LI,M0,NI,0, DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),0.D0,0.D0
-!              ELSEIF(LST.EQ.3) THEN
-!               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''T ''',LI,M0,NI,0,' ', DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),' .0D+00 .0D+00 '
-!              ENDIF
-!             I=I+4
-!3400      CONTINUE
-!!
-!          I=0
-!          DO 3600 LI=LMIN,LMAX,LD
-!            NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
-!            DO 3600 NI=1,NIMAX
-!              IF( LST.EQ.0 ) THEN
-!               WRITE(unitOut,9200) 'G',LI,M0,NI,0, DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),0.D0,0.D0
-!              ELSEIF(LST.EQ.3) THEN
-!               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''G ''',LI,M0,NI,0,' ', DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),' .0D+00 .0D+00 '
-!              ENDIF
-!             I=I+4
-!3600      CONTINUE
-!!
-!9200            FORMAT(1X,A1,4I3,4D16.8)
-!         ELSE
-!          WRITE(unitOut,*) 'NO CRITICAL RAYLEIGH NUMBER FOUND.'
-!          STOP NO_RA_FOUND
-!       ENDIF
-!   end subroutine
+      I=0
+      DO LI=LMIN,LMAX,LD
+         NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
+         DO NI=1,NIMAX
+            IF( outputFormat.EQ.0 ) THEN
+               WRITE(unitOut,'(1X,A1,4I3,4D16.8)') 'G',LI,M0,NI,0, DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),0.D0,0.D0
+            ELSEIF(outputFormat.EQ.3) THEN
+               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''G ''',LI,M0,NI,0,' ', DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),' .0D+00 .0D+00 '
+            ENDIF
+            I=I+4
+         enddo
+      enddo
+   end subroutine
 
    !**********************************************************************
    !> Computes the critical thermal Rayleigh number as a function of tau
