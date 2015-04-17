@@ -15,12 +15,13 @@ PROGRAM LARA
    integer, PARAMETER:: NMX = 65, NMY = 128
    integer:: NMC
    integer:: NCPLOT, LR, NQ, NR, n, l
-   integer:: drawPlotNum, drawFrame, drawHeader, drawTime, contourDistanceOrNumber
+   integer:: drawPlotNum, drawFrame, drawHeader, drawTime
+   logical:: countourParIsNumber
    integer:: dataSetNumber
    CHARACTER*40 INPUTFILE,OUTPUTFILE
    CHARACTER*30 CTEXT1
    CHARACTER*10 CTEXT2
-   CHARACTER*1 CF,CFS
+   CHARACTER*1 whatToPlot,CFS
    CHARACTER*2 CRR
    integer:: timeSeriesControl
    INTEGER:: i, j
@@ -28,13 +29,13 @@ PROGRAM LARA
    double precision:: dt
    double precision:: headerSpaceY
 
-   double precision:: DX(NM), XC(nPlotsMAX,nSubPlotsMAX),XRMU(nPlotsMAX,nSubPlotsMAX)
-   double precision:: TIME(nPlotsMAX), ZD(nPlotsMAX,nSubPlotsMAX)
+   double precision:: DX(NM), constantCoordinateValue(nPlotsMAX,nSubPlotsMAX),normRadiusMax(nPlotsMAX,nSubPlotsMAX)
+   double precision:: TIME(nPlotsMAX), contourPar(nPlotsMAX,nSubPlotsMAX)
    integer:: nSubPlots(nPlotsMAX)
    character(len=1):: constantCoordinate(nPlotsMAX,nSubPlotsMAX), thisPlotconstantCoordinate(NPAM)
    character(len=2):: whatToPlot(nPlotsMAX,nSubPlotsMAX), thisPlotWhatToPlot(NPAM)
    character(len=2):: domain(nPlotsMAX), quadrant(nPlotsMAX,nSubPlotsMAX), thisPlotQuadrant(NPAM), XCP(NPAM)
-   character(len=3):: ABCNUMI(nPlotsMAX,nSubPlotsMAX), ABCN(NPAM)
+   character(len=3):: subPlotLabel(nPlotsMAX,nSubPlotsMAX), ABCN(NPAM)
    double precision:: zdo
    DIMENSION ZDP(NPAM),TIMEP(NPAM)
    DIMENSION XOR(NPAM),YOR(NPAM),XAR(NPAM),YAR(NPAM)
@@ -42,7 +43,7 @@ PROGRAM LARA
 
    COMMON/LOG/LCALC,LWRITE,LTR,LVAR,LDY,LT,L7,L8,L9,L10
    COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-   COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+   COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
    COMMON/QNUS/NMSC,LS(NM),MS(NM),NS(NM),CFS(NM)
    COMMON/PAR/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
    COMMON/PARI/RAI,TAI,PRI,PMI,ETAI,CI,OMI,FTWI,FTGI,MFI
@@ -60,11 +61,12 @@ PROGRAM LARA
    LR = 0
    NQ = 0
    NR = 0
-!      OPEN(11,FILE = PARFILE,STATUS = 'old')
+
    READ(*,*)
-   READ(*,*) INPUTFILE,OUTPUTFILE,dataSetNumber,DC
+   READ(*,*) INPUTFILE,OUTPUTFILE,dataSetNumber,driftRate
    READ(*,*)
-   READ(*,*) timeSeriesControl,drawHeader,drawPlotNum,drawTime,plotSize,contourDistanceOrNumber,drawFrame
+   READ(*,*) timeSeriesControl, drawHeader, drawPlotNum, drawTime, &
+             plotSize, countourParIsNumber, drawFrame
 
    !-- drawHeader CONTROLLS THE HEAD:
    !   drawHeader = 0 : NHEAD,
@@ -72,14 +74,14 @@ PROGRAM LARA
    !   drawPlotNum = 0 : NO PLOTNUMBERS
    !   drawPlotNum = 1 : PLOTNUMBERS WITH DESCRIPTION,
    !   drawPlotNum = 2 : PLOTNUMBERS WITHOUT DESCRIPTION,
-   !   drawPlotNum = 3 : PLOTNUMBERS GIVEN BY ABCNUMI,
+   !   drawPlotNum = 3 : PLOTNUMBERS GIVEN BY subPlotLabel,
    !   drawTime CONTROLLS WETHER THE TIME IS WRITTEN (0/1).
    !   plotSize DETERMINS THE SIZE OF THE PLOT:
    !   plotSize = 0 : SMALL
    !   plotSize = 1 : MEDIUM
    !   plotSize = 2 : BIG
-   !   contourDistanceOrNumber CONTROLLS WETHER ZD IS THE NUMBER OF CONTOURLINES (contourDistanceOrNumber = 1) OR
-   !   THE DIFFERENCE BETWEEN THE CONTOUR LEVELS (contourDistanceOrNumber = 0).
+   !   countourParIsNumber CONTROLLS WETHER contourPar IS THE NUMBER OF CONTOURLINES (countourParIsNumber = .true.) OR
+   !   THE DIFFERENCE BETWEEN THE CONTOUR LEVELS (countourParIsNumber = .false.).
    !   FOR drawFrame = 1 A FRAME IS DRAWN AROUND EACH SUBPLOT.
    !   timeSeriesControl CONTROLLS TIMESERIES
    !   timeSeriesControl = 0  : NORMAL
@@ -97,10 +99,6 @@ PROGRAM LARA
    ENDIF
    IF( drawHeader.NE.0 .AND. drawHeader.NE.1 ) THEN
       WRITE(*,*) 'WRONG INPUT OF drawHeader: ',drawHeader
-      STOP
-   ENDIF
-   IF( contourDistanceOrNumber.NE.0 .AND. contourDistanceOrNumber.NE.1 ) THEN
-      WRITE(*,*) 'WRONG INPUT OF contourDistanceOrNumber: ',contourDistanceOrNumber
       STOP
    ENDIF
    IF( drawFrame.NE.0 .AND. drawFrame.NE.1 ) THEN
@@ -147,9 +145,9 @@ PROGRAM LARA
       READ(*,*)
       READ(*,*) domain(I),TIME(I),nSubPlots(I)
       if(nSubPlots(I).ne.1) then
-            write(*,*) 'wrong number of plots.'
-            stop
-         endif
+         write(*,*) 'wrong number of plots.'
+         stop
+      endif
 
       IF( nSubPlots(I).GT.nSubPlotsMAX ) THEN
          WRITE(*,*) 'TOO BIG NUMBER OF SUBPLOTS nSubPlots:',nSubPlots(I)
@@ -164,8 +162,8 @@ PROGRAM LARA
       !----- quadrant DESTINGUSHES BETWEEN QUADRANTS (quadrant = 'Q1','Q2','Q3','Q4') ,
       !      HALF SPHERES ( quadrant = 'HL','HR','HU','HO') ,SPHERE ( quadrant = 'SP' )
       !      PROJECTION ON A SPHERE ( quadrant = ' PS','PL','PR' ) .
-      !      constantCoordinate DETERMINS WETHER R = XC (constantCoordinate = 'R') , PHI = XC (constantCoordinate = 'P') OR
-      !      THETA = XC (constantCoordinate = 'T') IS KEPT CONSTANT ,
+      !      constantCoordinate DETERMINS WETHER R = constantCoordinateValue (constantCoordinate = 'R') , PHI = constantCoordinateValue (constantCoordinate = 'P') OR
+      !      THETA = constantCoordinateValue (constantCoordinate = 'T') IS KEPT CONSTANT ,
       !      whatToPlot DETERMINS THE FIELD TO BE PLOTTED:
       !      'VS' : STREAMFUNCTIONS OF VELOCITY FIELD IN BUSSE NOTATION,
       !      'BS' : STREAMFUNCTIONS OF MAGNETIC FIELD IN BUSSE NOTATION,
@@ -184,12 +182,17 @@ PROGRAM LARA
       !      'UP' : Phi component of velocity,
       !      'NU' : local Nusselt number for r = ri.
       !
-      !      XRMU IS A MULTIPLIER FOR THE LARGEST RADIUS TO BE PLOTTED: RM = XRMU*RO.
-      !      ZD IS THE STEP FOR THE CONTOURS FOR contourDistanceOrNumber = 0 OR
+      !      normRadiusMax IS A MULTIPLIER FOR THE LARGEST RADIUS TO BE PLOTTED: RM = normRadiusMax*RO.
+      !      contourPar IS THE STEP FOR THE CONTOURS FOR countourParIsNumber = .false. OR
       !      THE NUMBER OF CONTPUR LINES FOR Z>0 OR Z<0.
+      ! Next two lines  are repeated for the number of subplots
+      !| SUBPL | PLANE(RPT) | CONST | FIELD |(MAX RAD)/RO|contourPar/STEP|PlotNR|
+      !   'SP'      'T'        90      'VS'     1.E0          9    '000'
       DO J = 1,nSubPlots(I)
          READ(*,*)
-         READ(*,*) quadrant(I,J),constantCoordinate(I,J),XC(I,J),whatToPlot(I,J), XRMU(I,J),ZD(I,J),ABCNUMI(I,J)
+         READ(*,*) quadrant(I,J), constantCoordinate(I,J), &
+                   constantCoordinateValue(I,J), whatToPlot(I,J), &
+                   normRadiusMax(I,J),contourPar(I,J),subPlotLabel(I,J)
       enddo
    enddo
    !-- END OF PARAMETER INPUT.
@@ -230,36 +233,36 @@ PROGRAM LARA
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
          ENDIF
-         IF( constantCoordinate(I,J).EQ.'R' ) XRMU(I,J) = 1.E0
+         IF( constantCoordinate(I,J).EQ.'R' ) normRadiusMax(I,J) = 1.E0
 !
-         IF( constantCoordinate(I,J).EQ.'P' .AND. XC(I,J).GT.360.E0 ) THEN
+         IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.360.E0 ) THEN
             WRITE(*,*) 'PHI SHOULD BE GIVEN IN DEGREES < =  360.'
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
-         ELSEIF( constantCoordinate(I,J).EQ.'T' .AND. XC(I,J).GT.180.E0 ) THEN
+         ELSEIF( constantCoordinate(I,J).EQ.'T' .AND. constantCoordinateValue(I,J).GT.180.E0 ) THEN
             WRITE(*,*) 'THETA SHOULD BE GIVEN IN DEGREES < =  180.'
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
-         ELSEIF(  constantCoordinate(I,J).EQ.'R' .AND. ( XC(I,J).LT.0.E0 .OR. XC(I,J).GT.1.E0 )  )THEN
+         ELSEIF(  constantCoordinate(I,J).EQ.'R' .AND. ( constantCoordinateValue(I,J).LT.0.E0 .OR. constantCoordinateValue(I,J).GT.1.E0 )  )THEN
             WRITE(*,*) 'RREL SHOULD BE > = 0 , < =  1 .'
             WRITE(*,*) 'RREL IS DEFINED AS: R = RI+RREL*(RO-RI).'
             WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
             STOP
          ENDIF
          IF(  constantCoordinate(I,J).EQ.'P' ) THEN
-            IF( XC(I,J).LT.0.E0 ) XC(I,J) = XC(I,J)+360.E0
+            IF( constantCoordinateValue(I,J).LT.0.E0 ) constantCoordinateValue(I,J) = constantCoordinateValue(I,J)+360.E0
             IF(( quadrant(I,J).EQ.'Q1' .OR. &
-               quadrant(I,J).EQ.'Q4' .OR. &
-               quadrant(I,J).EQ.'HR' ) .AND. &
-               XC(I,J).GT.180.E0 .AND. &
-               XC(I,J).LT.360.E0 ) THEN
-               XC(I,J) = XC(I,J) - 180.E0
+                 quadrant(I,J).EQ.'Q4' .OR. &
+                 quadrant(I,J).EQ.'HR' ) .AND. &
+                 constantCoordinateValue(I,J).GT.180.E0 .AND. &
+                 constantCoordinateValue(I,J).LT.360.E0 ) THEN
+                 constantCoordinateValue(I,J) = constantCoordinateValue(I,J) - 180.E0
             ELSEIF(( quadrant(I,J).EQ.'Q2' .OR. &
                      quadrant(I,J).EQ.'Q3' .OR. &
                      quadrant(I,J).EQ.'HL' ) .AND. &
-                     XC(I,J).LT.180.E0 .AND. &
-                     XC(I,J).GT.0.E0 ) THEN
-               XC(I,J) = XC(I,J) + 180.E0
+                     constantCoordinateValue(I,J).LT.180.E0 .AND. &
+                     constantCoordinateValue(I,J).GT.0.E0 ) THEN
+               constantCoordinateValue(I,J) = constantCoordinateValue(I,J) + 180.E0
             ENDIF
          ENDIF
          IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MT' ) THEN
@@ -323,40 +326,40 @@ PROGRAM LARA
                STOP
             ENDIF
             IF( quadrant(I,J).NE.'Q1' .AND. quadrant(I,J).NE.'Q2' .AND. &
-               quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' .AND. &
-               quadrant(I,J).NE.'HO' .AND. quadrant(I,J).NE.'HU' ) THEN
+                quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' .AND. &
+                quadrant(I,J).NE.'HO' .AND. quadrant(I,J).NE.'HU' ) THEN
                WRITE(*,*) 'FOR domain = HS ONLY quadrant = Q1,Q2,Q3,Q4,HO,HU VALID.'
                WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
                STOP
             ENDIF
             IF( quadrant(I,J).EQ.'HO' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
                quadrant(I,J) = 'Q1'
-               IF( XC(I,J).GT.180.E0 ) THEN
-                  XC(I,J) = XC(I,J)-180.E0
+               IF( constantCoordinateValue(I,J).GT.180.E0 ) THEN
+                  constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
                ENDIF
                nSubPlots(I) = nSubPlots(I)+1
                quadrant(I,nSubPlots(I)) = 'Q2'
                constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
-               IF( XC(I,J).LT.180.E0 ) THEN
-                  XC(I,nSubPlots(I)) = XC(I,nSubPlots(I))+180.E0
+               IF( constantCoordinateValue(I,J).LT.180.E0 ) THEN
+                  constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,nSubPlots(I))+180.E0
                ENDIF
                whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
-               XRMU(I,nSubPlots(I)) = XRMU(I,J)
-               ZD(I,nSubPlots(I)) = ZD(I,J)
+               normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
+               contourPar(I,nSubPlots(I)) = contourPar(I,J)
             ELSEIF( quadrant(I,J).EQ.'HU' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
                quadrant(I,J) = 'Q4'
-                     IF( XC(I,J).GT.180.E0 ) THEN
-                  XC(I,J) = XC(I,J)-180.E0
+                     IF( constantCoordinateValue(I,J).GT.180.E0 ) THEN
+                  constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
                ENDIF
                nSubPlots(I) = nSubPlots(I)+1
                quadrant(I,nSubPlots(I)) = 'Q3'
                constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
-                     IF( XC(I,J).LT.180.E0 ) THEN
-                  XC(I,nSubPlots(I)) = XC(I,nSubPlots(I))+180.E0
+                     IF( constantCoordinateValue(I,J).LT.180.E0 ) THEN
+                  constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,nSubPlots(I))+180.E0
                ENDIF
                whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
-               XRMU(I,nSubPlots(I)) = XRMU(I,J)
-               ZD(I,nSubPlots(I)) = ZD(I,J)
+               normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
+               contourPar(I,nSubPlots(I)) = contourPar(I,J)
             ENDIF
          ELSEIF( domain(I).EQ.'SP' ) THEN
             IF( nSubPlots(I).GT.4 ) THEN
@@ -366,24 +369,24 @@ PROGRAM LARA
             ENDIF
             IF( quadrant(I,J).EQ.'HO' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
                quadrant(I,J) = 'Q1'
-               IF( constantCoordinate(I,J).EQ.'P' .AND. XC(I,J).GT.180.E0 ) XC(I,J) = XC(I,J)-180.E0
+               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.180.E0 ) constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
                nSubPlots(I) = nSubPlots(I)+1
                quadrant(I,nSubPlots(I)) = 'Q2'
                constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
-               IF( constantCoordinate(I,J).EQ.'P' .AND. XC(I,J).LT.180.E0 ) XC(I,nSubPlots(I)) = XC(I,J)+180.E0
+               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).LT.180.E0 ) constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,J)+180.E0
                whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
-               XRMU(I,nSubPlots(I)) = XRMU(I,J)
-               ZD(I,nSubPlots(I)) = ZD(I,J)
+               normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
+               contourPar(I,nSubPlots(I)) = contourPar(I,J)
             ELSEIF( quadrant(I,J).EQ.'HU' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
                quadrant(I,J) = 'Q4'
-               IF( constantCoordinate(I,J).EQ.'P' .AND. XC(I,J).GT.180.E0 ) XC(I,J) = XC(I,J)-180.E0
+               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.180.E0 ) constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
                nSubPlots(I) = nSubPlots(I)+1
                quadrant(I,nSubPlots(I)) = 'Q3'
                constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
-               IF( constantCoordinate(I,J).EQ.'P' .AND. XC(I,J).LT.180.E0 ) XC(I,nSubPlots(I)) = XC(I,J)+180.E0
+               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).LT.180.E0 ) constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,J)+180.E0
                whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
-               XRMU(I,nSubPlots(I)) = XRMU(I,J)
-               ZD(I,nSubPlots(I)) = ZD(I,J)
+               normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
+               contourPar(I,nSubPlots(I)) = contourPar(I,J)
             ENDIF
          ENDIF
       enddo
@@ -443,9 +446,9 @@ PROGRAM LARA
       DT = TPERIOD/nPlots
       drawPlotNum = 3
       TIME(1) = 0.D0
-      ABCNUMI(1,1) = '(a)'
+      subPlotLabel(1,1) = '(a)'
       DO J = 2,nSubPlots(1)
-         ABCNUMI(1,J) = '   '
+         subPlotLabel(1,J) = '   '
       enddo
       DO I = 2,nPlots
          domain(I) = domain(1)
@@ -455,79 +458,81 @@ PROGRAM LARA
          ELSE
             NQ = NQ+1
          ENDIF
-         IF( I.EQ.2 ) THEN
-            TIME(I) = DT
-         ELSEIF( I.EQ.3 ) THEN
-            IF( nPlots.EQ.6 ) THEN
-               TIME(I) = 5*DT
-            ELSEIF( nPlots.EQ.8 ) THEN
-               TIME(I) = 2*DT
-            ENDIF
-         ELSEIF( I.EQ.4 ) THEN
-            IF( nPlots.EQ.6 ) THEN
-               TIME(I) = 2*DT
-            ELSEIF( nPlots.EQ.8 ) THEN
-               TIME(I) = 7*DT
-            ENDIF
-         ELSEIF( I.EQ.5 ) THEN
-            IF( nPlots.EQ.6 ) THEN
-               TIME(I) = 4*DT
-            ELSEIF( nPlots.EQ.8 ) THEN
-               TIME(I) = 3*DT
-            ENDIF
-         ELSEIF( I.EQ.6 ) THEN
-            IF( nPlots.EQ.6 ) THEN
-               TIME(I) = 3*DT
-            ELSEIF( nPlots.EQ.8 ) THEN
-               TIME(I) = 6*DT
-            ENDIF
-         ELSEIF( I.EQ.7 ) THEN
-            TIME(I) = 5*DT
-         ELSEIF( I.EQ.8 ) THEN
-            TIME(I) = 4*DT
+         IF( nPlots.EQ.6 ) THEN
+            select case(I)
+               case(2)
+                  TIME(I) = 1*DT
+               case(3)
+                  TIME(I) = 5*DT
+               case(4)
+                  TIME(I) = 2*DT
+               case(5)
+                  TIME(I) = 4*DT
+               case(6)
+                  TIME(I) = 3*DT
+            end select
+         ELSEIF( nPlots.EQ.8 ) THEN
+            select case(I)
+               case(2)
+                  TIME(I) = 1*DT
+               case(3)
+                  TIME(I) = 2*DT
+               case(4)
+                  TIME(I) = 7*DT
+               case(5)
+                  TIME(I) = 3*DT
+               case(6)
+                  TIME(I) = 6*DT
+               case(7)
+                  TIME(I) = 5*DT
+               case(8)
+                  TIME(I) = 4*DT
+            end select
          ENDIF
          DO J = 1,nSubPlots(1)
             quadrant(I,J) = quadrant(1,J)
             constantCoordinate(I,J) = constantCoordinate(1,J)
-            XC(I,J) = XC(1,J)
+            constantCoordinateValue(I,J) = constantCoordinateValue(1,J)
             whatToPlot(I,J) = whatToPlot(1,J)
-            XRMU(I,J) = XRMU(1,J)
-            ZD(I,J) = -ZD(1,J)
+            normRadiusMax(I,J) = normRadiusMax(1,J)
+            contourPar(I,J) = -contourPar(1,J)
             IF( J.EQ.1 ) THEN
-               IF( I.EQ.2 ) THEN
-                  ABCNUMI(I,J) = '(b)'
-               ELSEIF( I.EQ.3 ) THEN
-                  IF( nPlots.EQ.6 ) THEN
-                     ABCNUMI(I,J) = '(f)'
-                  ELSEIF( nPlots.EQ.8 ) THEN
-                     ABCNUMI(I,J) = '(c)'
-                  ENDIF
-               ELSEIF( I.EQ.4 ) THEN
-                  IF( nPlots.EQ.6 ) THEN
-                     ABCNUMI(I,J) = '(c)'
-                  ELSEIF( nPlots.EQ.8 ) THEN
-                     ABCNUMI(I,J) = '(h)'
-                  ENDIF
-               ELSEIF( I.EQ.5 ) THEN
-                  IF( nPlots.EQ.6 ) THEN
-                     ABCNUMI(I,J) = '(e)'
-                  ELSEIF( nPlots.EQ.8 ) THEN
-                     ABCNUMI(I,J) = '(d)'
-                  ENDIF
-               ELSEIF( I.EQ.6 ) THEN
-                  IF( nPlots.EQ.6 ) THEN
-                     ABCNUMI(I,J) = '(d)'
-                  ELSEIF( nPlots.EQ.8 ) THEN
-                     ABCNUMI(I,J) = '(g)'
-                  ENDIF
-               ELSEIF( I.EQ.7 ) THEN
-                  ABCNUMI(I,J) = '(f)'
-               ELSEIF( I.EQ.8 ) THEN
-                  ABCNUMI(I,J) = '(e)'
+               IF( nPlots.EQ.6 ) THEN
+                  select case(I)
+                     case(2)
+                        subPlotLabel(I,J) = '(b)'
+                     case(3)
+                        subPlotLabel(I,J) = '(f)'
+                     case(4)
+                        subPlotLabel(I,J) = '(c)'
+                     case(5)
+                        subPlotLabel(I,J) = '(e)'
+                     case(6)
+                        subPlotLabel(I,J) = '(d)'
+                     case default
+                        subPlotLabel(I,J) = '   '
+                  end select
+               ELSEIF( nPlots.EQ.8 ) THEN
+                  select case(I)
+                     case(2)
+                        subPlotLabel(I,J) = '(b)'
+                     case(3)
+                        subPlotLabel(I,J) = '(c)'
+                     case(4)
+                        subPlotLabel(I,J) = '(h)'
+                     case(5)
+                        subPlotLabel(I,J) = '(d)'
+                     case(6)
+                        subPlotLabel(I,J) = '(g)'
+                     case(7)
+                        subPlotLabel(I,J) = '(f)'
+                     case(8)
+                        subPlotLabel(I,J) = '(e)'
+                     case default
+                        subPlotLabel(I,J) = '   '
+                  end select
                ENDIF
-            ELSE
-               ABCNUMI(I,J) = '   '
-            ENDIF
+            endif
          enddo
       enddo
    ENDIF
@@ -540,10 +545,8 @@ PROGRAM LARA
 
    !-- ABG CALCULATES THE ALPHAS AND BETAS IN THE RADIAL FUNCTION
    !   OF THE POLOIDAL MAGNETIC FIELD:
-   IF( LCALC.EQ.2 .OR. LCALC.EQ.4 .OR. LCALC.EQ.6 ) CALL ABG(ND,CF,L,N)
+   IF( LCALC.EQ.2 .OR. LCALC.EQ.4 .OR. LCALC.EQ.6 ) CALL ABG(ND,whatToPlot,L,N)
 
-   !-- FEHLER NACH 13 SCHREIBEN
-   OPEN(13,STATUS = 'SCRATCH')
    XLRAND = 3.0D0
    XRRAND = 3.0D0
    NROWR = NR
@@ -675,13 +678,13 @@ PROGRAM LARA
          thisPlotQuadrant(NP)           = quadrant(I,J)
          thisPlotWhatToPlot(NP)         = whatToPlot(I,J)
          thisPlotconstantCoordinate(NP) = constantCoordinate(I,J)
-         ABCN(NP) = ABCNUMI(I,J)
+         ABCN(NP) = subPlotLabel(I,J)
          IF( constantCoordinate(I,J).EQ.'R' ) THEN
-            XCP(NP) = XRI+XC(I,J)
+            XCP(NP) = XRI+constantCoordinateValue(I,J)
          ELSE
-            XCP(NP) = XC(I,J)
+            XCP(NP) = constantCoordinateValue(I,J)
          ENDIF
-         ZDP(NP)   = ZD(I,J)
+         ZDP(NP)   = contourPar(I,J)
          TIMEP(NP) = TIME(I)
          IF( domain(I).EQ.'HS' ) THEN
             IF( quadrant(I,J).EQ.'HO' .OR. quadrant(I,J).EQ.'HU' ) THEN
@@ -785,7 +788,7 @@ PROGRAM LARA
                XRMCM(NP) = XBQ/2
             ENDIF
          ENDIF
-         XRM(NP) = XRMU(I,J)*XRO
+         XRM(NP) = normRadiusMax(I,J)*XRO
          XROCM(NP) = XRMCM(NP)*XRO/XRM(NP)
          XRICM(NP) = XRMCM(NP)*XRI/XRM(NP)
       enddo
@@ -800,7 +803,7 @@ PROGRAM LARA
 
       IF( TIMEP(I).NE.TIMEO .AND. LT.EQ.1 ) CALL READLA(INPUTFILE,dataSetNumber,TIMEP(I),DX)
 
-      CALL PLO(I,NSUBP,DC,DX,contourDistanceOrNumber,plotSize,drawFrame,&
+      CALL PLO(I,NSUBP,driftRate,DX,countourParIsNumber,plotSize,drawFrame,&
                      ZDP(I),TIMEP(I),thisPlotQuadrant(I),thisPlotWhatToPlot(I), &
                      thisPlotconstantCoordinate(I),XCP(I),        &
                      XOR(I),YOR(I),XAR(I),YAR(I),                       &
@@ -904,20 +907,18 @@ PROGRAM LARA
       ENDIF
       TIMEO = TIMEP(I)
    enddo
-   CLOSE(11)
    CLOSE(14)
-   CLOSE(13)
 
 contains
 
    !------------------------------------------------------------------------
    !     calculates the field Z and makes one subplot.
-   SUBROUTINE PLO(NPLOT,NSUBP,DC,DX,contourDistanceOrNumber,plotSize,drawFrame,ZD,TIME,CP,CF,constantCoordinate,XC, &
+   SUBROUTINE PLO(NPLOT,NSUBP,driftRate,DX,countourParIsNumber,plotSize,drawFrame,contourPar,TIME,quadrant,whatToPlot,constantCoordinate,constantCoordinateValue, &
              XOR,YOR,XAR,YAR,XRI,XRO,XRM,XRICM,XROCM,XRMCM,XP,YP)
       IMPLICIT REAL*8(A-H,O-W)
       IMPLICIT REAL*8(X,Y,Z)
       CHARACTER*1 constantCoordinate,CCC
-      CHARACTER*2 CP,CF,CPC
+      CHARACTER*2 quadrant,whatToPlot,CPC
       character*20 filez,filex,filey
 
       DIMENSION DX(*),THETA(NMY),XIDL(NMX,NMY),YIDL(NMX,NMY)
@@ -926,7 +927,6 @@ contains
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/CNULL/ZNULL
       integer on_a_sphere
-      COMMON/THETAC/THETA
 
       !-- COUNTER
       NCPLOT = NCPLOT+1
@@ -934,15 +934,15 @@ contains
 
       !-- UEBERGABE AN COMMONBLOCK FUER TRANS:
       CCC = constantCoordinate
-      CPC = CP
-      XCC = XC
+      CPC = quadrant
+      XCC = constantCoordinateValue
 
       !-- INITIALISIERUNG VON DISSPLA UND ZEICHNEN EINES RAHMENS (FRAME):
       DXY = XRO/100
 
       !-- FESTLEGEN DER X BZW Y ACHSE UND ZEICHNEN DES INNEREN UND
       !   AEUSSEREN KERNS MIT ARC:
-      IF( CP.EQ.'Q1' ) THEN
+      IF( quadrant.EQ.'Q1' ) THEN
          XML(1) = XRI
          YML(1) = 0.E0
          XML(2) = XRO
@@ -954,20 +954,20 @@ contains
          XMIN = XRI
          XMAX = XRM
          IF( constantCoordinate.EQ.'T' ) THEN
-                  YMIN = 90.E0
+            YMIN = 90.E0
             YMAX = 180.E0
          ELSEIF( constantCoordinate.EQ.'P' ) THEN
-                  YMIN = 0.E0
+            YMIN = 0.E0
             YMAX = 90.E0
          ENDIF
-      ELSEIF( CP.EQ.'Q2' ) THEN
+      ELSEIF( quadrant.EQ.'Q2' ) THEN
          XMIN = XRI
-               XMAX = XRM
+         XMAX = XRM
          IF( constantCoordinate.EQ.'T' ) THEN
-                  YMIN = 180.E0
+            YMIN = 180.E0
             YMAX = 270.E0
          ELSEIF( constantCoordinate.EQ.'P' ) THEN
-                  YMIN = 0.E0
+            YMIN = 0.E0
             YMAX = 90.E0
          ENDIF
          XML(1) = -XRO
@@ -978,7 +978,7 @@ contains
          YML(1) = XRI
          XML(2) = 0.E0
          YML(2) = XRO
-      ELSEIF( CP.EQ.'Q3' ) THEN
+      ELSEIF( quadrant.EQ.'Q3' ) THEN
          XMIN = XRI
          XMAX = XRM
          IF( constantCoordinate.EQ.'T' ) THEN
@@ -996,7 +996,7 @@ contains
          YML(1) = -XRI
          XML(2) = 0.E0
          YML(2) = -XRO
-      ELSEIF( CP.EQ.'Q4' ) THEN
+      ELSEIF( quadrant.EQ.'Q4' ) THEN
          XMIN = XRI
          XMAX = XRM
          IF( constantCoordinate.EQ.'T' ) THEN
@@ -1014,7 +1014,7 @@ contains
          YML(1) = -XRI
          XML(2) = 0.E0
          YML(2) = -XRO
-      ELSEIF( CP.EQ.'HO' ) THEN
+      ELSEIF( quadrant.EQ.'HO' ) THEN
          XMIN = XRI
          XMAX = XRM
          IF( constantCoordinate.EQ.'T' ) THEN
@@ -1032,7 +1032,7 @@ contains
          YML(1) = 0.E0
          XML(2) = XRO
          YML(2) = 0.E0
-      ELSEIF( CP.EQ.'HU' ) THEN
+      ELSEIF( quadrant.EQ.'HU' ) THEN
          XMIN = XRI
          XMAX = XRM
          IF( constantCoordinate.EQ.'T' ) THEN
@@ -1050,7 +1050,7 @@ contains
          YML(1) = 0.E0
          XML(2) = XRO
          YML(2) = 0.E0
-      ELSEIF( CP.EQ.'HL' ) THEN
+      ELSEIF( quadrant.EQ.'HL' ) THEN
          XMIN = XRI
          XMAX = XRM
          IF( constantCoordinate.EQ.'T' ) THEN
@@ -1068,7 +1068,7 @@ contains
          YML(1) = XRI
          XML(2) = 0.E0
          YML(2) = XRO
-      ELSEIF( CP.EQ.'HR' ) THEN
+      ELSEIF( quadrant.EQ.'HR' ) THEN
          XMIN = XRI
          XMAX = XRM
          IF( constantCoordinate.EQ.'T' ) THEN
@@ -1086,7 +1086,7 @@ contains
          YML(1) = XRI
          XML(2) = 0.E0
          YML(2) = XRO
-      ELSEIF( CP.EQ.'SP' ) THEN
+      ELSEIF( quadrant.EQ.'SP' ) THEN
          XMIN = XRI
          XMAX = XRM
          IF( constantCoordinate.EQ.'T' ) THEN
@@ -1096,12 +1096,12 @@ contains
             YMIN = 0.E0
             YMAX = 180.E0
          ENDIF
-      ELSEIF( CP.EQ.'PS' ) THEN
+      ELSEIF( quadrant.EQ.'PS' ) THEN
          XMIN = -180.E0-XP
          XMAX = 180.E0-XP
          YMIN = 180.E0-YP
          YMAX = 0.E0-YP
-      ELSEIF( CP.EQ.'PL' ) THEN
+      ELSEIF( quadrant.EQ.'PL' ) THEN
          XMIN = -180.E0-XP
          XMAX = 180.E0-XP
          YMIN = 180.E0-YP
@@ -1110,7 +1110,7 @@ contains
          YML(1) = 0.E0
          XML(2) = 0.5E0
          YML(2) = 1.E0
-      ELSEIF( CP.EQ.'PR' ) THEN
+      ELSEIF( quadrant.EQ.'PR' ) THEN
          XMIN = -180.E0-XP
          XMAX = 180.E0-XP
          YMIN = 180.E0-YP
@@ -1125,47 +1125,47 @@ contains
       !   UND EXISTIERT ABER NUR FUER R< = RO EIN FELD , SO MUESSEN DAS
       !   PLOTGEBIET UND DER URSPRUNG ENTSPRECHEND ANGEPASST WERDEN.
       !   TEILWEISE WIRD ZUDEM DIE X-ACHSE AUF R< = RO EINGESCHRAENKT.
-      IF( ( ( CF.NE.'BS' .AND. CF.NE.'MP' ) .OR. &
-            ( CF.EQ.'BS' .AND. constantCoordinate.EQ.'R' ) ) .AND. &
+      IF( ( ( whatToPlot.NE.'BS' .AND. whatToPlot.NE.'MP' ) .OR. &
+            ( whatToPlot.EQ.'BS' .AND. constantCoordinate.EQ.'R' ) ) .AND. &
             XROCM.NE.XRMCM ) THEN
-         IF( CP(:1).EQ.'Q' ) THEN
+         IF( quadrant(:1).EQ.'Q' ) THEN
             XAR = XROCM
             YAR = XROCM
             XMAX = XRO
-            IF( CP.EQ.'Q2' ) THEN
+            IF( quadrant.EQ.'Q2' ) THEN
                XOR = XOR+XRMCM-XROCM
-            ELSEIF( CP.EQ.'Q3' ) THEN
+            ELSEIF( quadrant.EQ.'Q3' ) THEN
                XOR = XOR+XRMCM-XROCM
                YOR = YOR+XRMCM-XROCM
-            ELSEIF( CP.EQ.'Q4' ) THEN
+            ELSEIF( quadrant.EQ.'Q4' ) THEN
                YOR = YOR+XRMCM-XROCM
             ENDIF
-         ELSEIF( CP.EQ.'HL' ) THEN
+         ELSEIF( quadrant.EQ.'HL' ) THEN
             XAR = XROCM
             YAR = 2*XROCM
             XMAX = XRO
             XOR = XOR+XRMCM-XROCM
             YOR = YOR+XRMCM-XROCM
-         ELSEIF( CP.EQ.'HR' ) THEN
+         ELSEIF( quadrant.EQ.'HR' ) THEN
             XAR = XROCM
             YAR = 2*XROCM
             XMAX = XRO
             YOR = YOR+XRMCM-XROCM
-         ELSEIF( CP.EQ.'HO' ) THEN
+         ELSEIF( quadrant.EQ.'HO' ) THEN
             XAR = 2*XROCM
             YAR = XROCM
             XMAX = XRO
             XOR = XOR+XRMCM-XROCM
-         ELSEIF( CP.EQ.'HU' ) THEN
+         ELSEIF( quadrant.EQ.'HU' ) THEN
             XAR = 2*XROCM
             YAR = XROCM
             XMAX = XRO
             XOR = XOR+XRMCM-XROCM
             YOR = YOR+XRMCM-XROCM
-         ELSEIF( CP.EQ.'SP' .OR. CP(:1).EQ.'P' ) THEN
+         ELSEIF( quadrant.EQ.'SP' .OR. quadrant(:1).EQ.'P' ) THEN
             XAR = 2*XROCM
             YAR = 2*XROCM
-            IF( CP.EQ.'SP' ) XMAX = XRO
+            IF( quadrant.EQ.'SP' ) XMAX = XRO
             XOR = XOR+XRMCM-XROCM
             YOR = YOR+XRMCM-XROCM
          ENDIF
@@ -1175,18 +1175,17 @@ contains
 
       write(*,*) 'computing the fields...'
 
-
       !-- BERECHNEN DER Z-WERTE FUER EIN RASTER MIT JE NXM PUNKTEN IN
       !   X-RICHTUNG UND NYM PUNKTEN IN Y-RICHTUNG:
       !   THETA WIRD EIN INTEGER NTHETA ZUGEORDNET UNTER DEM PLM(THETA)
       !   ABGESPEICHERT WIRD, NMTHETA IST DIE ANZAHL DER BENOETIGTEN THETA.
       IF( constantCoordinate.EQ.'T' ) THEN
          NMTHETA = 1
-         THETA(NMTHETA) = DBLE(XC)
+         THETA(NMTHETA) = DBLE(constantCoordinateValue)
       ELSEIF( constantCoordinate.EQ.'P' ) THEN
-         PHI = DBLE(XC)
+         PHI = DBLE(constantCoordinateValue)
       ELSEIF( constantCoordinate.EQ.'R' ) THEN
-         R = DBLE(XC)
+         R = DBLE(constantCoordinateValue)
       ENDIF
       XD = (XMAX-XMIN)/(NMX-1)
       YD = (YMAX-YMIN)/(NMY-1)
@@ -1236,53 +1235,53 @@ contains
                stop
             endif
             !-------- R,PHI UND THETA SIND DIE KUGELKOORDINATEN:
-            IF( CF.EQ.'VS' .OR. CF.EQ.'BS' .OR. CF.EQ.'JS' ) THEN
+            IF( whatToPlot.EQ.'VS' .OR. whatToPlot.EQ.'BS' .OR. whatToPlot.EQ.'JS' ) THEN
                IF(  constantCoordinate.EQ.'T' ) THEN
-                  Z(I,J) = REAL(FT(DX,CF,R,PHI,NTHETA,TIME,DC))
+                  Z(I,J) = REAL(FT(DX,whatToPlot,R,PHI,NTHETA,TIME,driftRate))
                ELSEIF( constantCoordinate.EQ.'P' ) THEN
-                  Z(I,J) = REAL(FP(DX,CF,R,PHI,NTHETA,TIME,DC))
+                  Z(I,J) = REAL(FP(DX,whatToPlot,R,PHI,NTHETA,TIME,driftRate))
                ELSEIF( constantCoordinate.EQ.'R' ) THEN
-                  Z(I,J) = REAL(FR(DX,CF,R,PHI,NTHETA,TIME,DC))
+                  Z(I,J) = REAL(FR(DX,whatToPlot,R,PHI,NTHETA,TIME,driftRate))
                ENDIF
-            ELSEIF( CF.EQ.'VR' .OR. CF.EQ.'BR' ) THEN
-               Z(I,J) = REAL(RF(DX,CF,R,PHI,NTHETA,TIME,DC))
-            ELSEIF( CF.EQ.'TE' ) THEN
-               Z(I,J) = REAL(TEMP(DX,CF,R,PHI,NTHETA,TIME,DC))
-            ELSEIF( CF.EQ.'ZF' ) THEN
+            ELSEIF( whatToPlot.EQ.'VR' .OR. whatToPlot.EQ.'BR' ) THEN
+               Z(I,J) = REAL(RF(DX,whatToPlot,R,PHI,NTHETA,TIME,driftRate))
+            ELSEIF( whatToPlot.EQ.'TE' ) THEN
+               Z(I,J) = REAL(TEMP(DX,whatToPlot,R,PHI,NTHETA,TIME,driftRate))
+            ELSEIF( whatToPlot.EQ.'ZF' ) THEN
                Z(I,J) = REAL(FZONAL(DX,R,NTHETA,TIME))
-            ELSEIF( CF.EQ.'MF' ) THEN
+            ELSEIF( whatToPlot.EQ.'MF' ) THEN
                Z(I,J) = REAL(DMERI(DX,R,NTHETA,TIME))
-            ELSEIF( CF.EQ.'MT' ) THEN
+            ELSEIF( whatToPlot.EQ.'MT' ) THEN
                Z(I,J) = REAL(DMTOR(DX,R,NTHETA,TIME))
-            ELSEIF( CF.EQ.'MP' .OR. CF.EQ.'MJ' ) THEN
-               Z(I,J) = REAL(DMPJ(DX,CF,R,NTHETA,TIME))
-            ELSEIF( CF.EQ.'BT' ) THEN
-               Z(I,J) = REAL(DBT(DX,R,PHI,NTHETA,TIME,DC))
-            ELSEIF( CF.EQ.'MC' ) THEN
+            ELSEIF( whatToPlot.EQ.'MP' .OR. whatToPlot.EQ.'MJ' ) THEN
+               Z(I,J) = REAL(DMPJ(DX,whatToPlot,R,NTHETA,TIME))
+            ELSEIF( whatToPlot.EQ.'BT' ) THEN
+               Z(I,J) = REAL(DBT(DX,R,PHI,NTHETA,TIME,driftRate))
+            ELSEIF( whatToPlot.EQ.'MC' ) THEN
                Z(I,J) = REAL(DMC(DX,R,NTHETA,TIME))
-            ELSEIF( CF.EQ.'TT' ) THEN
-               Z(I,J) = REAL(TT(DX,CF,R,PHI,NTHETA,TIME,DC))
-            ELSEIF( CF.EQ.'UP' ) THEN
-               Z(I,J) = REAL(UP(DX,CF,R,PHI,NTHETA,TIME,DC))
-            ELSEIF( CF.EQ.'NU' ) THEN
-               Z(I,J) = REAL(FNU(DX,CF,R,PHI,NTHETA,TIME,DC))
+            ELSEIF( whatToPlot.EQ.'TT' ) THEN
+               Z(I,J) = REAL(TT(DX,whatToPlot,R,PHI,NTHETA,TIME,driftRate))
+            ELSEIF( whatToPlot.EQ.'UP' ) THEN
+               Z(I,J) = REAL(UP(DX,whatToPlot,R,PHI,NTHETA,TIME,driftRate))
+            ELSEIF( whatToPlot.EQ.'NU' ) THEN
+               Z(I,J) = REAL(FNU(DX,whatToPlot,R,PHI,NTHETA,TIME,driftRate))
             ELSE
-               WRITE(*,*) 'WRONG INPUT OF CF.'
+               WRITE(*,*) 'WRONG INPUT OF whatToPlot.'
                STOP
             ENDIF
-                  IF( Z(I,J).GT.ZMAX ) ZMAX = Z(I,J)
-                  IF( Z(I,J).LT.ZMIN ) ZMIN = Z(I,J)
+            IF( Z(I,J).GT.ZMAX ) ZMAX = Z(I,J)
+            IF( Z(I,J).LT.ZMIN ) ZMIN = Z(I,J)
          enddo
       enddo
 
-      ZAMAX = MAX(ABS(ZMIN),ABS(ZMAX))
-      ZNULL = 1.E-11*ZAMAX
+      range = MAX(ABS(ZMIN),ABS(ZMAX))
+      ZNULL = 1.E-11*range
       ZNULLM = 1.E-11
       ZANULL = 1.E-13
       ZSCALE = 1.E0
 
-      IF( ZD.GT.0.E0 ) THEN
-         IF( ZAMAX.LT.ZANULL ) THEN
+      IF( contourPar.GT.0.E0 ) THEN
+         IF( range.LT.ZANULL ) THEN
             WRITE(14,*) 'ZMAX AND ZMIN CLOSE TO ZERO: ',ZMAX,ZMIN
             WRITE(14,*) 'NO PLOT POSSIBLE.'
             GOTO 9000
@@ -1298,46 +1297,46 @@ contains
                enddo
             enddo
          ENDIF
-      ELSEIF( ZD.LT.0.E0 ) THEN
+      ELSEIF( contourPar.LT.0.E0 ) THEN
          IF( NCPLOT.GT.NSUBP ) THEN
             NZD = MOD(NCPLOT,NSUBP)
             IF( NZD.EQ.0 ) NZD = NSUBP
-            ZD = ZSCALE*ZDS(NZD)
-            contourDistanceOrNumber = 0
+            contourPar = ZSCALE*ZDS(NZD)
+            countourParIsNumber = .true.
          ELSE
-            ZD = ZSCALE*ABS(ZD)
+            contourPar = ZSCALE*ABS(contourPar)
          ENDIF
       ENDIF
-      IF( contourDistanceOrNumber.EQ.1 ) THEN
-         NCL = AINT(ZD+0.1E0)
+      IF( countourParIsNumber ) THEN
+         NCL = AINT(contourPar+0.1E0)
          IF( ZMIN.GT.-ZNULL .OR. ZMAX.LT.ZNULL ) THEN
-            ZD = ((ZMAX-ZMIN)-ZNULL)/(NCL-1)
+            contourPar = ((ZMAX-ZMIN)-ZNULL)/(NCL-1)
          ELSE
-            ZD = (MAX(ABS(ZMIN),ABS(ZMAX))-ZNULL)/(NCL-1)
+            contourPar = (MAX(ABS(ZMIN),ABS(ZMAX))-ZNULL)/(NCL-1)
          ENDIF
-         ZD = ZD-ZD/100
-      ELSEIF( contourDistanceOrNumber.EQ.0 ) THEN
-         IF( ZD.GT.ABS(ZMAX) .AND. ZD.GT.ABS(ZMIN) ) THEN
-            WRITE(*,*) 'TOO LARGE ZD , ZMIN,ZMAX ARE ONLY: ',ZMIN,ZMAX
+         contourPar = contourPar-contourPar/100
+      ELSE
+         IF( contourPar.GT.ABS(ZMAX) .AND. contourPar.GT.ABS(ZMIN) ) THEN
+            WRITE(*,*) 'TOO LARGE contourPar , ZMIN,ZMAX ARE ONLY: ',ZMIN,ZMAX
             STOP
          ENDIF
          IF( ZMIN.GT.-ZNULL .OR. ZMAX.LT.ZNULL ) THEN
-            NCL = AINT( ABS(ZMAX-ZMIN)/ZD+0.1E0 )+1
+            NCL = AINT( ABS(ZMAX-ZMIN)/contourPar+0.1E0 )+1
          ELSE
-            NCL = AINT(MAX(ABS(ZMAX),ABS(ZMIN))/ZD+0.1E0)+1
+            NCL = AINT(MAX(ABS(ZMAX),ABS(ZMIN))/contourPar+0.1E0)+1
          ENDIF
       ENDIF
-      IF( NCPLOT.LE.NSUBP ) ZDS(NCPLOT) = ZD/ZSCALE
+      IF( NCPLOT.LE.NSUBP ) ZDS(NCPLOT) = contourPar/ZSCALE
       IF( ZMIN.GT.-ZNULL .OR. ZMAX.LT.ZNULL ) THEN
          ZMINP = ZMIN
          ZMAXP = ZMAX
       ELSE
-         ZMINP = ZD*AINT( ZMIN/ZD )-ZNULL
-         ZMAXP = ZD*AINT( ZMAX/ZD )+ZNULL
+         ZMINP = contourPar*AINT( ZMIN/contourPar )-ZNULL
+         ZMAXP = contourPar*AINT( ZMAX/contourPar )+ZNULL
       ENDIF
       IF( ABS(ZMINP).LT.ZNULL ) ZMINP = ZNULL
       IF( ABS(ZMAXP).LT.ZNULL ) ZMAXP = ZNULL
-      WRITE(14,*) 'DIFFERENCE BETWEEN CONTOURLINES ZD =  ',ZD
+      WRITE(14,*) 'DIFFERENCE BETWEEN CONTOURLINES contourPar =  ',contourPar
       WRITE(14,*) 'NUMBER OF CONTOURLINES NCL =  ',NCL
       WRITE(14,*) 'ZMAX,ZMIN =  ',ZMAX,ZMIN
       WRITE(14,*) 'ZMAXP,ZMINP =  ',ZMAXP,ZMINP
@@ -1380,8 +1379,10 @@ contains
          enddo
       ENDIF
 
+      close(21)
+      close(22)
+      close(23)
 9999  CONTINUE
-      RETURN
    END subroutine plo
 
    !------------------------------------------------------------------------
@@ -1391,16 +1392,16 @@ contains
    !              F_theta = r dphi g
    !
    !     optimized for K = 0.
-   FUNCTION FT(X,whatToPlot,R,PHI,NTHETA,TIME,DC)
+   FUNCTION FT(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       double precision, intent(in):: x(:)
       character(len=2), intent(in):: whatToPlot
       integer, intent(in):: NTHETA
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
       COMMON/AB/A(NAM),B(NAM),NAMC
@@ -1432,10 +1433,10 @@ contains
          STOP
       ENDIF
       DO  I = NDOMIN,NDOMAX
-         IF( .NOT.( ( CF(I).EQ.'V' .AND. whatToPlot.EQ.'VS' ) .OR. &
-                    ( CF(I).EQ.'H' .AND. whatToPlot.EQ.'BS' ) .OR. &
-                    ( CF(I).EQ.'G' .AND. whatToPlot.EQ.'JS' )  )  ) THEN
-            WRITE(*,*) 'WRONG CF IN FT, SHOULD BE V OR H OR G BUT IS: ',CF(I)
+         IF( .NOT.( ( whatToPlot(I).EQ.'V' .AND. whatToPlot.EQ.'VS' ) .OR. &
+                    ( whatToPlot(I).EQ.'H' .AND. whatToPlot.EQ.'BS' ) .OR. &
+                    ( whatToPlot(I).EQ.'G' .AND. whatToPlot.EQ.'JS' )  )  ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN FT, SHOULD BE V OR H OR G BUT IS: ',whatToPlot(I)
             STOP
          ENDIF
          IF( M(I).EQ.0 ) THEN
@@ -1449,9 +1450,9 @@ contains
             EPSK = 2.D0
          ENDIF
          FTT = EPSM*EPSK*M(I)*PLMS(L(I),M(I),NTHETA)*R
-         IF( CF(I).EQ.'V' .OR. CF(I).EQ.'G' ) THEN
+         IF( whatToPlot(I).EQ.'V' .OR. whatToPlot(I).EQ.'G' ) THEN
             FTT = FTT*DSIN( N(I)*PI*(R-RI) )
-         ELSEIF( CF(I).EQ.'H' ) THEN
+         ELSEIF( whatToPlot(I).EQ.'H' ) THEN
             NR = NAB(L(I),N(I))
             IF( R.LE.RO ) THEN
                IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
@@ -1470,21 +1471,21 @@ contains
 
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
-               FTT = -FTT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) )
+               FTT = -FTT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FTT = -FTT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) )
+               FTT = -FTT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
             ELSE
                FTT = 0.D0
             ENDIF
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               FTT = -FTT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               FTT = -FTT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FTT = -FTT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               FTT = -FTT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               FTT = FTT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               FTT = FTT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               FTT = FTT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               FTT = FTT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ENDIF
          endif
          FT = FT-FTT
@@ -1498,15 +1499,15 @@ contains
    !              F_phi = r sin(theta) dtheta g
    !
    !     optimized for K = 0.
-   FUNCTION FP(X,whatToPlot,R,PHI,NTHETA,TIME,DC)
+   FUNCTION FP(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       double precision, intent(in):: x(:)
       integer, intent(in):: NTHETA
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR,whatToPlot
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
 !cc   COMMON/NPARI/M0,NE,NTV,NTH,LTV,LTH,KTV,KTH,LD
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
@@ -1540,10 +1541,10 @@ contains
          STOP
       ENDIF
       DO I = NDOMIN,NDOMAX
-         IF( .NOT.( ( CF(I).EQ.'V' .AND. whatToPlot.EQ.'VS' ) .OR.&
-                   ( CF(I).EQ.'H' .AND. whatToPlot.EQ.'BS' ) .OR. &
-                   ( CF(I).EQ.'G' .AND. whatToPlot.EQ.'JS' )  )  ) THEN
-            WRITE(*,*) 'WRONG CF IN FP, SHOULD BE V OR H OR G BUT IS: ',CF(I)
+         IF( .NOT.( ( whatToPlot(I).EQ.'V' .AND. whatToPlot.EQ.'VS' ) .OR.&
+                   ( whatToPlot(I).EQ.'H' .AND. whatToPlot.EQ.'BS' ) .OR. &
+                   ( whatToPlot(I).EQ.'G' .AND. whatToPlot.EQ.'JS' )  )  ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN FP, SHOULD BE V OR H OR G BUT IS: ',whatToPlot(I)
             STOP
          ENDIF
          IF( M(I).EQ.0 ) THEN
@@ -1562,9 +1563,9 @@ contains
                  DBLE(L(I)+1)*DSQRT( DBLE( (L(I)-M(I))*(L(I)+M(I)) ) /    &
                  DBLE( (2*L(I)+1)*(2*L(I)-1) ) ) * PLMS(L(I)-1,M(I),NTHETA)  )
 
-         IF( CF(I).EQ.'V' .OR. CF(I).EQ.'G' ) THEN
+         IF( whatToPlot(I).EQ.'V' .OR. whatToPlot(I).EQ.'G' ) THEN
             FPT = FPT*DSIN( N(I)*PI*(R-RI) )
-         ELSEIF( CF(I).EQ.'H' ) THEN
+         ELSEIF( whatToPlot(I).EQ.'H' ) THEN
             NR = NAB(L(I),N(I))
             IF( R.LE.RO ) THEN
                IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
@@ -1583,21 +1584,21 @@ contains
 
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
-               FPT = FPT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) )
+               FPT = FPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FPT = -FPT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) )
+               FPT = -FPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
             ELSE
                FPT = 0.D0
             ENDIF
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               FPT = FPT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               FPT = FPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FPT = -FPT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               FPT = -FPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               FPT = -FPT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               FPT = -FPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               FPT = FPT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               FPT = FPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ENDIF
          endif
          FP = FP+FPT
@@ -1611,15 +1612,15 @@ contains
    !                     F_r = - laplace h
    !
    !     optimized for K = 0.
-   FUNCTION FR(X,whatToPlot,R,PHI,NTHETA,TIME,DC)
+   FUNCTION FR(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR,whatToPlot
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
 !cc   COMMON/NPARI/M0,NE,NTV,NTH,LTV,LTH,KTV,KTH,LD
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
@@ -1647,10 +1648,10 @@ contains
          STOP
       ENDIF
       DO I = NDOMIN,NDOMAX
-         IF(  .NOT.( ( whatToPlot.EQ.'VS' .AND. CF(I).EQ.'W' ) .OR.&
-                     ( whatToPlot.EQ.'BS' .AND. CF(I).EQ.'G' ) .OR.&
-                     ( whatToPlot.EQ.'JS' .AND. CF(I).EQ.'H' )  )  ) THEN
-            WRITE(*,*) 'WRONG CF IN FR, SHOULD BE W OR G OR H BUT IS: ',CF(I)
+         IF(  .NOT.( ( whatToPlot.EQ.'VS' .AND. whatToPlot(I).EQ.'W' ) .OR.&
+                     ( whatToPlot.EQ.'BS' .AND. whatToPlot(I).EQ.'G' ) .OR.&
+                     ( whatToPlot.EQ.'JS' .AND. whatToPlot(I).EQ.'H' )  )  ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN FR, SHOULD BE W OR G OR H BUT IS: ',whatToPlot(I)
             STOP
          ENDIF
          IF( M(I).EQ.0 ) THEN
@@ -1664,11 +1665,11 @@ contains
             EPSK = 2.D0
          ENDIF
          FRT = EPSM*EPSK*PLMS(L(I),M(I),NTHETA)
-         IF( CF(I).EQ.'W' ) THEN
+         IF( whatToPlot(I).EQ.'W' ) THEN
             FRT = FRT*R*DCOS( (N(I)-1)*PI*(R-RI) )
-         ELSEIF( CF(I).EQ.'G' ) THEN
+         ELSEIF( whatToPlot(I).EQ.'G' ) THEN
             FRT = FRT*DSIN( N(I)*PI*(R-RI) )
-         ELSEIF( CF(I).EQ.'H' ) THEN
+         ELSEIF( whatToPlot(I).EQ.'H' ) THEN
             NR = NAB(L(I),N(I))
             IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
                WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
@@ -1678,21 +1679,21 @@ contains
          ENDIF
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
-               FRT = FRT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) )
+               FRT = FRT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FRT = -FRT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) )
+               FRT = -FRT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
             ELSE
                FRT = 0.D0
             ENDIF
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               FRT = FRT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               FRT = FRT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FRT = -FRT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               FRT = -FRT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               FRT = -FRT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               FRT = -FRT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               FRT = FRT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               FRT = FRT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ENDIF
          endif
          FR = FR+FRT
@@ -1703,15 +1704,15 @@ contains
    ! Radiales Geschw.feld: U_r = L_2/r v
    !
    !     optimized for K = 0.
-   FUNCTION RF(X,whatToPlot,R,PHI,NTHETA,TIME,DC)
+   FUNCTION RF(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR,whatToPlot
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
       COMMON/AB/A(NAM),B(NAM),NAMC
@@ -1739,9 +1740,9 @@ contains
          STOP
       ENDIF
       DO I = NDOMIN,NDOMAX
-         IF( .NOT.( ( CF(I).EQ.'V' .AND. whatToPlot.EQ.'VR' ) .OR. &
-                    ( CF(I).EQ.'H' .AND. whatToPlot.EQ.'BR' )  ) ) THEN
-            WRITE(*,*) 'WRONG CF IN RF, SHOULD BE V OR H BUT IS: ', CF(I)
+         IF( .NOT.( ( whatToPlot(I).EQ.'V' .AND. whatToPlot.EQ.'VR' ) .OR. &
+                    ( whatToPlot(I).EQ.'H' .AND. whatToPlot.EQ.'BR' )  ) ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN RF, SHOULD BE V OR H BUT IS: ', whatToPlot(I)
             STOP
          ENDIF
          IF( M(I).EQ.0 ) THEN
@@ -1755,9 +1756,9 @@ contains
             EPSK = 2.D0
          ENDIF
          RFT = EPSM*EPSK*L(I)*(L(I)+1) * PLMS(L(I),M(I),NTHETA) / R
-         IF( CF(I).EQ.'V' ) THEN
+         IF( whatToPlot(I).EQ.'V' ) THEN
             RFT = RFT*DSIN( N(I)*PI*(R-RI) )
-         ELSEIF( CF(I).EQ.'H' ) THEN
+         ELSEIF( whatToPlot(I).EQ.'H' ) THEN
             NR = NAB(L(I),N(I))
             IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
                WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
@@ -1768,21 +1769,21 @@ contains
 
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
-               RFT = RFT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) )
+               RFT = RFT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               RFT = -RFT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) )
+               RFT = -RFT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
             ELSE
                RFT = 0.D0
             ENDIF
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               RFT = RFT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               RFT = RFT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               RFT = -RFT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               RFT = -RFT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               RFT = -RFT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               RFT = -RFT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               RFT = RFT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               RFT = RFT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ENDIF
          endif
          RF = RF+RFT
@@ -1792,15 +1793,15 @@ contains
    !------------------------------------------------------------------------
    !   Temperaturfeld Theta ( =  Abweichung vom Grundzust.)
    !   optimized for K = 0.
-   FUNCTION TEMP(X,whatToPlot,R,PHI,NTHETA,TIME,DC)
+   FUNCTION TEMP(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR,whatToPlot
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
       IF( NM.NE.NMC ) THEN
@@ -1820,8 +1821,8 @@ contains
       ENDIF
 
       DO I = NDOMIN, NDOMAX
-         IF( CF(I).NE.'T' ) THEN
-            WRITE(*,*) 'WRONG CF IN TEMP, SHOULD BE T BUT IS: ', CF(I)
+         IF( whatToPlot(I).NE.'T' ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN TEMP, SHOULD BE T BUT IS: ', whatToPlot(I)
             STOP
          ENDIF
          IF( M(I).EQ.0 ) THEN
@@ -1838,21 +1839,21 @@ contains
 
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
-               TEM = TEM * X(I) * DCOS( M(I)*(PPHI-DC*TIME) )
+               TEM = TEM * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               TEM = -TEM * X(I) * DSIN( M(I)*(PPHI-DC*TIME) )
+               TEM = -TEM * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
             ELSE
                TEM = 0.D0
             ENDIF
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               TEM = TEM * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               TEM = TEM * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               TEM = -TEM * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               TEM = -TEM * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               TEM = -TEM * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               TEM = -TEM * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               TEM = TEM * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               TEM = TEM * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ENDIF
          endif
          TEMP = TEMP+TEM
@@ -1862,15 +1863,15 @@ contains
    !------------------------------------------------------------------------
    !     temperature field Theta + Ts
    !     optimized for K = 0.
-   FUNCTION TT(X,whatToPlot,R,PHI,NTHETA,TIME,DC)
+   FUNCTION TT(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR,whatToPlot
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
 
@@ -1890,8 +1891,8 @@ contains
          STOP
       ENDIF
       DO I = NDOMIN,NDOMAX
-         IF( CF(I).NE.'T' ) THEN
-            WRITE(*,*) 'WRONG CF IN T, SHOULD BE T BUT IS: ', CF(I)
+         IF( whatToPlot(I).NE.'T' ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN T, SHOULD BE T BUT IS: ', whatToPlot(I)
             STOP
          ENDIF
          IF( M(I).EQ.0 ) THEN
@@ -1909,9 +1910,9 @@ contains
 
          IF(K(I).EQ.0) THEN
           IF( CRR(I).EQ.'RR' ) THEN
-            TT = TT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) )
+            TT = TT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
           ELSEIF( CRR(I).EQ.'IR' ) THEN
-            TT = -TT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) )
+            TT = -TT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
           ELSEIF( CRR(I).EQ.'RI' ) THEN
             TT = 0.0D0
           ELSEIF( CRR(I).EQ.'II' ) THEN
@@ -1919,13 +1920,13 @@ contains
           ENDIF
          ELSE
           IF( CRR(I).EQ.'RR' ) THEN
-            TT = TT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) )  * DCOS(K(I)*OM*TIME)
+            TT = TT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )  * DCOS(K(I)*OM*TIME)
           ELSEIF( CRR(I).EQ.'IR' ) THEN
-            TT = -TT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+            TT = -TT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
           ELSEIF( CRR(I).EQ.'RI' ) THEN
-            TT = -TT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+            TT = -TT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
           ELSEIF( CRR(I).EQ.'II' ) THEN
-            TT = TT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+            TT = TT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
           ENDIF
          ENDIF
          T = T+TT
@@ -1939,15 +1940,15 @@ contains
    !------------------------------------------------------------------------
    !   local Nusselt number NU(r = ri)
    !   optimized for K = 0.
-   FUNCTION FNU(X,whatToPlot,R,PHI,NTHETA,TIME,DC)
+   FUNCTION FNU(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR,whatToPlot
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
       IF( NM.NE.NMC ) THEN
@@ -1967,8 +1968,8 @@ contains
       ENDIF
 
       DO I = NDOMIN,NDOMAX
-         IF( CF(I).NE.'T' ) THEN
-            WRITE(*,*) 'WRONG CF IN TEMP, SHOULD BE T BUT IS: ', CF(I)
+         IF( whatToPlot(I).NE.'T' ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN TEMP, SHOULD BE T BUT IS: ', whatToPlot(I)
             STOP
          ENDIF
          IF( M(I).EQ.0 ) THEN
@@ -1985,21 +1986,21 @@ contains
 
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
-               FNUT = FNUT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) )
+               FNUT = FNUT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FNUT = -FNUT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) )
+               FNUT = -FNUT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
             ELSE
                FNUT = 0.D0
             ENDIF
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               FNUT = FNUT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               FNUT = FNUT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FNUT = -FNUT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               FNUT = -FNUT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               FNUT = -FNUT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               FNUT = -FNUT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               FNUT = FNUT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               FNUT = FNUT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ENDIF
          endif
          FNU = FNU+FNUT
@@ -2016,11 +2017,11 @@ contains
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
 
@@ -2035,8 +2036,8 @@ contains
       NDOMAX = NDV+NDW
 
       DO I = NDOMIN,NDOMAX
-         IF( CF(I).NE.'W' ) THEN
-            WRITE(*,*) 'WRONG CF IN FZONAL, SHOULD BE W BUT IS: ', CF(I)
+         IF( whatToPlot(I).NE.'W' ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN FZONAL, SHOULD BE W BUT IS: ', whatToPlot(I)
             STOP
          ENDIF
 
@@ -2072,20 +2073,18 @@ contains
    !     Uphi = 1/(r*sinphi) d^2/drdph rv - d/dth w
    !
    !     optimized for K = 0.
-   FUNCTION UP(X,whatToPlot,R,PHI,NTHETA,TIME,DC)
+   FUNCTION UP(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR,whatToPlot
       DIMENSION THETA(NMY)
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
-
-      COMMON/THETAC/THETA
 
       IF( NM.NE.NMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NM IN UP.'
@@ -2133,16 +2132,16 @@ contains
                DSQRT((DLMM+1.D0)*(DLPM+1.D0)/((2D0*DL+3D0)*(2D0*DL+1D0))) )
          ENDIF
 
-         IF( CF(I).EQ.'W' ) THEN
+         IF( whatToPlot(I).EQ.'W' ) THEN
             UPT = UPT*R*DCOS( (N(I)-1)*PI*(R-RI) )
-         ELSEIF( CF(I).EQ.'G' ) THEN
+         ELSEIF( whatToPlot(I).EQ.'G' ) THEN
             UPT = UPT*DSIN( N(I)*PI*(R-RI) )
          ENDIF
          IF(K(I).EQ.0) THEN
             IF( CRR(I).EQ.'RR' ) THEN
-               UPT = UPT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) )
+               UPT = UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) )
+               UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
             ELSEIF( CRR(I).EQ.'RI' ) THEN
                UPT = 0.0D0
             ELSEIF( CRR(I).EQ.'II' ) THEN
@@ -2150,13 +2149,13 @@ contains
             ENDIF
          ELSE
             IF( CRR(I).EQ.'RR' ) THEN
-               UPT = UPT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               UPT = UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+               UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               UPT = -UPT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               UPT = -UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               UPT = UPT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+               UPT = UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ENDIF
          ENDIF
 
@@ -2190,21 +2189,21 @@ contains
 
             IF(K(I).EQ.0) THEN
                IF( CRR(I).EQ.'RR' ) THEN
-                  UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) )
+                  UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
                ELSEIF( CRR(I).EQ.'IR' ) THEN
-                  UPT = -UPT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) )
+                  UPT = -UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
                ELSE
                   UPT = 0.D0
                ENDIF
             ELSE
                IF( CRR(I).EQ.'RR' ) THEN
-                  UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+                  UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
                ELSEIF( CRR(I).EQ.'IR' ) THEN
-                  UPT = -UPT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+                  UPT = -UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
                ELSEIF( CRR(I).EQ.'RI' ) THEN
-                  UPT = UPT * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+                  UPT = UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
                ELSEIF( CRR(I).EQ.'II' ) THEN
-                  UPT = UPT * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+                  UPT = UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
                ENDIF
             ENDIF
          ENDIF
@@ -2222,11 +2221,11 @@ contains
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
 
@@ -2240,8 +2239,8 @@ contains
       NDOMAX = NDV
 
       DO I = NDOMIN, NDOMAX
-         IF( CF(I).NE.'V' ) THEN
-            WRITE(*,*) 'WRONG CF IN FP, SHOULD BE V BUT IS: ', CF(I)
+         IF( whatToPlot(I).NE.'V' ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN FP, SHOULD BE V BUT IS: ', whatToPlot(I)
             STOP
          ENDIF
 
@@ -2286,11 +2285,11 @@ contains
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
 
@@ -2304,8 +2303,8 @@ contains
       NDOMIN = NDV+NDW+NDT+NDH+1
       NDOMAX = NDV+NDW+NDT+NDH+NDG
       DO I = NDOMIN,NDOMAX
-         IF( CF(I).NE.'G' ) THEN
-            WRITE(*,*) 'WRONG CF IN DMTOR, SHOULD BE G BUT IS: ', CF(I)
+         IF( whatToPlot(I).NE.'G' ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN DMTOR, SHOULD BE G BUT IS: ', whatToPlot(I)
             STOP
          ENDIF
          IF( M(I).NE.0 ) cycle
@@ -2345,11 +2344,11 @@ contains
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR,whatToPlot
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
       COMMON/AB/A(NAM),B(NAM),NAMC
@@ -2377,9 +2376,9 @@ contains
          STOP
       ENDIF
       DO I = NDOMIN,NDOMAX
-         IF( .NOT.( ( CF(I).EQ.'H' .AND. whatToPlot.EQ.'MP' ) .OR. &
-                   ( CF(I).EQ.'G' .AND. whatToPlot.EQ.'MJ' )  ) ) THEN
-            WRITE(*,*) 'WRONG CF IN DMPJ, SHOULD BE H OR G BUT IS: ', CF(I)
+         IF( .NOT.( ( whatToPlot(I).EQ.'H' .AND. whatToPlot.EQ.'MP' ) .OR. &
+                   ( whatToPlot(I).EQ.'G' .AND. whatToPlot.EQ.'MJ' )  ) ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN DMPJ, SHOULD BE H OR G BUT IS: ', whatToPlot(I)
             STOP
          ENDIF
          IF( M(I).NE.0 ) cycle
@@ -2391,7 +2390,7 @@ contains
          DMP = EPSK*R * DBLE(L(I)*(L(I)+1)) * ( &
               PLMS(L(I)+1,M(I),NTHETA) / DSQRT( DBLE( (2*L(I)+1)*(2*L(I)+3) ) )  - &
               PLMS(L(I)-1,M(I),NTHETA) / DSQRT( DBLE( (2*L(I)+1)*(2*L(I)-1) ) )   )
-         IF( CF(I).EQ.'H' ) THEN
+         IF( whatToPlot(I).EQ.'H' ) THEN
             NR = NAB(L(I),N(I))
             IF( R.LE.RO ) THEN
                IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
@@ -2406,7 +2405,7 @@ contains
                ENDIF
                DMP = DMP * (RO/R)**(L(I)+1) * DCOS( A(NR)*RO-B(NR) )
             ENDIF
-         ELSEIF( CF(I).EQ.'G' ) THEN
+         ELSEIF( whatToPlot(I).EQ.'G' ) THEN
             DMP = DMP*DSIN( N(I)*PI*(R-RI) )
          ENDIF
         if(K(I).EQ.0) then
@@ -2437,11 +2436,11 @@ contains
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
       COMMON/AB/A(NAM),B(NAM),NAMC
@@ -2459,8 +2458,8 @@ contains
       NDOMIN = NDV + NDW + NDT + 1
       NDOMAX = NDV + NDW + NDT + NDH
       DO I = NDOMIN,NDOMAX
-         IF( CF(I).NE.'H' ) THEN
-            WRITE(*,*) 'WRONG CF IN DMC, SHOULD BE H BUT IS: ', CF(I)
+         IF( whatToPlot(I).NE.'H' ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN DMC, SHOULD BE H BUT IS: ', whatToPlot(I)
             STOP
          ENDIF
          IF( M(I).NE.0 ) cycle
@@ -2505,9 +2504,9 @@ contains
    !  THE A'S AND B'S ARE STORED LINEARLY IN THE ARRAYS, NAB(L,N)
    !  DETERMINS THE POSITION IN THE ARRAY.
    !  NEEDS FUNCTIONS AMIN,NAB .
-   SUBROUTINE ABG(ND,CF,LA,NA)
+   SUBROUTINE ABG(ND,whatToPlot,LA,NA)
       IMPLICIT REAL*8(A-H,O-Y)
-      CHARACTER(len=1):: CF(:)
+      CHARACTER(len=1):: whatToPlot(:)
       integer:: ND
       double precision:: LA(:),NA(:)
       double precision:: ri, ro
@@ -2530,7 +2529,7 @@ contains
          STOP
       ENDIF
 
-      CALL CALCNMAX(ND,CF,LA,NA)
+      CALL CALCNMAX(ND,whatToPlot,LA,NA)
 
       RI = ETA/(1.D0-ETA)
       RO = RI+1.D0
@@ -2789,10 +2788,10 @@ contains
    !------------------------------------------------------------------------
    !-- CALCULATES THE MAXIMUM N FOR EACH L.
    !   THIS IS USED FOR CALCULATING THE RADIAL FUNCTION OF H.
-   SUBROUTINE CALCNMAX(NK,CF,L,N)
+   SUBROUTINE CALCNMAX(NK,whatToPlot,L,N)
       IMPLICIT REAL*8(A-H,O-Z)
       integer:: NK
-      CHARACTER(len=1):: CF(:)
+      CHARACTER(len=1):: whatToPlot(:)
       double precision:: L(*),N(*)
       integer:: i, lold
 
@@ -2804,7 +2803,7 @@ contains
       LOLD = 10000
       NL = 0
       DO I = 1,NK
-         IF( CF(I).EQ.'H' ) THEN
+         IF( whatToPlot(I).EQ.'H' ) THEN
             IF( L(I).NE.LOLD ) THEN
                NL = NL+1
                IF( NL.GT.NLMA ) THEN
@@ -2823,15 +2822,15 @@ contains
 
    !------------------------------------------------------------------------
    ! Phi -Komponente des Toroidalfeldes: - dtheta g
-   FUNCTION DBT(X,R,PHI,NTHETA,TIME,DC)
+   FUNCTION DBT(X,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
-      CHARACTER*1 CF
+      CHARACTER*1 whatToPlot
       CHARACTER*2 CRR
 
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
       COMMON/NPARI/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
 
@@ -2846,8 +2845,8 @@ contains
       NDOMIN = NDV+NDW+NDT+NDH+1
       NDOMAX = NDV+NDW+NDT+NDH+NDG
       DO I = NDOMIN,NDOMAX
-         IF( CF(I).NE.'G' ) THEN
-            WRITE(*,*) 'WRONG CF IN DBT, SHOULD BE G BUT IS: ', CF(I)
+         IF( whatToPlot(I).NE.'G' ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN DBT, SHOULD BE G BUT IS: ', whatToPlot(I)
             STOP
          ENDIF
          IF( M(I).EQ.0 ) THEN
@@ -2865,13 +2864,13 @@ contains
               DSQRT(DBLE((L(I)+M(I)+1)*(L(I)-M(I)))) * PLMS(L(I),M(I)+1,NTHETA) )
          DB = DB*DSIN( N(I)*PI*(R-RI) )
          IF( CRR(I).EQ.'RR' ) THEN
-            DB = DB * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+            DB = DB * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'IR' ) THEN
-            DB = -DB * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DCOS(K(I)*OM*TIME)
+            DB = -DB * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'RI' ) THEN
-            DB = -DB * X(I) * DCOS( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+            DB = -DB * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
          ELSEIF( CRR(I).EQ.'II' ) THEN
-            DB = DB * X(I) * DSIN( M(I)*(PPHI-DC*TIME) ) * DSIN(K(I)*OM*TIME)
+            DB = DB * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
          ENDIF
          DBT = DBT+DB
       enddo
@@ -2881,7 +2880,7 @@ contains
    SUBROUTINE READLA(STARTFILE,NUDSR,TIMER,X)
       IMPLICIT REAL*8(A-H,O-Z)
       integer:: NUDSR
-      CHARACTER*1 CF,CFS
+      CHARACTER*1 whatToPlot,CFS
       CHARACTER*2 CRR
       CHARACTER*40 STARTFILE
       double precision, intent(in):: x(:)
@@ -2892,7 +2891,7 @@ contains
       COMMON/NUM/RELE,EPS,ALPH,STOER,NITMAX,NJA
       COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
       COMMON/DIMS/NDVS,NDWS,NDTS,NDHS,NDGS,NDS
-      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),CF(NM),CRR(NM)
+      COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
       COMMON/QNUS/NMSC,LS(NM),MS(NM),NS(NM),CFS(NM)
       COMMON/QNUVI/NUC,NUOM
       COMMON/TINT/DT,TIME0,NST,NTW,NDTW,NDTPW,NKWT,IKWT(NMT)
@@ -2932,7 +2931,7 @@ contains
       !-- LOOKING FOR THE RIGHT DATASET:
       DO I=1,1000
          !----- READD READS FULL SET OF COEFFITIENTS:
-         CALL READD(12,LDR,ND,X,CF,CRR,L,M,N,K, EVPM,EVPF,EVTM,DNU,EVTF,EMPM,EMPF,EMTM,EMTF)
+         CALL READD(12,LDR,ND,X,whatToPlot,CRR,L,M,N,K, EVPM,EVPF,EVTM,DNU,EVTF,EMPM,EMPF,EMTM,EMTF)
          IF( LDR.EQ.1 ) exit
       enddo
 
@@ -2943,8 +2942,8 @@ contains
       TA=TA**2
 
       LSX=1
-      CALL SORTK(ND,LSX,X,CF,CRR,L,M,N,K,NUC,NUOM)
-      CALL RDIM(ND,CF,CRR,L,M,N,K,CFS,LS,MS,NS, &
+      CALL SORTK(ND,LSX,X,whatToPlot,CRR,L,M,N,K,NUC,NUOM)
+      CALL RDIM(ND,whatToPlot,CRR,L,M,N,K,CFS,LS,MS,NS, &
                        NDV,NDW,NDT,NDH,NDG,NDVS,NDWS,NDTS,NDHS,NDGS,NDS)
       CLOSE(12)
    END SUBROUTINE READLA
