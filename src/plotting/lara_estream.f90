@@ -8,6 +8,7 @@
 !--
 !------------------------------------------------------------------------
 PROGRAM LARA
+   use parameters
    implicit none
    double precision, parameter:: PI = 3.14159265358979D0
    integer, PARAMETER:: NM = 5500, NAM = 400, nPlotsMAX = 9, nSubPlotsMAX = 4, NPAM = nPlotsMAX*nSubPlotsMAX
@@ -45,13 +46,12 @@ PROGRAM LARA
    COMMON/DIM/NDV,NDW,NDT,NDH,NDG,ND
    COMMON/QNU/NMC,L(NM),M(NM),N(NM),K(NM),whatToPlot(NM),CRR(NM)
    COMMON/QNUS/NMSC,LS(NM),MS(NM),NS(NM),CFS(NM)
-   COMMON/PAR/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
+
    COMMON/PARI/RAI,TAI,PRI,PMI,ETAI,CI,OMI,FTWI,FTGI,MFI
    COMMON/NPAR/M0,NTV,NTH,LTV,LTH,KTV,KTH,LEV,LRB,LD
    COMMON/NPARI/M0I,NTVI,NTHI,LTVI,LTHI,KTVI,KTHI,LEVI,LRBI,LDI
    COMMON/LNMAX/NLMAC,NL,LC(NLMA),NMAXC(NLMA),NMABC
    COMMON/AB/A(NAM),B(NAM),NAMC
-   COMMON/NUM/RELE,EPS,ALPH,STOER,NITMAX,NJA
    COMMON/POLE/XP,YP
 
    NCPLOT = 0
@@ -84,11 +84,11 @@ PROGRAM LARA
    !   THE DIFFERENCE BETWEEN THE CONTOUR LEVELS (countourParIsNumber = .false.).
    !   FOR drawFrame = 1 A FRAME IS DRAWN AROUND EACH SUBPLOT.
    !   timeSeriesControl CONTROLLS TIMESERIES
-   !   timeSeriesControl = 0  : NORMAL
+   !   timeSeriesControl =  0 : NORMAL
    !   timeSeriesControl = -1 : TIMESERIES OF 6 PLOTS WITH TIME GIVEN INDIVIDUALLY,
-   !   timeSeriesControl = 1  : TIMESERIES OF 6 PLOTS WITH TIME GIVEN BY OM,
+   !   timeSeriesControl =  1 : TIMESERIES OF 6 PLOTS WITH TIME GIVEN BY OM,
    !   timeSeriesControl = -2 : TIMESERIES OF 8 PLOTS WITH TIME GIVEN INDIVIDUALLY,
-   !   timeSeriesControl = 2  : TIMESERIES OF 8 PLOTS WITH TIME GIVEN BY OM.
+   !   timeSeriesControl =  2 : TIMESERIES OF 8 PLOTS WITH TIME GIVEN BY OM.
    IF( drawPlotNum.LT.0 .OR. drawPlotNum.GT.3 ) THEN
       WRITE(*,*) 'WRONG INPUT OF drawPlotNum: ',drawPlotNum
       STOP
@@ -159,12 +159,20 @@ PROGRAM LARA
          NQ = NQ+1
       ENDIF
 
-      !----- quadrant DESTINGUSHES BETWEEN QUADRANTS (quadrant = 'Q1','Q2','Q3','Q4') ,
-      !      HALF SPHERES ( quadrant = 'HL','HR','HU','HO') ,SPHERE ( quadrant = 'SP' )
-      !      PROJECTION ON A SPHERE ( quadrant = ' PS','PL','PR' ) .
-      !      constantCoordinate DETERMINS WETHER R = constantCoordinateValue (constantCoordinate = 'R') , PHI = constantCoordinateValue (constantCoordinate = 'P') OR
-      !      THETA = constantCoordinateValue (constantCoordinate = 'T') IS KEPT CONSTANT ,
-      !      whatToPlot DETERMINS THE FIELD TO BE PLOTTED:
+      !--- quadrant DESTINGUSHES BETWEEN:
+      !     QUADRANTS:
+      !        quadrant = 'Q1','Q2','Q3','Q4' ,
+      !     HALF SPHERES:
+      !        quadrant = 'HL','HR','HU','HO',
+      !     SPHERE:
+      !        quadrant = 'SP',
+      !     PROJECTION ON A SPHERE
+      !        quadrant = ' PS','PL','PR'
+      !    constantCoordinate DETERMINS WhETHER:
+      !             R = constantCoordinateValue (constantCoordinate = 'R') ,
+      !           PHI = constantCoordinateValue (constantCoordinate = 'P') OR
+      !         THETA = constantCoordinateValue (constantCoordinate = 'T') IS KEPT CONSTANT ,
+      !    whatToPlot DETERMINS THE FIELD TO BE PLOTTED:
       !      'VS' : STREAMFUNCTIONS OF VELOCITY FIELD IN BUSSE NOTATION,
       !      'BS' : STREAMFUNCTIONS OF MAGNETIC FIELD IN BUSSE NOTATION,
       !      'JS' : STREAMFUNCTIONS OF ELECTRIC CURRENT IN BUSSE NOTATION,
@@ -182,9 +190,10 @@ PROGRAM LARA
       !      'UP' : Phi component of velocity,
       !      'NU' : local Nusselt number for r = ri.
       !
-      !      normRadiusMax IS A MULTIPLIER FOR THE LARGEST RADIUS TO BE PLOTTED: RM = normRadiusMax*RO.
-      !      contourPar IS THE STEP FOR THE CONTOURS FOR countourParIsNumber = .false. OR
-      !      THE NUMBER OF CONTPUR LINES FOR Z>0 OR Z<0.
+      !    normRadiusMax IS A MULTIPLIER FOR THE LARGEST RADIUS TO BE PLOTTED: RM = normRadiusMax*RO.
+      !    contourPar IS:
+      !       THE STEP FOR THE CONTOURS FOR countourParIsNumber = .false. OR
+      !       THE NUMBER OF CONTPUR LINES FOR Z>0 OR Z<0 countourParIsNumber = .true.
       ! Next two lines  are repeated for the number of subplots
       !| SUBPL | PLANE(RPT) | CONST | FIELD |(MAX RAD)/RO|contourPar/STEP|PlotNR|
       !   'SP'      'T'        90      'VS'     1.E0          9    '000'
