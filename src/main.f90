@@ -58,7 +58,7 @@ program linearOnset
       !! other parameters fixed.
       case(-1)
          call fixedParGrowthRate()
-      !> Computes the critical Thermal Rayleigh number for the onset of 
+      !> Computes the critical Thermal Rayleigh number for the onset of
       !! convections for all other parameters fixed.
       case(0)
          call fixedParCriticalRa()
@@ -79,7 +79,7 @@ program linearOnset
          LowerLimit = tau
          call varyTauCriticalState(LowerLimit, UpperLimit)
       !> Computes the eigen vector
-      !! Corresponding to the critical value of Rt with all other parameters 
+      !! Corresponding to the critical value of Rt with all other parameters
       !! fixed.
       case(4)
          call fixedParCriticalEigenVector()
@@ -188,7 +188,7 @@ contains
    end subroutine
 
    !**********************************************************************
-   !> Computes the critical Thermal Rayleigh number for the onset of 
+   !> Computes the critical Thermal Rayleigh number for the onset of
    !! convections when all other parameters are considered fixed.
    subroutine fixedParCriticalRa()
       implicit none
@@ -242,6 +242,8 @@ contains
          write( unitOut,'(1X,1P,E17.6,I4)') aux, M0
          write( *,'(1X,1P,E17.6,I4)') aux, M0
       enddo
+      call setParameterValue(CriticalPar)
+      call GrowthRateUpdatePar(m=CriticalM)
       write( unitOut,'(">",1P,E17.6,I4)')  CriticalPar, CriticalM
       write( *,'(">",1P,E17.6,I4)')    CriticalPar, CriticalM
    end subroutine
@@ -324,7 +326,7 @@ contains
 
    !**********************************************************************
    !> Computes and Writes out the eigen vector (equatorial render)
-   !! Corresponding to the critical value of Rt with all other parameters 
+   !! Corresponding to the critical value of Rt with all other parameters
    !! fixed.
    subroutine fixedParCriticalEigenVector()
       implicit none
@@ -333,14 +335,17 @@ contains
       integer:: info, i, ni, li, lti, lpi, Nmodes
       integer:: NTH, KTV, KTH, LTV, LTH, lst, NUC
       double precision:: GRR, GRI, Pm, C0,CriticalRt, OMM
-      integer:: nuds, nuom, MF, LMAX, NIMAX
+      integer:: nuom, MF, LMAX, NIMAX
 
       Ta = TAU*TAU
       ! find the zero grothrate:
       call fixedParCriticalParAndM0_v2()
       Nmodes = getEigenProblemSize()
+      ! Allocate space for the eigen modes and vectors
       allocate( ZEVEC(Nmodes), zew(Nmodes), ZEVAL(Nmodes,Nmodes))
-      call computeGrowthRateModes(.TRUE.,zew,zeval)
+      ! Recoompute critical state modes and eigenvectors
+      call computeGrowthRateModes(sort=.TRUE., zew=zew, zeval=zeval)
+      ! Most unstable mode will be the first
       GROR  = DIMAG(zew(1))
       Omega = -dble(zew(1))
       zevec(:) = zeval(:,1)
@@ -348,7 +353,7 @@ contains
       IF(info.NE.0) THEN
          WRITE(unitOut,*) 'NO CRITICAL RAYLEIGH NUMBER FOUND.'
          STOP NO_RA_FOUND
-      endif 
+      endif
       ! print eigenvector
       ! Fileformat for outputfile:
       ! outputFormat=0 formatted Wicht
@@ -366,7 +371,7 @@ contains
       WRITE(unitOut,'(I2,7I3,2D16.8,'' M0,TRUNC,LD,GROTH,DRIFT'')')  M0,Truncation,NTH,KTV,KTH,LTV,LTH,LD,GRR,GRI
       NUDS=1
       PM=0.D0
-      WRITE(unitOut, '(I5,2D14.6,D9.2,D13.6,D9.2,'' I,Ta,Rt,Pt,PM,E'')') NUDS,Ta,CriticalRt,Pt,PM,ETA
+      WRITE(unitOut, '(I5,2D14.6,D9.2,D13.6,D9.2,'' I,Ta,Rt,Pt,PM,E'')') 0,Ta,Rt,Pt,PM,ETA
       C0 = OMEGA/M0
       OMM=0.D0
       NUC=0
@@ -376,9 +381,9 @@ contains
 9100      FORMAT(2D17.10,3I4,'    C,OM, WHERE?,FLOQUET')
 
       LMAX=2*Truncation+M0-1
+      ! poloidal flow:
       I=0
       DO LI=LMIN,LMAX,LD
-         !  L for poloidal (v) field:
          LPI = LI
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
          DO NI=1,NIMAX
@@ -390,10 +395,9 @@ contains
             I=I+4
          enddo
       enddo
-!
+      ! toroidal  flow:
       I=0
       DO LI=LMIN,LMAX,LD
-!           L for toroidal (w) field:
          IF( Symmetry.EQ.2 ) THEN
          LTI=LI+1
          ELSEIF( Symmetry.EQ.1 ) THEN
@@ -411,7 +415,7 @@ contains
             I=I+4
          enddo
       enddo
-!
+      ! temperature
       I=0
       DO LI=LMIN,LMAX,LD
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
@@ -424,7 +428,7 @@ contains
             I=I+4
          enddo
       enddo
-!
+      ! composition
       I=0
       DO LI=LMIN,LMAX,LD
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
