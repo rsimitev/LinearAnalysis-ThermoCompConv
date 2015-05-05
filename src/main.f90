@@ -242,7 +242,8 @@ contains
       DO m0=nint(LowerLimit), nint(UpperLimit), nint(StepSize)
          call GrowthRateUpdatePar(m=m0)
          ! Increase the interval, in case we did not find anything.
-         do i=0, 5
+         do i=0, 6
+            if (i==6) origParVal = 1.0d60
             ParMin = origParVal - 0.5*2**i*dabs(origParVal)
             ParMax = origParVal + 0.5*2**i*dabs(origParVal)
 
