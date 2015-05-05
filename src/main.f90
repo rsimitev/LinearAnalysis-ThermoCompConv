@@ -216,11 +216,29 @@ contains
       INTEGER:: CriticalM
       integer:: info, i
 
-      info=0
-      CriticalPar = 1.0d300
+      info=0 
+      select case (trim(VariablePar))
+         case('Rt','Rc')
+            CriticalPar = 1.0d100
+         case default
+            CriticalPar = -1.0d100
+      end select
       call saveParameterValue(origParVal)
+      Write(*,*) '#----------------------------------------'
+      WRITE(*,*) '# eta = ',ETA
+      WRITE(*,*) '# m0  = ',M0
+      WRITE(*,*) '# tau = ',TAU
+      WRITE(*,*) '# Pt  = ',Pt
+      WRITE(*,*) '# Le  = ',Le
+      WRITE(*,*) '# Rc  = ',Rc
+      WRITE(*,*) '# Rt  = ',Rt
+      Write(*,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
+      Write(*,*) '#----------------------------------------'
+      Write(*,*) '#       ', trim(VariablePar)//'_c', '      m'
+      !
+      WRITE(unitOut,*) '#TAU=',TAU,' Pt=',Pt,' M0=',M0,' eta=',ETA
+      WRITE(unitOut,*) '#Le=',Le,' Rc=',Rc
       Write(unitOut,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
-      Write(*      ,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
       DO m0=nint(LowerLimit), nint(UpperLimit), nint(StepSize)
          call GrowthRateUpdatePar(m=m0)
          ! Increase the interval, in case we did not find anything.
@@ -235,10 +253,20 @@ contains
             Write(*,*) 'Failed to find roots: error:', info
             stop 5
          endif
-         if (aux < CriticalPar) then
-            CriticalPar = aux
-            CriticalM  = m0
-         endif
+         ! Critical values are above the line for Rc and Rt
+         ! But below the line for the other parameters
+         select case (trim(VariablePar))
+            case('Rt','Rc')
+               if (aux < CriticalPar) then
+                  CriticalPar = aux
+                  CriticalM  = m0
+               endif
+            case default
+               if (aux > CriticalPar) then
+                  CriticalPar = aux
+                  CriticalM  = m0
+               endif
+         end select
          write( unitOut,'(1X,1P,E17.6,I4)') aux, M0
          write( *,'(1X,1P,E17.6,I4)') aux, M0
       enddo
