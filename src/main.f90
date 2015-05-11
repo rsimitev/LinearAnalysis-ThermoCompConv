@@ -250,7 +250,7 @@ contains
             ParMax = origParVal + 0.5*2**i*dabs(origParVal)
             if (ParMax.lt.0) ParMax=0.0d0
             if (i==6) then
-	       Write(*,*) 'Damn! 6 iterations and I could find nothing?'
+               Write(*,*) 'Damn! 6 iterations and I could find nothing?'
                ParMin = -1.0d60
                ParMax = 1.0d60
             endif
