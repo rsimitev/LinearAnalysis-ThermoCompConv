@@ -207,7 +207,9 @@ contains
 
    !**********************************************************************
    !> For the specified parameter, finds the global critical value
-   !! for all other parameters fixed.
+   !! for all other parameters fixed. At the end, m0 is teh critical m
+   !! and the critical value of VariablePar is updated in the growth rate 
+   !! module.
    subroutine fixedParCriticalParAndM0_v2()
       implicit none
       double precision:: aux
