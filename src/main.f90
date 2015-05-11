@@ -279,6 +279,8 @@ contains
          write( unitOut,'(1X,1P,E17.6,I4)') aux, M0
          write( *,'(1X,1P,E17.6,I4)') aux, M0
       enddo
+      call setParameterValue(CriticalPar)
+      m0 = CriticalM
       write( unitOut,'(">",1P,E17.6,I4)')  CriticalPar, CriticalM
       write( *,'(">",1P,E17.6,I4)')    CriticalPar, CriticalM
    end subroutine
