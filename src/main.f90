@@ -103,6 +103,11 @@ program linearOnset
          endif
          LowerLimit = m0
          call fixedParCriticalParAndM0_v2()
+      case(8) ! Loops through the m's to find the critical Rt=Rc and m_c.
+         VariablePar = 'Rt'
+         call setVariableParam(VariablePar)
+         LowerLimit = m0
+         call CriticalRtSameAsRc()
       case default
          Write(*,*) 'Unknown computation type:', LCALC
    end select
@@ -207,7 +212,9 @@ contains
 
    !**********************************************************************
    !> For the specified parameter, finds the global critical value
-   !! for all other parameters fixed.
+   !! for all other parameters fixed. At the end, m0 is teh critical m
+   !! and the critical value of VariablePar is updated in the growth rate 
+   !! module.
    subroutine fixedParCriticalParAndM0_v2()
       implicit none
       double precision:: aux
@@ -216,38 +223,73 @@ contains
       INTEGER:: CriticalM
       integer:: info, i
 
-      info=0
-      CriticalPar = 1.0d300
+      info=0 
+      select case (trim(VariablePar))
+         case('Rt','Rc')
+            CriticalPar = 1.0d100
+         case default
+            CriticalPar = -1.0d100
+      end select
       call saveParameterValue(origParVal)
+      Write(*,*) '#----------------------------------------'
+      WRITE(*,*) '# eta = ',ETA
+      WRITE(*,*) '# m0  = ',M0
+      WRITE(*,*) '# tau = ',TAU
+      WRITE(*,*) '# Pt  = ',Pt
+      WRITE(*,*) '# Le  = ',Le
+      WRITE(*,*) '# Rc  = ',Rc
+      WRITE(*,*) '# Rt  = ',Rt
+      Write(*,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
+      Write(*,*) '#----------------------------------------'
+      Write(*,*) '#       ', trim(VariablePar)//'_c', '      m'
+      !
+      WRITE(unitOut,*) '#TAU=',TAU,' Pt=',Pt,' M0=',M0,' eta=',ETA
+      WRITE(unitOut,*) '#Le=',Le,' Rc=',Rc
       Write(unitOut,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
-      Write(*      ,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
       DO m0=nint(LowerLimit), nint(UpperLimit), nint(StepSize)
          call GrowthRateUpdatePar(m=m0)
          ! Increase the interval, in case we did not find anything.
-         do i=0, 5
+         do i=0, 6
             ParMin = origParVal - 0.5*2**i*dabs(origParVal)
+            if (ParMin.gt.0.0d0) ParMin = 0.0d0
             ParMax = origParVal + 0.5*2**i*dabs(origParVal)
+            if (ParMax.lt.0) ParMax=0.0d0
+            if (i==6) then
+               Write(*,*) 'Damn! 6 iterations and I could find nothing?'
+               ParMin = -1.0d60
+               ParMax = 1.0d60
+            endif
 
             call minimizer(MaxGrowthRate, ParMin, ParMax, RELE ,ABSE, NSMAX, aux, info)
             if (info.eq.0) exit
          enddo
          if(info.NE.0) then
             Write(*,*) 'Failed to find roots: error:', info
-            stop 5
+            cycle 
          endif
-         if (aux < CriticalPar) then
-            CriticalPar = aux
-            CriticalM  = m0
-         endif
+         ! Critical values are above the line for Rc and Rt
+         ! But below the line for the other parameters
+         select case (trim(VariablePar))
+            case('Rt','Rc')
+               if (aux < CriticalPar) then
+                  CriticalPar = aux
+                  CriticalM  = m0
+               endif
+            case default
+               if (aux > CriticalPar) then
+                  CriticalPar = aux
+                  CriticalM  = m0
+               endif
+         end select
          write( unitOut,'(1X,1P,E17.6,I4)') aux, M0
          write( *,'(1X,1P,E17.6,I4)') aux, M0
       enddo
       call setParameterValue(CriticalPar)
       call GrowthRateUpdatePar(m=CriticalM)
+      m0 = CriticalM
       write( unitOut,'(">",1P,E17.6,I4)')  CriticalPar, CriticalM
       write( *,'(">",1P,E17.6,I4)')    CriticalPar, CriticalM
    end subroutine
-
 
    !**********************************************************************
    !> Computes the lowest critical thermal Rayleigh number of all m's
@@ -614,6 +656,29 @@ contains
          WRITE(*,*) Le, CriticalRt, GROR
          WRITE(unitOut,'(3D16.8)') Le, CriticalRt, GROR
       enddo
+   end subroutine
+   
+   !**********************************************************************
+   !> Computes the global critical thermal Rayleigh number that equals the
+   !! compositional Rayleigh number for fixed other parameters.
+   subroutine CriticalRtSameAsRc()
+      implicit none
+      double precision:: dRtRel
+      integer:: counter
+      Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc
+      do counter = 1, 15
+         call fixedParCriticalParAndM0_v2()
+         call saveParameterValue(Rt)
+         dRtRel = abs((Rt-Rc)/Rt)
+         ! If we reached the required tolerance, bail out
+         if (dRtRel .le. 1.0d-7) exit
+         Rc = ( Rt*0.6d0 + Rc*0.4d0 )
+         LowerLimit = m0+5
+         call GrowthRateUpdatePar(Rc=Rc)
+         Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc
+      enddo
+      WRITE(*,*) ">>",Rt, Rc, m0
+      WRITE(unitOut,'(A,2D16.8,I4)') ">>", Rt, Rc, m0
    end subroutine
 end program
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
