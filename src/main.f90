@@ -243,9 +243,15 @@ contains
          call GrowthRateUpdatePar(m=m0)
          ! Increase the interval, in case we did not find anything.
          do i=0, 6
-            if (i==6) origParVal = 1.0d60
             ParMin = origParVal - 0.5*2**i*dabs(origParVal)
+            if (ParMin.gt.0.0d0) ParMin = 0.0d0
             ParMax = origParVal + 0.5*2**i*dabs(origParVal)
+            if (ParMax.lt.0) ParMax=0.0d0
+            if (i==6) then
+	       Write(*,*) 'Damn! 6 iterations and I could find nothing?'
+               ParMin = -1.0d60
+               ParMax = 1.0d60
+            endif
 
             call minimizer(MaxGrowthRate, ParMin, ParMax, RELE ,ABSE, NSMAX, aux, info)
             if (info.eq.0) exit
