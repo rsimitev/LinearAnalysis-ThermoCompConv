@@ -103,6 +103,11 @@ program linearOnset
          endif
          LowerLimit = m0
          call fixedParCriticalParAndM0_v2()
+      case(8) ! Loops through the m's to find the critical Rt=Rc and m_c.
+         VariablePar = 'Rt'
+         call setVariableParam(VariablePar)
+         LowerLimit = m0
+         call CriticalRtSameAsRc()
       case default
          Write(*,*) 'Unknown computation type:', LCALC
    end select
@@ -284,7 +289,6 @@ contains
       write( unitOut,'(">",1P,E17.6,I4)')  CriticalPar, CriticalM
       write( *,'(">",1P,E17.6,I4)')    CriticalPar, CriticalM
    end subroutine
-
 
    !**********************************************************************
    !> Computes the lowest critical thermal Rayleigh number of all m's
