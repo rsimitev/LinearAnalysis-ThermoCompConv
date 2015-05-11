@@ -641,5 +641,28 @@ contains
          WRITE(unitOut,'(3D16.8)') Le, CriticalRt, GROR
       enddo
    end subroutine
+   
+   !**********************************************************************
+   !> Computes the global critical thermal Rayleigh number that equals the
+   !! compositional Rayleigh number for fixed other parameters.
+   subroutine CriticalRtSameAsRc()
+      implicit none
+      double precision:: dRtRel
+      integer:: counter
+      Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc
+      do counter = 1, 15
+         call fixedParCriticalParAndM0_v2()
+         call saveParameterValue(Rt)
+         dRtRel = abs((Rt-Rc)/Rt)
+         ! If we reached the required tolerance, bail out
+         if (dRtRel .le. 1.0d-7) exit
+         Rc = ( Rt*0.6d0 + Rc*0.4d0 )
+         LowerLimit = m0+5
+         call GrowthRateUpdatePar(Rc=Rc)
+         Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc
+      enddo
+      WRITE(*,*) ">>",Rt, Rc, m0
+      WRITE(unitOut,'(A,2D16.8,I4)') ">>", Rt, Rc, m0
+   end subroutine
 end program
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
