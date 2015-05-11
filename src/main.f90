@@ -258,7 +258,7 @@ contains
          enddo
          if(info.NE.0) then
             Write(*,*) 'Failed to find roots: error:', info
-            stop 5
+            cycle 
          endif
          ! Critical values are above the line for Rc and Rt
          ! But below the line for the other parameters
