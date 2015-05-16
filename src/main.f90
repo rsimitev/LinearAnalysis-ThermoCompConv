@@ -239,12 +239,14 @@ contains
       WRITE(*,*) '# Le  = ',Le
       WRITE(*,*) '# Rc  = ',Rc
       WRITE(*,*) '# Rt  = ',Rt
+      Write(*,*) '# Truncation = ', Truncation
       Write(*,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
       Write(*,*) '#----------------------------------------'
       Write(*,*) '#       ', trim(VariablePar)//'_c', '      m'
       !
       WRITE(unitOut,*) '#TAU=',TAU,' Pt=',Pt,' M0=',M0,' eta=',ETA
       WRITE(unitOut,*) '#Le=',Le,' Rc=',Rc
+      Write(unitOut,*) '# Truncation = ', Truncation
       Write(unitOut,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
       DO m0=nint(LowerLimit), nint(UpperLimit), nint(StepSize)
          call GrowthRateUpdatePar(m=m0)
