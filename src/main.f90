@@ -688,25 +688,22 @@ contains
          if(LowerLimit==0.or.m0==0) LowerLimit=20
          ! Update the Rc steps
          dRc_old = dRc
-         ! We want the next iteration to have a an Rc that bridged \a adv of the
-         ! gap based on its previous evolution. But only if it was a sane
-         ! iteration, otherwise go back.
-         if( Rt*Rt_old.gt.0 ) then
-            dRc = adv*(Rc-Rt)/((Rt-Rt_old)/dRc_old-adv)
-         elseif(Rt.lt.0) then
-            dRc = -0.9*dRc_old
+         if(counter.lt.2) then
+            dRc = ( Rt - Rc )*adv
          else
-            dRc = (Rt - Rc)*adv
+            ! We want the next iteration to have a an Rc that bridged \a adv of the
+            ! gap based on its previous evolution. But only if it was a sane
+            ! iteration, otherwise go back.
+            if( Rt*Rt_old.gt.0 ) then
+               dRc = adv*(Rc-Rt)/((Rt-Rt_old)/dRc_old-adv)
+            elseif(Rt.lt.0) then
+               dRc = -0.9*dRc_old
+            else
+               dRc = (Rt - Rc)*adv
+            endif
          endif
-         !if(abs(dRc).gt.abs(dRc_old)) dRc=abs(dRc_old)*dRc/abs(dRc)
          ! Update the Rc
-         ! If Rayleigh became negative we went too far
-         if(counter.eq.1) then
-            ! Cover 20% of the difference
-            Rc = ( Rt*0.1d0 + Rc*0.9d0 )
-         else
-            Rc = Rc + dRc
-         endif
+         Rc = Rc + dRc
          ! Cache this steps's Rc and Rt
          Rt_old = Rt
          Rc_old = Rc
