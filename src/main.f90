@@ -666,22 +666,53 @@ contains
    !! compositional Rayleigh number for fixed other parameters.
    subroutine CriticalRtSameAsRc()
       implicit none
-      double precision:: dRtRel
+      double precision:: dRtRel, Rt_old, Rc_old, dRc, dRc_old
+      double precision, parameter:: adv = 0.3d0 !< The advance fraction.
       integer:: counter
+      !Rt=(tau*Pt)**(4.0d0/3.0d0)
+      !Rc=(tau*Pt)**(4.0d0/3.0d0)
+      Rt_old = Rt
+      Rc_old = Rc
+      dRc=tau**(3.0d0/4.0d0)
       Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc
-      do counter = 1, 15
+      do counter = 1, 1000
+         ! Compute the Critical Rt
          call fixedParCriticalParAndM0_v2()
          call saveParameterValue(Rt)
+         ! Compute the relative difference to Rc
          dRtRel = abs((Rt-Rc)/Rt)
          ! If we reached the required tolerance, bail out
          if (dRtRel .le. 1.0d-7) exit
-         Rc = ( Rt*0.6d0 + Rc*0.4d0 )
-         LowerLimit = m0+5
+         ! Reset the limits for the m's.
+         LowerLimit = m0+7
+         if(LowerLimit==0.or.m0==0) LowerLimit=20
+         ! Update the Rc steps
+         dRc_old = dRc
+         ! We want the next iteration to have a an Rc that bridged 50% of the
+         ! gap based on its previous evolution.
+         dRc = adv*(Rc-Rt)/((Rt-Rt_old)/dRc_old-adv)
+         !if(abs(dRc).gt.abs(dRc_old)) dRc=abs(dRc_old)*dRc/abs(dRc)
+         ! Update the Rc
+         ! If Rayleigh became negative we went too far
+         if(counter.le.2) then
+            ! Cover 20% of the difference
+            Rc = ( Rt*0.1d0 + Rc*0.9d0 )
+         else
+            Rc = Rc + dRc
+         endif
+         ! Cache this steps's Rc and Rt
+         Rt_old = Rt
+         Rc_old = Rc
          call GrowthRateUpdatePar(Rc=Rc)
-         Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc
+         Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc, 'dRc = ', dRc
       enddo
-      WRITE(*,*) ">>",Rt, Rc, m0
-      WRITE(unitOut,'(A,2D16.8,I4)') ">>", Rt, Rc, m0
+      if (dRtRel .le. 1.0d-7) then
+         WRITE(*,*) ">>",Rt, Rc, m0
+         WRITE(unitOut,'(A,2D16.8,I4)') ">>", Rt, Rc, m0
+      else
+         WRITE(*,*) ">>  NaN   NaN   NaN"
+         WRITE(unitOut,*)  ">>  NaN   NaN   NaN"
+      endif
    end subroutine
 end program
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
