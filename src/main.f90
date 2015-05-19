@@ -223,7 +223,7 @@ contains
       INTEGER:: CriticalM
       integer:: info, i
 
-      info=0 
+      info=0
       select case (trim(VariablePar))
          case('Rt','Rc')
             CriticalPar = 1.0d100
@@ -287,10 +287,8 @@ contains
          write( unitOut,'(1X,1P,E17.6,I4)') aux, M0
          write( *,'(1X,1P,E17.6,I4)') aux, M0
       enddo
-      if (info==0) then
-         call setParameterValue(CriticalPar)
-         m0 = CriticalM
-      endif
+      call setParameterValue(CriticalPar)
+      m0 = CriticalM
       write( unitOut,'(">",1P,E17.6,I4)')  CriticalPar, CriticalM
       write( *,'(">",1P,E17.6,I4)')    CriticalPar, CriticalM
    end subroutine
@@ -623,8 +621,8 @@ contains
    !**********************************************************************
    !> Varies the Lewis number and computes the critical
    !! thermal Rayleigh number for fixed other parameters.
-   !! This subroutine changes the module variable "Le" during execution and does
-   !! not restore it at the end.
+   !! This subroutine changes the module variable "Le" during execution
+   !! and does not restore it at the end.
    subroutine varyLeCriticalRt(LeMin, LeMax)
       implicit none
       double precision, intent(in):: LeMin, LeMax
@@ -660,7 +658,7 @@ contains
          WRITE(unitOut,'(3D16.8)') Le, CriticalRt, GROR
       enddo
    end subroutine
-   
+
    !**********************************************************************
    !> Computes the global critical thermal Rayleigh number that equals the
    !! compositional Rayleigh number for fixed other parameters.
