@@ -103,6 +103,11 @@ program linearOnset
          endif
          LowerLimit = m0
          call fixedParCriticalParAndM0_v2()
+      case(8) ! Loops through the m's to find the critical Rt=Rc and m_c.
+         VariablePar = 'Rt'
+         call setVariableParam(VariablePar)
+         LowerLimit = m0
+         call CriticalRtSameAsRc()
       case default
          Write(*,*) 'Unknown computation type:', LCALC
    end select
@@ -207,7 +212,9 @@ contains
 
    !**********************************************************************
    !> For the specified parameter, finds the global critical value
-   !! for all other parameters fixed.
+   !! for all other parameters fixed. At the end, m0 is teh critical m
+   !! and the critical value of VariablePar is updated in the growth rate 
+   !! module.
    subroutine fixedParCriticalParAndM0_v2()
       implicit none
       double precision:: aux
@@ -216,7 +223,7 @@ contains
       INTEGER:: CriticalM
       integer:: info, i
 
-      info=0 
+      info=0
       select case (trim(VariablePar))
          case('Rt','Rc')
             CriticalPar = 1.0d100
@@ -232,26 +239,36 @@ contains
       WRITE(*,*) '# Le  = ',Le
       WRITE(*,*) '# Rc  = ',Rc
       WRITE(*,*) '# Rt  = ',Rt
+      Write(*,*) '# Truncation = ', Truncation
       Write(*,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
       Write(*,*) '#----------------------------------------'
       Write(*,*) '#       ', trim(VariablePar)//'_c', '      m'
       !
       WRITE(unitOut,*) '#TAU=',TAU,' Pt=',Pt,' M0=',M0,' eta=',ETA
       WRITE(unitOut,*) '#Le=',Le,' Rc=',Rc
+      Write(unitOut,*) '# Truncation = ', Truncation
       Write(unitOut,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
       DO m0=nint(LowerLimit), nint(UpperLimit), nint(StepSize)
          call GrowthRateUpdatePar(m=m0)
          ! Increase the interval, in case we did not find anything.
-         do i=0, 5
-            ParMin = origParVal - 0.5*2**i*dabs(origParVal)
-            ParMax = origParVal + 0.5*2**i*dabs(origParVal)
+         do i=0, 10
+            ParMin = origParVal - 2**(i-2)*dabs(origParVal)
+            ParMax = origParVal + 2**(i-2)*dabs(origParVal)
+            if (ParMin.gt.0.0d0) ParMin = 0.0d0
+            if (ParMax.lt.0.0d0) ParMax = 0.0d0
+            if (i.gt.9) then
+               Write(*,*) i,': Damn! 6 iterations and I could find nothing?'
+               ParMin = -1.0d20
+               ParMax = 1.0d20
+            endif
 
             call minimizer(MaxGrowthRate, ParMin, ParMax, RELE ,ABSE, NSMAX, aux, info)
             if (info.eq.0) exit
          enddo
          if(info.NE.0) then
             Write(*,*) 'Failed to find roots: error:', info
-            stop 5
+            info=0
+            cycle 
          endif
          ! Critical values are above the line for Rc and Rt
          ! But below the line for the other parameters
@@ -272,10 +289,10 @@ contains
       enddo
       call setParameterValue(CriticalPar)
       call GrowthRateUpdatePar(m=CriticalM)
+      m0 = CriticalM
       write( unitOut,'(">",1P,E17.6,I4)')  CriticalPar, CriticalM
       write( *,'(">",1P,E17.6,I4)')    CriticalPar, CriticalM
    end subroutine
-
 
    !**********************************************************************
    !> Computes the lowest critical thermal Rayleigh number of all m's
@@ -606,8 +623,8 @@ contains
    !**********************************************************************
    !> Varies the Lewis number and computes the critical
    !! thermal Rayleigh number for fixed other parameters.
-   !! This subroutine changes the module variable "Le" during execution and does
-   !! not restore it at the end.
+   !! This subroutine changes the module variable "Le" during execution
+   !! and does not restore it at the end.
    subroutine varyLeCriticalRt(LeMin, LeMax)
       implicit none
       double precision, intent(in):: LeMin, LeMax
@@ -642,6 +659,67 @@ contains
          WRITE(*,*) Le, CriticalRt, GROR
          WRITE(unitOut,'(3D16.8)') Le, CriticalRt, GROR
       enddo
+   end subroutine
+
+   !**********************************************************************
+   !> Computes the global critical thermal Rayleigh number that equals the
+   !! compositional Rayleigh number for fixed other parameters.
+   subroutine CriticalRtSameAsRc()
+      implicit none
+      double precision:: dRtRel, Rt_old, Rc_old, dRc, dRc_old
+      double precision, parameter:: adv = 0.3d0 !< The advance fraction.
+      integer:: counter
+      !Rt=(tau*Pt)**(4.0d0/3.0d0)
+      !Rc=(tau*Pt)**(4.0d0/3.0d0)
+      Rt_old = Rt
+      Rc_old = Rc
+      dRc=tau**(3.0d0/4.0d0)
+      Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc
+      do counter = 1, 1000
+         ! Compute the Critical Rt
+         call fixedParCriticalParAndM0_v2()
+         call saveParameterValue(Rt)
+         ! Compute the relative difference to Rc
+         dRtRel = abs((Rt-Rc)/Rt)
+         ! If we reached the required tolerance, bail out
+         if (dRtRel .le. 1.0d-7) exit
+         ! Reset the limits for the m's.
+         LowerLimit = m0+7
+         if(LowerLimit==0.or.m0==0) LowerLimit=20
+         ! Update the Rc steps
+         dRc_old = dRc
+         ! We want the next iteration to have a an Rc that bridged \a adv of the
+         ! gap based on its previous evolution. But only if it was a sane
+         ! iteration, otherwise go back.
+         if( Rt*Rt_old.gt.0 ) then
+            dRc = adv*(Rc-Rt)/((Rt-Rt_old)/dRc_old-adv)
+         elseif(Rt.lt.0) then
+            dRc = -0.9*dRc_old
+         else
+            dRc = (Rt - Rc)*adv
+         endif
+         !if(abs(dRc).gt.abs(dRc_old)) dRc=abs(dRc_old)*dRc/abs(dRc)
+         ! Update the Rc
+         ! If Rayleigh became negative we went too far
+         if(counter.eq.1) then
+            ! Cover 20% of the difference
+            Rc = ( Rt*0.1d0 + Rc*0.9d0 )
+         else
+            Rc = Rc + dRc
+         endif
+         ! Cache this steps's Rc and Rt
+         Rt_old = Rt
+         Rc_old = Rc
+         call GrowthRateUpdatePar(Rc=Rc)
+         Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc, 'dRc = ', dRc
+      enddo
+      if (dRtRel .le. 1.0d-7) then
+         WRITE(*,*) ">>",Rt, Rc, m0
+         WRITE(unitOut,'(A,2D16.8,I4)') ">>", Rt, Rc, m0
+      else
+         WRITE(*,*) ">>  NaN   NaN   NaN"
+         WRITE(unitOut,*)  ">>  NaN   NaN   NaN"
+      endif
    end subroutine
 end program
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
