@@ -701,6 +701,7 @@ contains
             else
                dRc = (Rt - Rc)*adv
             endif
+            if (dRc.gt.(Rt - Rc)*adv) dRc = (Rt - Rc)*adv
          endif
          ! Update the Rc
          Rc = Rc + dRc
@@ -708,7 +709,7 @@ contains
          Rt_old = Rt
          Rc_old = Rc
          call GrowthRateUpdatePar(Rc=Rc)
-         Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc, 'dRc = ', dRc
+         Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc, ', dRc = ', dRc
       enddo
       if (dRtRel .le. 1.0d-7) then
          WRITE(*,*) ">>",Rt, Rc, m0
