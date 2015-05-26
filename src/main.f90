@@ -165,10 +165,13 @@ contains
    !! magnitude of the value of the parameter (for example, if we are steping in
    !! Rt and Rt is 5*10^3, then the step size is 10^3). The step size is never
    !! smaller than \a StepSize.
+   !!
+   !! The output is written to file as "par, GR, W"
    subroutine fixedParGrowthRate()
       implicit none
       INTEGER:: aux
-      double precision:: GroR, factor, par
+      double complex:: MaxEval
+      double precision:: factor, par
       double precision:: dPar
 
       call saveParameterValue(par)
@@ -180,16 +183,16 @@ contains
       do while(abs(par-UpperLimit) > abs(0.11*UpperLimit))
          aux  = int(log10(abs(par)))
          dPar = factor*10.0d0**(aux-1)
-         if (dPar < StepSize) dPar = StepSize
+         if (dPar < StepSize.or.par==0.0d0) dPar = StepSize
          par  = par + dPar
-         GROR = MaxGrowthRate(par)
-         WRITE(*,*) par, GROR
-         Write(unitOut, *) par, GroR
+         MaxEval = MaxGrowthRateCmplx(par)
+         WRITE(*,*) par, dimag(MaxEval), dble(MaxEval)
+         Write(unitOut, *) par, dimag(MaxEval), dble(MaxEval)
       enddo
 
-      WRITE(*,*) 'R=',Rt,' TAU=',TAU,' P=',Pt,' M0=',M0,' eta=',ETA
-      WRITE(*,*) 'Most unstable growth rate', GROR
-      WRITE(*,*) 'If growth rate < 0 then above onset'
+      WRITE(*,*) '# R=',Rt,' TAU=',TAU,' P=',Pt,' M0=',M0,' eta=',ETA
+      WRITE(*,*) '# Most unstable growth rate', dble(MaxEval)
+      WRITE(*,*) '# If growth rate < 0 then above onset'
    end subroutine
 
    !**********************************************************************
