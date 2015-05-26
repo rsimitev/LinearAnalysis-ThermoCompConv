@@ -665,7 +665,7 @@ contains
    subroutine CriticalRtSameAsRc()
       implicit none
       double precision:: dRtRel, Rt_old, Rc_old, dRc, dRc_old
-      double precision, parameter:: adv = 0.3d0 !< The advance fraction.
+      double precision, parameter:: adv = 1.0d0/3.0d0 !< The advance fraction.
       integer:: counter
       !Rt=(tau*Pt)**(4.0d0/3.0d0)
       !Rc=(tau*Pt)**(4.0d0/3.0d0)
