@@ -183,7 +183,7 @@ contains
       do while(abs(par-UpperLimit) > abs(0.11*UpperLimit))
          aux  = int(log10(abs(par)))
          dPar = factor*10.0d0**(aux-1)
-         if (dPar < StepSize.or.par==0.0d0) dPar = StepSize
+         if (abs(dPar) < abs(StepSize).or.par==0.0d0) dPar = factor*abs(StepSize)
          par  = par + dPar
          MaxEval = MaxGrowthRateCmplx(par)
          WRITE(*,*) par, dimag(MaxEval), dble(MaxEval)
