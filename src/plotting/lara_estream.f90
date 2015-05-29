@@ -57,6 +57,9 @@ PROGRAM LARA
    NCPLOT = 0
    ZDO = 0.E0
 
+   RELE = 1.D-9
+   EPS = 1.D-13
+
    !-- INPUT:
    LR = 0
    NQ = 0
@@ -64,6 +67,10 @@ PROGRAM LARA
 
    READ(*,*)
    READ(*,*) INPUTFILE,OUTPUTFILE,dataSetNumber,driftRate
+
+   OPEN(14,FILE = OUTPUTFILE,STATUS = 'unknown')
+   write(14,*) 'Inputfile,dataSetNumber ',INPUTFILE,dataSetNumber
+
    READ(*,*)
    READ(*,*) timeSeriesControl, drawHeader, drawPlotNum, drawTime, &
              plotSize, countourParIsNumber, drawFrame
@@ -109,12 +116,6 @@ PROGRAM LARA
       WRITE(*,*) 'WRONG INPUT OF timeSeriesControl: ',timeSeriesControl
       STOP
    ENDIF
-
-   OPEN(14,FILE = OUTPUTFILE,STATUS = 'unknown')
-   write(14,*) 'Inputfile,dataSetNumber ',INPUTFILE,dataSetNumber
-
-   RELE = 1.D-9
-   EPS = 1.D-13
 
    !-- nPlots IS NUMBER OF PLOTS, XP AND YP ARE LATITUDE AND LONGITUDE OF
    !   THE POLE FOR PROJECTION OF A SPHERE ON A CIRCLE ( quadrant = 'PL','PR','PS' ) .
@@ -218,11 +219,11 @@ PROGRAM LARA
             STOP
          ENDIF
          IF( quadrant(I,J).NE.'Q1' .AND. quadrant(I,J).NE.'Q2' .AND. &
-            quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' .AND. &
-            quadrant(I,J).NE.'HU' .AND. quadrant(I,J).NE.'HO' .AND. &
-            quadrant(I,J).NE.'HL' .AND. quadrant(I,J).NE.'HR' .AND. &
-            quadrant(I,J).NE.'PL' .AND. quadrant(I,J).NE.'PR' .AND. &
-            quadrant(I,J).NE.'SP' .AND. quadrant(I,J).NE.'PS' ) THEN
+             quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' .AND. &
+             quadrant(I,J).NE.'HU' .AND. quadrant(I,J).NE.'HO' .AND. &
+             quadrant(I,J).NE.'HL' .AND. quadrant(I,J).NE.'HR' .AND. &
+             quadrant(I,J).NE.'PL' .AND. quadrant(I,J).NE.'PR' .AND. &
+             quadrant(I,J).NE.'SP' .AND. quadrant(I,J).NE.'PS' ) THEN
             WRITE(*,*) 'WRONG INPUT OF quadrant.'
             WRITE(*,*) '  CHOOSE BETWEEN QUADRANTS : quadrant = Q1,Q2,Q3,Q4 ,'
             WRITE(*,*) '              HALF SPHERES : quadrant = HL,HR,HO,HU ,'
@@ -378,21 +379,29 @@ PROGRAM LARA
             ENDIF
             IF( quadrant(I,J).EQ.'HO' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
                quadrant(I,J) = 'Q1'
-               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.180.E0 ) constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
+               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.180.E0 ) then
+                  constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
+               endif
                nSubPlots(I) = nSubPlots(I)+1
                quadrant(I,nSubPlots(I)) = 'Q2'
                constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
-               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).LT.180.E0 ) constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,J)+180.E0
+               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).LT.180.E0 ) then
+                  constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,J)+180.E0
+               endif
                whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
                normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
                contourPar(I,nSubPlots(I)) = contourPar(I,J)
             ELSEIF( quadrant(I,J).EQ.'HU' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
                quadrant(I,J) = 'Q4'
-               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.180.E0 ) constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
+               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.180.E0 ) then
+                  constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
+               endif
                nSubPlots(I) = nSubPlots(I)+1
                quadrant(I,nSubPlots(I)) = 'Q3'
                constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
-               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).LT.180.E0 ) constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,J)+180.E0
+               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).LT.180.E0 ) then
+                  constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,J)+180.E0
+               endif
                whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
                normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
                contourPar(I,nSubPlots(I)) = contourPar(I,J)
@@ -467,81 +476,15 @@ PROGRAM LARA
          ELSE
             NQ = NQ+1
          ENDIF
-         IF( nPlots.EQ.6 ) THEN
-            select case(I)
-               case(2)
-                  TIME(I) = 1*DT
-               case(3)
-                  TIME(I) = 5*DT
-               case(4)
-                  TIME(I) = 2*DT
-               case(5)
-                  TIME(I) = 4*DT
-               case(6)
-                  TIME(I) = 3*DT
-            end select
-         ELSEIF( nPlots.EQ.8 ) THEN
-            select case(I)
-               case(2)
-                  TIME(I) = 1*DT
-               case(3)
-                  TIME(I) = 2*DT
-               case(4)
-                  TIME(I) = 7*DT
-               case(5)
-                  TIME(I) = 3*DT
-               case(6)
-                  TIME(I) = 6*DT
-               case(7)
-                  TIME(I) = 5*DT
-               case(8)
-                  TIME(I) = 4*DT
-            end select
-         ENDIF
+         call setPlotTime(i)
          DO J = 1,nSubPlots(1)
-            quadrant(I,J) = quadrant(1,J)
-            constantCoordinate(I,J) = constantCoordinate(1,J)
+            quadrant(I,J)                = quadrant(1,J)
+            constantCoordinate(I,J)      = constantCoordinate(1,J)
             constantCoordinateValue(I,J) = constantCoordinateValue(1,J)
-            whatToPlot(I,J) = whatToPlot(1,J)
-            normRadiusMax(I,J) = normRadiusMax(1,J)
-            contourPar(I,J) = -contourPar(1,J)
-            IF( J.EQ.1 ) THEN
-               IF( nPlots.EQ.6 ) THEN
-                  select case(I)
-                     case(2)
-                        subPlotLabel(I,J) = '(b)'
-                     case(3)
-                        subPlotLabel(I,J) = '(f)'
-                     case(4)
-                        subPlotLabel(I,J) = '(c)'
-                     case(5)
-                        subPlotLabel(I,J) = '(e)'
-                     case(6)
-                        subPlotLabel(I,J) = '(d)'
-                     case default
-                        subPlotLabel(I,J) = '   '
-                  end select
-               ELSEIF( nPlots.EQ.8 ) THEN
-                  select case(I)
-                     case(2)
-                        subPlotLabel(I,J) = '(b)'
-                     case(3)
-                        subPlotLabel(I,J) = '(c)'
-                     case(4)
-                        subPlotLabel(I,J) = '(h)'
-                     case(5)
-                        subPlotLabel(I,J) = '(d)'
-                     case(6)
-                        subPlotLabel(I,J) = '(g)'
-                     case(7)
-                        subPlotLabel(I,J) = '(f)'
-                     case(8)
-                        subPlotLabel(I,J) = '(e)'
-                     case default
-                        subPlotLabel(I,J) = '   '
-                  end select
-               ENDIF
-            endif
+            whatToPlot(I,J)              = whatToPlot(1,J)
+            normRadiusMax(I,J)           = normRadiusMax(1,J)
+            contourPar(I,J)              = -contourPar(1,J)
+            call setSubplotLabel(i,j)
          enddo
       enddo
    ENDIF
@@ -868,38 +811,8 @@ PROGRAM LARA
             YTIME = YNUM+0.8E0
          ENDIF
          IF( drawPlotNum.EQ.1 ) THEN
-            IF( thisPlotWhatToPlot(I).EQ.'BR' ) THEN
-               CTEXT1 = '  Contours of radial magnetic field for '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'BR' ) THEN
-               CTEXT1 = '  Contours of toriodal magnetic field for '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'BS' ) THEN
-               CTEXT1 = '  Magnetic field lines in the plane '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'VR' ) THEN
-               CTEXT1 = '  Contours of radial velocity field for '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'VS' ) THEN
-               CTEXT1 = '  Streamlines in the plane  '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'VS' ) THEN
-               CTEXT1 = '  Streamlines of electric current in the plane  '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'TE' ) THEN
-               CTEXT1 = '  Temperature field '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'ZF' ) THEN
-               CTEXT1 = '  Mean zonal flow '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'MF' ) THEN
-               CTEXT1 = '  Mean meridional flow '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'MT' ) THEN
-               CTEXT1 = '  Mean toroidal magnetic field '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'MP' ) THEN
-               CTEXT1 = '  Fieldlines of mean poloidal magnetic field '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'MJ' ) THEN
-               CTEXT1 = '  Fieldlines of mean electric current'
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'MC' ) THEN
-               CTEXT1 = '  Contourlines of mean phi comp. of elec. curr.'
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'TT' ) THEN
-               CTEXT1 = '  Temperature field including basic state for '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'UP' ) THEN
-               CTEXT1 = '  Contours of U{M7}v{M0} for '
-            ELSEIF( thisPlotWhatToPlot(I).EQ.'NU' ) THEN
-               CTEXT1 = '  Contours of local nusselt number for '
+            cal setPlotTitle(i)
+            IF( thisPlotWhatToPlot(I).EQ.'NU' ) THEN
                XCP(I) = REAL(ETA/(1.D0-ETA))
             ENDIF
             IF( thisPlotconstantCoordinate(I).EQ.'P') THEN
@@ -2956,5 +2869,132 @@ contains
                        NDV,NDW,NDT,NDH,NDG,NDVS,NDWS,NDTS,NDHS,NDGS,NDS)
       CLOSE(12)
    END SUBROUTINE READLA
+
+   !--------------------------------------------------------------------
+   !> Sets the labels for each subplot j of plot i.
+   subroutine setSubplotLabel(i,j)
+      implicit none
+      integer, intent(in):: i,j
+      IF( J.EQ.1 ) THEN
+         IF( nPlots.EQ.6 ) THEN
+            select case(I)
+               case(1)
+                  subPlotLabel(I,J) = '(a)'
+               case(2)
+                  subPlotLabel(I,J) = '(b)'
+               case(3)
+                  subPlotLabel(I,J) = '(f)'
+               case(4)
+                  subPlotLabel(I,J) = '(c)'
+               case(5)
+                  subPlotLabel(I,J) = '(e)'
+               case(6)
+                  subPlotLabel(I,J) = '(d)'
+               case default
+                  subPlotLabel(I,J) = '   '
+            end select
+         ELSEIF( nPlots.EQ.8 ) THEN
+            select case(I)
+               case(1)
+                  subPlotLabel(I,J) = '(a)'
+               case(2)
+                  subPlotLabel(I,J) = '(b)'
+               case(3)
+                  subPlotLabel(I,J) = '(c)'
+               case(4)
+                  subPlotLabel(I,J) = '(h)'
+               case(5)
+                  subPlotLabel(I,J) = '(d)'
+               case(6)
+                  subPlotLabel(I,J) = '(g)'
+               case(7)
+                  subPlotLabel(I,J) = '(f)'
+               case(8)
+                  subPlotLabel(I,J) = '(e)'
+               case default
+                  subPlotLabel(I,J) = '   '
+            end select
+         ENDIF
+      endif
+   end subroutine
+
+   !--------------------------------------------------------------------
+   !> Sets the time for each plot i.
+   subroutine setPlotTime(i)
+      implicit none
+      integer, intent(in):: i
+      IF( nPlots.EQ.6 ) THEN
+         select case(I)
+            case(2)
+               TIME(I) = 1*DT
+            case(3)
+               TIME(I) = 5*DT
+            case(4)
+               TIME(I) = 2*DT
+            case(5)
+               TIME(I) = 4*DT
+            case(6)
+               TIME(I) = 3*DT
+         end select
+      ELSEIF( nPlots.EQ.8 ) THEN
+         select case(I)
+            case(2)
+               TIME(I) = 1*DT
+            case(3)
+               TIME(I) = 2*DT
+            case(4)
+               TIME(I) = 7*DT
+            case(5)
+               TIME(I) = 3*DT
+            case(6)
+               TIME(I) = 6*DT
+            case(7)
+               TIME(I) = 5*DT
+            case(8)
+               TIME(I) = 4*DT
+         end select
+      ENDIF
+   end subroutine
+
+   !--------------------------------------------------------------------
+   !>
+   subroutine setPlotTitle(i)
+      implicit none
+      integer, intent(in):: i
+      IF( thisPlotWhatToPlot(I).EQ.'BR' ) THEN
+         CTEXT1 = '  Contours of radial magnetic field for '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'BR' ) THEN
+         CTEXT1 = '  Contours of toriodal magnetic field for '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'BS' ) THEN
+         CTEXT1 = '  Magnetic field lines in the plane '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'VR' ) THEN
+         CTEXT1 = '  Contours of radial velocity field for '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'VS' ) THEN
+         CTEXT1 = '  Streamlines in the plane  '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'VS' ) THEN
+         CTEXT1 = '  Streamlines of electric current in the plane  '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'TE' ) THEN
+         CTEXT1 = '  Temperature field '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'ZF' ) THEN
+         CTEXT1 = '  Mean zonal flow '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'MF' ) THEN
+         CTEXT1 = '  Mean meridional flow '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'MT' ) THEN
+         CTEXT1 = '  Mean toroidal magnetic field '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'MP' ) THEN
+         CTEXT1 = '  Fieldlines of mean poloidal magnetic field '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'MJ' ) THEN
+         CTEXT1 = '  Fieldlines of mean electric current'
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'MC' ) THEN
+         CTEXT1 = '  Contourlines of mean phi comp. of elec. curr.'
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'TT' ) THEN
+         CTEXT1 = '  Temperature field including basic state for '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'UP' ) THEN
+         CTEXT1 = '  Contours of U{M7}v{M0} for '
+      ELSEIF( thisPlotWhatToPlot(I).EQ.'NU' ) THEN
+         CTEXT1 = '  Contours of local nusselt number for '
+      ENDIF
+   end subroutine
+
 END PROGRAM LARA
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
