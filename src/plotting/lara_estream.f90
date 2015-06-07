@@ -54,700 +54,7 @@ PROGRAM LARA
    COMMON/AB/A(NAM),B(NAM),NAMC
    COMMON/POLE/XP,YP
 
-   NCPLOT = 0
-   ZDO = 0.E0
-
-   RELE = 1.D-9
-   EPS = 1.D-13
-
-   !-- INPUT:
-   LR = 0
-   NQ = 0
-   NR = 0
-
-   READ(*,*)
-   READ(*,*) INPUTFILE,OUTPUTFILE,dataSetNumber,driftRate
-
-   OPEN(14,FILE = OUTPUTFILE,STATUS = 'unknown')
-   write(14,*) 'Inputfile,dataSetNumber ',INPUTFILE,dataSetNumber
-
-   READ(*,*)
-   READ(*,*) timeSeriesControl, drawHeader, drawPlotNum, drawTime, &
-             plotSize, countourParIsNumber, drawFrame
-
-   !-- drawHeader CONTROLLS THE HEAD:
-   !   drawHeader = 0 : NHEAD,
-   !   drawHeader = 1 : NHEAD WRITTEN,
-   !   drawPlotNum = 0 : NO PLOTNUMBERS
-   !   drawPlotNum = 1 : PLOTNUMBERS WITH DESCRIPTION,
-   !   drawPlotNum = 2 : PLOTNUMBERS WITHOUT DESCRIPTION,
-   !   drawPlotNum = 3 : PLOTNUMBERS GIVEN BY subPlotLabel,
-   !   drawTime CONTROLLS WETHER THE TIME IS WRITTEN (0/1).
-   !   plotSize DETERMINS THE SIZE OF THE PLOT:
-   !   plotSize = 0 : SMALL
-   !   plotSize = 1 : MEDIUM
-   !   plotSize = 2 : BIG
-   !   countourParIsNumber CONTROLLS WETHER contourPar IS THE NUMBER OF CONTOURLINES (countourParIsNumber = .true.) OR
-   !   THE DIFFERENCE BETWEEN THE CONTOUR LEVELS (countourParIsNumber = .false.).
-   !   FOR drawFrame = 1 A FRAME IS DRAWN AROUND EACH SUBPLOT.
-   !   timeSeriesControl CONTROLLS TIMESERIES
-   !   timeSeriesControl =  0 : NORMAL
-   !   timeSeriesControl = -1 : TIMESERIES OF 6 PLOTS WITH TIME GIVEN INDIVIDUALLY,
-   !   timeSeriesControl =  1 : TIMESERIES OF 6 PLOTS WITH TIME GIVEN BY OM,
-   !   timeSeriesControl = -2 : TIMESERIES OF 8 PLOTS WITH TIME GIVEN INDIVIDUALLY,
-   !   timeSeriesControl =  2 : TIMESERIES OF 8 PLOTS WITH TIME GIVEN BY OM.
-   IF( drawPlotNum.LT.0 .OR. drawPlotNum.GT.3 ) THEN
-      WRITE(*,*) 'WRONG INPUT OF drawPlotNum: ',drawPlotNum
-      STOP
-   ENDIF
-   IF( plotSize.LT.0 .OR. plotSize.GT.2 ) THEN
-      WRITE(*,*) 'WRONG INPUT OF plotSize: ',plotSize
-      STOP
-   ENDIF
-   IF( drawHeader.NE.0 .AND. drawHeader.NE.1 ) THEN
-      WRITE(*,*) 'WRONG INPUT OF drawHeader: ',drawHeader
-      STOP
-   ENDIF
-   IF( drawFrame.NE.0 .AND. drawFrame.NE.1 ) THEN
-      WRITE(*,*) 'WRONG INPUT OF drawFrame: ',drawFrame
-      STOP
-   ENDIF
-   IF( timeSeriesControl.LT.-2 .OR. timeSeriesControl.GT.2 ) THEN
-      WRITE(*,*) 'WRONG INPUT OF timeSeriesControl: ',timeSeriesControl
-      STOP
-   ENDIF
-
-   !-- nPlots IS NUMBER OF PLOTS, XP AND YP ARE LATITUDE AND LONGITUDE OF
-   !   THE POLE FOR PROJECTION OF A SPHERE ON A CIRCLE ( quadrant = 'PL','PR','PS' ) .
-   READ(*,*)
-   READ(*,*) nPlots,XP,YP
-
-   if(nPlots.ne.1.) then
-      write(*,*) 'wrong number of plots.'
-      stop
-   endif
-
-   IF( timeSeriesControl.GT.0 ) THEN
-      plotSize = 0
-      nPlots = 1
-   ENDIF
-
-   IF( ( plotSize.EQ.0 .AND. nPlots.GT.nPlotsMAX ) .OR. &
-         ( plotSize.EQ.1 .AND. nPlots.GT.4 )   .OR. &
-         ( plotSize.EQ.2 .AND. nPlots.GT.2 ) ) THEN
-      WRITE(*,*) 'TOO BIG NUMBER OF PLOTS nPlots: ',nPlots
-      STOP
-   ENDIF
-
-   DO I = 1,nPlots
-      !----- nSubPlots IS NUMBER OF SUBPLOTS, domain DESTINGUISHES BETWEEN
-      !      QUADRANT (domain = 'QU'), HALFSPHERE (domain = 'HS') AND FULL SPHERE (domain = 'SP').
-      !      TIME IS THE TIME OF THE PLOTTED FIELD FOR TIME DEPENDENCE.
-      READ(*,*)
-      READ(*,*) domain(I),TIME(I),nSubPlots(I)
-      if(nSubPlots(I).ne.1) then
-         write(*,*) 'wrong number of plots.'
-         stop
-      endif
-
-      IF( nSubPlots(I).GT.nSubPlotsMAX ) THEN
-         WRITE(*,*) 'TOO BIG NUMBER OF SUBPLOTS nSubPlots:',nSubPlots(I)
-         STOP
-      ENDIF
-      IF( domain(I).EQ.'HS' ) THEN
-         NR = NR+1
-      ELSE
-         NQ = NQ+1
-      ENDIF
-
-      !--- quadrant DESTINGUSHES BETWEEN:
-      !     QUADRANTS:
-      !        quadrant = 'Q1','Q2','Q3','Q4' ,
-      !     HALF SPHERES:
-      !        quadrant = 'HL','HR','HU','HO',
-      !     SPHERE:
-      !        quadrant = 'SP',
-      !     PROJECTION ON A SPHERE
-      !        quadrant = ' PS','PL','PR'
-      !    constantCoordinate DETERMINS WhETHER:
-      !             R = constantCoordinateValue (constantCoordinate = 'R') ,
-      !           PHI = constantCoordinateValue (constantCoordinate = 'P') OR
-      !         THETA = constantCoordinateValue (constantCoordinate = 'T') IS KEPT CONSTANT ,
-      !    whatToPlot DETERMINS THE FIELD TO BE PLOTTED:
-      !      'VS' : STREAMFUNCTIONS OF VELOCITY FIELD IN BUSSE NOTATION,
-      !      'BS' : STREAMFUNCTIONS OF MAGNETIC FIELD IN BUSSE NOTATION,
-      !      'JS' : STREAMFUNCTIONS OF ELECTRIC CURRENT IN BUSSE NOTATION,
-      !      'VR' : RADIAL VELOCITY FIELD,
-      !      'BR' : RADIAL MAGNETIC FIELD,
-      !      'TE' : TEMPERATURE FIELD Theta,
-      !      'ZF' : ZONAL FLOW ( Mean part of phi comp. of velocity),
-      !      'MF' : MERIDIONAL FLOW ( MEAN STREAM FUNCTION IN PHI = CONST. PLANE ),
-      !      'MT' : MEAN TOROIDAL MAGNETIC FIELD FOR PHI = CONST,
-      !      'BT' : TOROIDAL MAGNETIC FIELD FOR PHI = CONST,
-      !      'MP' : STREAMLINES OF MEAN POLOIDAL MAGNETIC FIELD FOR PHI = CONST,
-      !      'MJ' : STREAMLINES OF MEAN ELECTRIC CURRENT FOR PHI = CONST,
-      !      'MC' : CONTOUR LINES OF MEAN PHI COMPONENT OF ELECTRIC CURRENT FOR PHI = CONST,
-      !      'TT' : Temperature field Theta+Ts,
-      !      'UP' : Phi component of velocity,
-      !      'NU' : local Nusselt number for r = ri.
-      !
-      !    normRadiusMax IS A MULTIPLIER FOR THE LARGEST RADIUS TO BE PLOTTED: RM = normRadiusMax*RO.
-      !    contourPar IS:
-      !       THE STEP FOR THE CONTOURS FOR countourParIsNumber = .false. OR
-      !       THE NUMBER OF CONTPUR LINES FOR Z>0 OR Z<0 countourParIsNumber = .true.
-      ! Next two lines  are repeated for the number of subplots
-      !| SUBPL | PLANE(RPT) | CONST | FIELD |(MAX RAD)/RO|contourPar/STEP|PlotNR|
-      !   'SP'      'T'        90      'VS'     1.E0          9    '000'
-      DO J = 1,nSubPlots(I)
-         READ(*,*)
-         READ(*,*) quadrant(I,J), constantCoordinate(I,J), &
-                   constantCoordinateValue(I,J), whatToPlot(I,J), &
-                   normRadiusMax(I,J),contourPar(I,J),subPlotLabel(I,J)
-      enddo
-   enddo
-   !-- END OF PARAMETER INPUT.
-
-   !-- INPUT CHECK:
-   DO I = 1,nPlots
-      DO J = 1,nSubPlots(I)
-         IF( domain(I).NE.'QU' .AND. domain(I).NE.'HS' .AND.  domain(I).NE.'SP' ) THEN
-            WRITE(*,*) 'WRONG INPUT OF domain.'
-            WRITE(*,*) 'CHOOSE BETWEEN QUADRANT : domain = QU ,'
-            WRITE(*,*) '            HALF SPHERE : domain = HS ,'
-            WRITE(*,*) '                 SPHERE : domain = SP .'
-            WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
-            STOP
-         ENDIF
-         IF( quadrant(I,J).NE.'Q1' .AND. quadrant(I,J).NE.'Q2' .AND. &
-             quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' .AND. &
-             quadrant(I,J).NE.'HU' .AND. quadrant(I,J).NE.'HO' .AND. &
-             quadrant(I,J).NE.'HL' .AND. quadrant(I,J).NE.'HR' .AND. &
-             quadrant(I,J).NE.'PL' .AND. quadrant(I,J).NE.'PR' .AND. &
-             quadrant(I,J).NE.'SP' .AND. quadrant(I,J).NE.'PS' ) THEN
-            WRITE(*,*) 'WRONG INPUT OF quadrant.'
-            WRITE(*,*) '  CHOOSE BETWEEN QUADRANTS : quadrant = Q1,Q2,Q3,Q4 ,'
-            WRITE(*,*) '              HALF SPHERES : quadrant = HL,HR,HO,HU ,'
-            WRITE(*,*) '               FULL SPHERE : quadrant = SP ,'
-            WRITE(*,*) '   PROJECTION OF LEFT HALF : quadrant = PL ,'
-            WRITE(*,*) '  PROJECTION OF RIGHT HALF : quadrant = PL ,'
-            WRITE(*,*) ' PROJECTION OF FULL SPHERE : quadrant = PL .'
-            WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
-            STOP
-         ENDIF
-         IF( constantCoordinate(I,J).NE.'P' .AND. constantCoordinate(I,J).NE.'T' .AND. constantCoordinate(I,J).NE.'R' ) THEN
-            WRITE(*,*) 'WRONG INPUT OF CONSTANT COORDINATE constantCoordinate.'
-            WRITE(*,*) '          CHOOSE BETWEEN PHI : constantCoordinate = P ,'
-            WRITE(*,*) '                       THETA : constantCoordinate = T ,'
-            WRITE(*,*) '                           R : constantCoordinate = R ,'
-            WRITE(*,*) ' RADIAL FIELD FOR CONSTANT R : constantCoordinate = R .'
-            WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
-            STOP
-         ENDIF
-         IF( constantCoordinate(I,J).EQ.'R' ) normRadiusMax(I,J) = 1.E0
-!
-         IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.360.E0 ) THEN
-            WRITE(*,*) 'PHI SHOULD BE GIVEN IN DEGREES < =  360.'
-            WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
-            STOP
-         ELSEIF( constantCoordinate(I,J).EQ.'T' .AND. constantCoordinateValue(I,J).GT.180.E0 ) THEN
-            WRITE(*,*) 'THETA SHOULD BE GIVEN IN DEGREES < =  180.'
-            WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
-            STOP
-         ELSEIF(  constantCoordinate(I,J).EQ.'R' .AND. ( constantCoordinateValue(I,J).LT.0.E0 .OR. constantCoordinateValue(I,J).GT.1.E0 )  )THEN
-            WRITE(*,*) 'RREL SHOULD BE > = 0 , < =  1 .'
-            WRITE(*,*) 'RREL IS DEFINED AS: R = RI+RREL*(RO-RI).'
-            WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
-            STOP
-         ENDIF
-         IF(  constantCoordinate(I,J).EQ.'P' ) THEN
-            IF( constantCoordinateValue(I,J).LT.0.E0 ) constantCoordinateValue(I,J) = constantCoordinateValue(I,J)+360.E0
-            IF(( quadrant(I,J).EQ.'Q1' .OR. &
-                 quadrant(I,J).EQ.'Q4' .OR. &
-                 quadrant(I,J).EQ.'HR' ) .AND. &
-                 constantCoordinateValue(I,J).GT.180.E0 .AND. &
-                 constantCoordinateValue(I,J).LT.360.E0 ) THEN
-                 constantCoordinateValue(I,J) = constantCoordinateValue(I,J) - 180.E0
-            ELSEIF(( quadrant(I,J).EQ.'Q2' .OR. &
-                     quadrant(I,J).EQ.'Q3' .OR. &
-                     quadrant(I,J).EQ.'HL' ) .AND. &
-                     constantCoordinateValue(I,J).LT.180.E0 .AND. &
-                     constantCoordinateValue(I,J).GT.0.E0 ) THEN
-               constantCoordinateValue(I,J) = constantCoordinateValue(I,J) + 180.E0
-            ENDIF
-         ENDIF
-         IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MT' ) THEN
-            WRITE(*,*) 'FOR MT PHI HAS TO BE KEPT CONSTANT.'
-            constantCoordinate(I,J) = 'P'
-         ENDIF
-         IF( constantCoordinate(I,J).NE.'P' .AND. ( whatToPlot(I,J).EQ.'MP' .OR. whatToPlot(I,J).EQ.'BT' ) ) THEN
-            WRITE(*,*) 'FOR MP AND BT PHI HAS TO BE KEPT CONSTANT.'
-            constantCoordinate(I,J) = 'P'
-         ENDIF
-         IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MJ' ) THEN
-            WRITE(*,*) 'FOR  MJ PHI HAS TO BE KEPT CONSTANT.'
-            constantCoordinate(I,J) = 'P'
-         ENDIF
-         IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MC' ) THEN
-            WRITE(*,*) 'FOR  MC PHI HAS TO BE KEPT CONSTANT.'
-            constantCoordinate(I,J) = 'P'
-         ENDIF
-         IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'ZF' ) THEN
-            WRITE(*,*) 'FOR ZONAL FLOW PHI HAS TO BE KEPT CONSTANT.'
-            constantCoordinate(I,J) = 'P'
-         ENDIF
-         IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MF' ) THEN
-            WRITE(*,*) 'FOR MERIDIONAL FLOW PHI HAS TO BE KEPT CONSTANT.'
-            constantCoordinate(I,J) = 'P'
-         ENDIF
-         IF( constantCoordinate(I,J).NE.'R' .AND. whatToPlot(I,J).EQ.'NU' ) THEN
-            WRITE(*,*) 'FOR NUSSELT NUMBER R HAS TO BE KEPT CONSTANT.'
-            constantCoordinate(I,J) = 'R'
-         ENDIF
-         if( constantCoordinate(I,J).EQ.'R' .and. quadrant(I,J)(:1).NE.'P' ) then
-            write(*,*) 'For R = const the subplot must be a projection.'
-            stop
-         endif
-         IF( domain(I).EQ.'QU' ) THEN
-            IF( nSubPlots(I).GT.1 ) THEN
-               WRITE(*,*) 'ONLY ONE SUBPLOT ALLOWED FOR domain = QU.'
-               WRITE(*,*) 'nSubPlots ASSUMED TO BE 1.'
-               nSubPlots(I) = 1
-            ENDIF
-            IF( constantCoordinate(I,J).NE.'P' .AND. constantCoordinate(I,J).NE.'T' ) THEN
-               WRITE(*,*) 'FOR domain = QU ONLY constantCoordinate = P OR constantCoordinate = T VALID.'
-               WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
-               STOP
-            ENDIF
-            IF( quadrant(I,J).NE.'Q1' .AND. quadrant(I,J).NE.'Q2' .AND. &
-               quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' ) THEN
-               WRITE(*,*) 'FOR domain = QU ONLY quadrant = Q1,Q2,Q3,Q4 VALID.'
-               WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
-               STOP
-            ENDIF
-         ELSEIF( domain(I).EQ.'HS' ) THEN
-            IF( nSubPlots(I).GT.2 ) THEN
-               WRITE(*,*) 'ONLY TWO SUBPLOT MAXIMUM ALLOWED FOR domain = HS.'
-               WRITE(*,*) 'nSubPlots ASSUMED TO BE 2.'
-               nSubPlots(I) = 2
-            ENDIF
-            IF( constantCoordinate(I,J).NE.'P' .AND. constantCoordinate(I,J).NE.'T' ) THEN
-               WRITE(*,*) 'FOR domain = HS ONLY constantCoordinate = P OR constantCoordinate = T VALID.'
-               WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
-               STOP
-            ENDIF
-            IF( quadrant(I,J).NE.'Q1' .AND. quadrant(I,J).NE.'Q2' .AND. &
-                quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' .AND. &
-                quadrant(I,J).NE.'HO' .AND. quadrant(I,J).NE.'HU' ) THEN
-               WRITE(*,*) 'FOR domain = HS ONLY quadrant = Q1,Q2,Q3,Q4,HO,HU VALID.'
-               WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
-               STOP
-            ENDIF
-            IF( quadrant(I,J).EQ.'HO' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
-               quadrant(I,J) = 'Q1'
-               IF( constantCoordinateValue(I,J).GT.180.E0 ) THEN
-                  constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
-               ENDIF
-               nSubPlots(I) = nSubPlots(I)+1
-               quadrant(I,nSubPlots(I)) = 'Q2'
-               constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
-               IF( constantCoordinateValue(I,J).LT.180.E0 ) THEN
-                  constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,nSubPlots(I))+180.E0
-               ENDIF
-               whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
-               normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
-               contourPar(I,nSubPlots(I)) = contourPar(I,J)
-            ELSEIF( quadrant(I,J).EQ.'HU' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
-               quadrant(I,J) = 'Q4'
-                     IF( constantCoordinateValue(I,J).GT.180.E0 ) THEN
-                  constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
-               ENDIF
-               nSubPlots(I) = nSubPlots(I)+1
-               quadrant(I,nSubPlots(I)) = 'Q3'
-               constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
-                     IF( constantCoordinateValue(I,J).LT.180.E0 ) THEN
-                  constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,nSubPlots(I))+180.E0
-               ENDIF
-               whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
-               normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
-               contourPar(I,nSubPlots(I)) = contourPar(I,J)
-            ENDIF
-         ELSEIF( domain(I).EQ.'SP' ) THEN
-            IF( nSubPlots(I).GT.4 ) THEN
-            WRITE(*,*) 'ONLY FOUR SUBPLOT MAXIMUM ALLOWED FOR domain = SP.'
-               WRITE(*,*) 'nSubPlots ASSUMED TO BE 4.'
-               nSubPlots(I) = 4
-            ENDIF
-            IF( quadrant(I,J).EQ.'HO' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
-               quadrant(I,J) = 'Q1'
-               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.180.E0 ) then
-                  constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
-               endif
-               nSubPlots(I) = nSubPlots(I)+1
-               quadrant(I,nSubPlots(I)) = 'Q2'
-               constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
-               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).LT.180.E0 ) then
-                  constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,J)+180.E0
-               endif
-               whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
-               normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
-               contourPar(I,nSubPlots(I)) = contourPar(I,J)
-            ELSEIF( quadrant(I,J).EQ.'HU' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
-               quadrant(I,J) = 'Q4'
-               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.180.E0 ) then
-                  constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
-               endif
-               nSubPlots(I) = nSubPlots(I)+1
-               quadrant(I,nSubPlots(I)) = 'Q3'
-               constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
-               IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).LT.180.E0 ) then
-                  constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,J)+180.E0
-               endif
-               whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
-               normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
-               contourPar(I,nSubPlots(I)) = contourPar(I,J)
-            ENDIF
-         ENDIF
-      enddo
-   enddo
-   !-- SETTING OF CONSTANTS:
-   LTR = 1
-   NMC = NM
-   NMSC = NM
-   NAMC = NAM
-   NLMAC = NLMA
-
-   IF( timeSeriesControl.GT.0 ) TIME(1) = 0.D0
-
-   !-- READLA READS THE SET OF COEFFITIENTS TO BE PLOTTED ,
-   !   IT IS NECESSARY TO CALL IS HERE TO GET PARAMETERS.
-   TIMEO = TIME(1)
-   write(*,'(A,A,I3,D9.2)') 'reading data from ',INPUTFILE,dataSetNumber,TIME(1),'...'
-   CALL READLA(INPUTFILE,dataSetNumber,TIME(1),DX)
-   write(*,*) '...done'
-   RA = RAI
-   TA = TAI
-   PR = PRI
-   PM = PMI
-   ETA = ETAI
-   C = CI
-   OM = OMI
-   FTW = FTWI
-   FTG = FTGI
-   MF = 0
-   M0 = M0I
-   NTV = NTVI
-   NTH = NTHI
-   LTV = LTVI
-   LTH = LTHI
-   KTV = KTVI
-   KTH = KTHI
-   LD = LDI
-   LEV = LEVI
-   LRB = LRBI
-
-   IF( timeSeriesControl.GT.0 ) THEN
-      NSUBP = nSubPlots(1)
-      IF( LCALC.NE.3 .AND. LCALC.NE.4 ) THEN
-         WRITE(*,*) 'TIMESERIES WITH timeSeriesControl.GT.0 ONLY FOR TIME EXPANSION.'
-         STOP
-      ENDIF
-      IF( OM.LT.0.D-4 ) THEN
-         WRITE(*,*) 'OM TOO SMALL FOR timeSeriesControl.GT.0.'
-         STOP
-      ENDIF
-      IF( timeSeriesControl.EQ.1 ) THEN
-         nPlots = 6
-      ELSEIF( timeSeriesControl.EQ.2 ) THEN
-         nPlots = 8
-      ENDIF
-      TPERIOD = 2*PI/OM
-      DT = TPERIOD/nPlots
-      drawPlotNum = 3
-      TIME(1) = 0.D0
-      subPlotLabel(1,1) = '(a)'
-      DO J = 2,nSubPlots(1)
-         subPlotLabel(1,J) = '   '
-      enddo
-      DO I = 2,nPlots
-         domain(I) = domain(1)
-         nSubPlots(I) = nSubPlots(1)
-         IF( domain(I).EQ.'HS' ) THEN
-            NR = NR+1
-         ELSE
-            NQ = NQ+1
-         ENDIF
-         call setPlotTime(i)
-         DO J = 1,nSubPlots(1)
-            quadrant(I,J)                = quadrant(1,J)
-            constantCoordinate(I,J)      = constantCoordinate(1,J)
-            constantCoordinateValue(I,J) = constantCoordinateValue(1,J)
-            whatToPlot(I,J)              = whatToPlot(1,J)
-            normRadiusMax(I,J)           = normRadiusMax(1,J)
-            contourPar(I,J)              = -contourPar(1,J)
-            call setSubplotLabel(i,j)
-         enddo
-      enddo
-   ENDIF
-
-   !-- CALCULATION OF INNER AND OUTER RADIUS:
-   RI = ETA/(1.D0-ETA)
-   RO = 1.D0+RI
-   XRI = DBLE(RI)
-   XRO = DBLE(RO)
-
-   !-- ABG CALCULATES THE ALPHAS AND BETAS IN THE RADIAL FUNCTION
-   !   OF THE POLOIDAL MAGNETIC FIELD:
-   IF( LCALC.EQ.2 .OR. LCALC.EQ.4 .OR. LCALC.EQ.6 ) CALL ABG(ND,whatToPlot,L,N)
-
-   XLRAND = 3.0D0
-   XRRAND = 3.0D0
-   NROWR = NR
-   NROWQ = NQ/2
-   IF( MOD(NQ,2).NE.0 ) NROWQ = NROWQ+1
-   IF( timeSeriesControl.NE.0 ) THEN
-      NROWR = 0
-      NROWQ = 3
-   ELSE
-      NROWR = NR
-      NROWQ = NQ/2
-      IF( MOD(NQ,2).NE.0 ) NROWQ = NROWQ+1
-   ENDIF
-   NROW = NROWR+NROWQ
-   IF( plotSize.EQ.0 .AND. NROW.GT.3 ) THEN
-      WRITE(*,*) 'TOO MANY ROWS, ONLY 3 ALLOWED FOR plotSize = 0.',NROW
-      STOP
-   ELSEIF( plotSize.EQ.1 .AND. NROW.GT.2 ) THEN
-      WRITE(*,*) 'TOO MANY ROWS, ONLY 2 ALLOWED FOR plotSize = 1.',NROW
-      STOP
-   ELSEIF( plotSize.EQ.2 .AND. NROW.GT.1 ) THEN
-      WRITE(*,*) 'TOO MANY ROWS, ONLY 1 ALLOWED FOR plotSize = 2.',NROW
-      STOP
-   ENDIF
-   IF( NQ.LE.1 ) THEN
-      NCOL = 1
-   ELSE
-      NCOL = 2
-   ENDIF
-   IF( plotSize.EQ.2 .AND. NCOL.EQ.2 ) THEN
-      WRITE(*,*) 'TOO MANY COLUMNS, ONLY 1 ALLOWED FOR plotSize = 2.',NCOL
-      STOP
-   ENDIF
-   IF( IABS(timeSeriesControl).EQ.2 ) NCOL = 3
-   XTEXT = XLRAND
-
-   !-- GROESSE DER PLOTS:
-   IF( plotSize.EQ.0 ) THEN
-      YHR = 5.5D0
-      YHQ = 5.5D0
-      XLR = 2.0D0
-      XLQ = 1.5D0
-      XINTER = 1.D0
-      YINTER = 1.D0
-   ELSEIF( plotSize.EQ.1 ) THEN
-      YHR = 6.75D0
-      YHQ = 6.75D0
-      XLR = 0.75D0
-      XLQ = 0.0D0
-      XINTER = 1.5D0
-      YINTER = 1.5D0
-   ELSEIF( plotSize.EQ.2 ) THEN
-      YHR = 6.75D0
-      YHQ = 13.0
-      XLR = 1.0D0
-      XINTER = 0.0D0
-      YINTER = 0.0D0
-   ENDIF
-   XBQ = YHQ
-   XBR = 2*YHR
-
-   IF( drawHeader.EQ.0 ) THEN
-      headerSpaceY = 0.0D0
-   ELSEIF( drawHeader.EQ.1 ) THEN
-      headerSpaceY = 3.D0
-   ENDIF
-   IF( drawPlotNum.EQ.1 ) THEN
-      plotNumSpaceY = 5.0D0
-   ELSE
-      plotNumSpaceY = 0.0D0
-   ENDIF
-   YHPG = NROWR*YHR+NROWQ*YHQ+(NROW-1)*YINTER
-   IF( NQ.GT.0 ) THEN
-      XBPG = 2*XLQ+NCOL*XBQ+(NCOL-1)*XINTER
-   ELSE
-      XBPG = 2*XLR+XBR
-   ENDIF
-   XAREA = XLRAND+XBPG+XRRAND
-   YAREA = plotNumSpaceY+YHPG+headerSpaceY
-
-   !-- NZEI ZAEHLT ZEILEN , NSPA SPALTEN UND NP ZAHL DER PLOTS.
-   !   NQT ZAEHLT DIE ZAHL DER QUADRATE.
-   NP = 0
-   NQT = 0
-
-   !-- DIE DATEN FUER DIE EINZELNEN PLOTS WERDEN FESTGELEGT UND LINEAR
-   !   ABGESPEICHERT: URSPRUNG IN CM = (XORIG,YORIG) ,
-   !   PLOTGEBIET IN CM = (XAR,YAR) , RADIEN IN CM = (XRICM,XROCM,XRMCM).
-   DO I = 1,nPlots
-      IF( I.EQ.1 ) THEN
-         NSPA = 1
-         NZEI = 1
-         IF( domain(I).EQ.'HS' ) THEN
-            YHPLOT = YHR
-            XBPLOT = XBR
-            XLPLOT = XLR
-         ELSE
-            YHPLOT = YHQ
-            XBPLOT = XBQ
-            XLPLOT = XLQ
-         ENDIF
-      ELSEIF( domain(I).EQ.'HS' .OR. domain(I-1).EQ.'HS' ) THEN
-         NSPA = 1
-         NZEI = NZEI+1
-         YHPLOT = YHR
-         XBPLOT = XBR
-         XLPLOT = XLR
-      ELSE
-         IF( NSPA.EQ.NCOL ) THEN
-            NSPA = 1
-            NZEI = NZEI+1
-         ELSE
-            NSPA = NSPA+1
-            IF( IABS(timeSeriesControl).EQ.2 .AND. I.EQ.5 ) NSPA = NSPA+1
-         ENDIF
-         YHPLOT = YHQ
-         XBPLOT = XBQ
-         XLPLOT = XLQ
-      ENDIF
-      XORIG = XLRAND+XLPLOT+(NSPA-1)*(XBPLOT+XINTER)
-      YORIG = plotNumSpaceY+YHPG-NZEI*YHPLOT-(NZEI-1)*YINTER
-
-      IF( domain(I).EQ.'QU' .OR. domain(I).EQ.'SP' .AND. NCOL.GT.1 ) THEN
-         NQT = NQT+1
-         IF( NSPA.EQ.1 .AND. NQT.EQ.NQ ) XLQ = XLQ+(XBQ+XINTER)/2
-      ENDIF
-      DO J = 1,nSubPlots(I)
-         NP = NP+1
-         thisPlotQuadrant(NP)           = quadrant(I,J)
-         thisPlotWhatToPlot(NP)         = whatToPlot(I,J)
-         thisPlotconstantCoordinate(NP) = constantCoordinate(I,J)
-         ABCN(NP) = subPlotLabel(I,J)
-         IF( constantCoordinate(I,J).EQ.'R' ) THEN
-            XCP(NP) = XRI+constantCoordinateValue(I,J)
-         ELSE
-            XCP(NP) = constantCoordinateValue(I,J)
-         ENDIF
-         ZDP(NP)   = contourPar(I,J)
-         TIMEP(NP) = TIME(I)
-         IF( domain(I).EQ.'HS' ) THEN
-            IF( quadrant(I,J).EQ.'HO' .OR. quadrant(I,J).EQ.'HU' ) THEN
-               XOR(NP) = XORIG
-               XAR(NP) = XBR
-               YOR(NP) = YORIG
-               YAR(NP) = YHR
-               XRMCM(NP) = XBR/2
-            ELSEIF( quadrant(I,J).EQ.'Q1' ) THEN
-               XOR(NP) = XORIG+XBR/2
-               XAR(NP) = XBR/2
-               YOR(NP) = YORIG
-               YAR(NP) = YHR
-               XRMCM(NP) = XBR/2
-            ELSEIF( quadrant(I,J).EQ.'Q2' ) THEN
-               XOR(NP) = XORIG
-               XAR(NP) = XBR/2
-               YOR(NP) = YORIG
-               YAR(NP) = YHR
-               XRMCM(NP) = XBR/2
-            ELSEIF( quadrant(I,J).EQ.'Q3' ) THEN
-               XOR(NP) = XORIG
-               XAR(NP) = XBR/2
-               YOR(NP) = YORIG
-               YAR(NP) = YHR
-               XRMCM(NP) = XBR/2
-            ELSEIF( quadrant(I,J).EQ.'Q4' ) THEN
-               XOR(NP) = XORIG+XBR/2
-               XAR(NP) = XBR/2
-               YOR(NP) = YORIG
-               YAR(NP) = YHR
-               XRMCM(NP) = XBR/2
-            ENDIF
-         ELSEIF( domain(I).EQ.'QU' ) THEN
-            XOR(NP) = XORIG
-            XAR(NP) = XBQ
-            YOR(NP) = YORIG
-            YAR(NP) = YHQ
-            XRMCM(NP) = XBQ
-         ELSEIF( domain(I).EQ.'SP' ) THEN
-            IF( quadrant(I,J).EQ.'Q1' ) THEN
-               XOR(NP) = XORIG+XBQ/2
-               XAR(NP) = XBQ/2
-               YOR(NP) = YORIG+YHQ/2
-               YAR(NP) = YHQ/2
-               XRMCM(NP) = XBQ/2
-            ELSEIF( quadrant(I,J).EQ.'Q2' ) THEN
-               XOR(NP) = XORIG
-               XAR(NP) = XBQ/2
-               YOR(NP) = YORIG+YHQ/2
-               YAR(NP) = YHQ/2
-               XRMCM(NP) = XBQ/2
-            ELSEIF( quadrant(I,J).EQ.'Q3' ) THEN
-               XOR(NP) = XORIG
-               XAR(NP) = XBQ/2
-               YOR(NP) = YORIG
-               YAR(NP) = YHQ/2
-               XRMCM(NP) = XBQ/2
-            ELSEIF( quadrant(I,J).EQ.'Q4' ) THEN
-               XOR(NP) = XORIG+XBQ/2
-               XAR(NP) = XBQ/2
-               YORIG = YORIG
-               YOR(NP) = YORIG
-               YAR(NP) = YHQ/2
-               XRMCM(NP) = XBQ/2
-            ELSEIF( quadrant(I,J).EQ.'HU' ) THEN
-               XOR(NP) = XORIG
-               XAR(NP) = XBQ
-               YOR(NP) = YORIG
-               YAR(NP) = YHQ/2
-               XRMCM(NP) = XBQ/2
-            ELSEIF( quadrant(I,J).EQ.'HO' ) THEN
-               XOR(NP) = XORIG
-               XAR(NP) = XBQ
-               YOR(NP) = YORIG+YHQ/2
-               YAR(NP) = YHQ/2
-               XRMCM(NP) = XBQ/2
-            ELSEIF( quadrant(I,J).EQ.'HL' ) THEN
-               XOR(NP) = XORIG
-               XAR(NP) = XBQ/2
-               YOR(NP) = YORIG
-               YAR(NP) = YHQ
-               XRMCM(NP) = XBQ/2
-            ELSEIF( quadrant(I,J).EQ.'HR' ) THEN
-               XOR(NP) = XORIG+XBQ/2
-               XAR(NP) = XBQ/2
-               YOR(NP) = YORIG
-               YAR(NP) = YHQ
-               XRMCM(NP) = XBQ/2
-            ELSEIF( quadrant(I,J).EQ.'SP' .OR. quadrant(I,J).EQ.'PS' .OR. quadrant(I,J).EQ.'PL' ) THEN
-               XOR(NP) = XORIG
-               XAR(NP) = XBQ
-               YOR(NP) = YORIG
-               YAR(NP) = YHQ
-               XRMCM(NP) = XBQ/2
-            ELSEIF( quadrant(I,J).EQ.'PR' ) THEN
-               XOR(NP) = XORIG
-               XAR(NP) = XBQ
-               YOR(NP) = YORIG
-               YAR(NP) = YHQ
-               XRMCM(NP) = XBQ/2
-            ENDIF
-         ENDIF
-         XRM(NP) = normRadiusMax(I,J)*XRO
-         XROCM(NP) = XRMCM(NP)*XRO/XRM(NP)
-         XRICM(NP) = XRMCM(NP)*XRI/XRM(NP)
-      enddo
-   enddo
-
-   YTEXT = plotNumSpaceY-1.0E0
-
+   call init()
    !-- PLO FUEHRT DIE EINZELNEN SUBPLOTS AUS:
 
    DO I = 1,NP
@@ -833,6 +140,702 @@ PROGRAM LARA
 
 contains
 
+   subroutine init()
+      implicit none
+      NCPLOT = 0
+      ZDO = 0.E0
+
+      RELE = 1.D-9
+      EPS = 1.D-13
+
+      !-- INPUT:
+      LR = 0
+      NQ = 0
+      NR = 0
+
+      READ(*,*)
+      READ(*,*) INPUTFILE,OUTPUTFILE,dataSetNumber,driftRate
+
+      OPEN(14,FILE = OUTPUTFILE,STATUS = 'unknown')
+      write(14,*) 'Inputfile,dataSetNumber ',INPUTFILE,dataSetNumber
+
+      READ(*,*)
+      READ(*,*) timeSeriesControl, drawHeader, drawPlotNum, drawTime, &
+                plotSize, countourParIsNumber, drawFrame
+
+      !-- drawHeader CONTROLLS THE HEAD:
+      !   drawHeader = 0 : NHEAD,
+      !   drawHeader = 1 : NHEAD WRITTEN,
+      !   drawPlotNum = 0 : NO PLOTNUMBERS
+      !   drawPlotNum = 1 : PLOTNUMBERS WITH DESCRIPTION,
+      !   drawPlotNum = 2 : PLOTNUMBERS WITHOUT DESCRIPTION,
+      !   drawPlotNum = 3 : PLOTNUMBERS GIVEN BY subPlotLabel,
+      !   drawTime CONTROLLS WETHER THE TIME IS WRITTEN (0/1).
+      !   plotSize DETERMINS THE SIZE OF THE PLOT:
+      !   plotSize = 0 : SMALL
+      !   plotSize = 1 : MEDIUM
+      !   plotSize = 2 : BIG
+      !   countourParIsNumber CONTROLLS WETHER contourPar IS THE NUMBER OF CONTOURLINES (countourParIsNumber = .true.) OR
+      !   THE DIFFERENCE BETWEEN THE CONTOUR LEVELS (countourParIsNumber = .false.).
+      !   FOR drawFrame = 1 A FRAME IS DRAWN AROUND EACH SUBPLOT.
+      !   timeSeriesControl CONTROLLS TIMESERIES
+      !   timeSeriesControl =  0 : NORMAL
+      !   timeSeriesControl = -1 : TIMESERIES OF 6 PLOTS WITH TIME GIVEN INDIVIDUALLY,
+      !   timeSeriesControl =  1 : TIMESERIES OF 6 PLOTS WITH TIME GIVEN BY OM,
+      !   timeSeriesControl = -2 : TIMESERIES OF 8 PLOTS WITH TIME GIVEN INDIVIDUALLY,
+      !   timeSeriesControl =  2 : TIMESERIES OF 8 PLOTS WITH TIME GIVEN BY OM.
+      IF( drawPlotNum.LT.0 .OR. drawPlotNum.GT.3 ) THEN
+         WRITE(*,*) 'WRONG INPUT OF drawPlotNum: ',drawPlotNum
+         STOP
+      ENDIF
+      IF( plotSize.LT.0 .OR. plotSize.GT.2 ) THEN
+         WRITE(*,*) 'WRONG INPUT OF plotSize: ',plotSize
+         STOP
+      ENDIF
+      IF( drawHeader.NE.0 .AND. drawHeader.NE.1 ) THEN
+         WRITE(*,*) 'WRONG INPUT OF drawHeader: ',drawHeader
+         STOP
+      ENDIF
+      IF( drawFrame.NE.0 .AND. drawFrame.NE.1 ) THEN
+         WRITE(*,*) 'WRONG INPUT OF drawFrame: ',drawFrame
+         STOP
+      ENDIF
+      IF( timeSeriesControl.LT.-2 .OR. timeSeriesControl.GT.2 ) THEN
+         WRITE(*,*) 'WRONG INPUT OF timeSeriesControl: ',timeSeriesControl
+         STOP
+      ENDIF
+
+      !-- nPlots IS NUMBER OF PLOTS, XP AND YP ARE LATITUDE AND LONGITUDE OF
+      !   THE POLE FOR PROJECTION OF A SPHERE ON A CIRCLE ( quadrant = 'PL','PR','PS' ) .
+      READ(*,*)
+      READ(*,*) nPlots,XP,YP
+
+      if(nPlots.ne.1.) then
+         write(*,*) 'wrong number of plots.'
+         stop
+      endif
+
+      IF( timeSeriesControl.GT.0 ) THEN
+         plotSize = 0
+         nPlots = 1
+      ENDIF
+
+      IF( ( plotSize.EQ.0 .AND. nPlots.GT.nPlotsMAX ) .OR. &
+            ( plotSize.EQ.1 .AND. nPlots.GT.4 )   .OR. &
+            ( plotSize.EQ.2 .AND. nPlots.GT.2 ) ) THEN
+         WRITE(*,*) 'TOO BIG NUMBER OF PLOTS nPlots: ',nPlots
+         STOP
+      ENDIF
+
+      DO I = 1,nPlots
+         !----- nSubPlots IS NUMBER OF SUBPLOTS, domain DESTINGUISHES BETWEEN
+         !      QUADRANT (domain = 'QU'), HALFSPHERE (domain = 'HS') AND FULL SPHERE (domain = 'SP').
+         !      TIME IS THE TIME OF THE PLOTTED FIELD FOR TIME DEPENDENCE.
+         READ(*,*)
+         READ(*,*) domain(I),TIME(I),nSubPlots(I)
+         if(nSubPlots(I).ne.1) then
+            write(*,*) 'wrong number of plots.'
+            stop
+         endif
+
+         IF( nSubPlots(I).GT.nSubPlotsMAX ) THEN
+            WRITE(*,*) 'TOO BIG NUMBER OF SUBPLOTS nSubPlots:',nSubPlots(I)
+            STOP
+         ENDIF
+         IF( domain(I).EQ.'HS' ) THEN
+            NR = NR+1
+         ELSE
+            NQ = NQ+1
+         ENDIF
+
+         !--- quadrant DESTINGUSHES BETWEEN:
+         !     QUADRANTS:
+         !        quadrant = 'Q1','Q2','Q3','Q4' ,
+         !     HALF SPHERES:
+         !        quadrant = 'HL','HR','HU','HO',
+         !     SPHERE:
+         !        quadrant = 'SP',
+         !     PROJECTION ON A SPHERE
+         !        quadrant = ' PS','PL','PR'
+         !    constantCoordinate DETERMINS WhETHER:
+         !             R = constantCoordinateValue (constantCoordinate = 'R') ,
+         !           PHI = constantCoordinateValue (constantCoordinate = 'P') OR
+         !         THETA = constantCoordinateValue (constantCoordinate = 'T') IS KEPT CONSTANT ,
+         !    whatToPlot DETERMINS THE FIELD TO BE PLOTTED:
+         !      'VS' : STREAMFUNCTIONS OF VELOCITY FIELD IN BUSSE NOTATION,
+         !      'BS' : STREAMFUNCTIONS OF MAGNETIC FIELD IN BUSSE NOTATION,
+         !      'JS' : STREAMFUNCTIONS OF ELECTRIC CURRENT IN BUSSE NOTATION,
+         !      'VR' : RADIAL VELOCITY FIELD,
+         !      'BR' : RADIAL MAGNETIC FIELD,
+         !      'TE' : TEMPERATURE FIELD Theta,
+         !      'ZF' : ZONAL FLOW ( Mean part of phi comp. of velocity),
+         !      'MF' : MERIDIONAL FLOW ( MEAN STREAM FUNCTION IN PHI = CONST. PLANE ),
+         !      'MT' : MEAN TOROIDAL MAGNETIC FIELD FOR PHI = CONST,
+         !      'BT' : TOROIDAL MAGNETIC FIELD FOR PHI = CONST,
+         !      'MP' : STREAMLINES OF MEAN POLOIDAL MAGNETIC FIELD FOR PHI = CONST,
+         !      'MJ' : STREAMLINES OF MEAN ELECTRIC CURRENT FOR PHI = CONST,
+         !      'MC' : CONTOUR LINES OF MEAN PHI COMPONENT OF ELECTRIC CURRENT FOR PHI = CONST,
+         !      'TT' : Temperature field Theta+Ts,
+         !      'UP' : Phi component of velocity,
+         !      'NU' : local Nusselt number for r = ri.
+         !
+         !    normRadiusMax IS A MULTIPLIER FOR THE LARGEST RADIUS TO BE PLOTTED: RM = normRadiusMax*RO.
+         !    contourPar IS:
+         !       THE STEP FOR THE CONTOURS FOR countourParIsNumber = .false. OR
+         !       THE NUMBER OF CONTPUR LINES FOR Z>0 OR Z<0 countourParIsNumber = .true.
+         ! Next two lines  are repeated for the number of subplots
+         !| SUBPL | PLANE(RPT) | CONST | FIELD |(MAX RAD)/RO|contourPar/STEP|PlotNR|
+         !   'SP'      'T'        90      'VS'     1.E0          9    '000'
+         DO J = 1,nSubPlots(I)
+            READ(*,*)
+            READ(*,*) quadrant(I,J), constantCoordinate(I,J), &
+                      constantCoordinateValue(I,J), whatToPlot(I,J), &
+                      normRadiusMax(I,J),contourPar(I,J),subPlotLabel(I,J)
+         enddo
+      enddo
+      !-- END OF PARAMETER INPUT.
+
+      !-- INPUT CHECK:
+      DO I = 1,nPlots
+         DO J = 1,nSubPlots(I)
+            IF( domain(I).NE.'QU' .AND. domain(I).NE.'HS' .AND.  domain(I).NE.'SP' ) THEN
+               WRITE(*,*) 'WRONG INPUT OF domain.'
+               WRITE(*,*) 'CHOOSE BETWEEN QUADRANT : domain = QU ,'
+               WRITE(*,*) '            HALF SPHERE : domain = HS ,'
+               WRITE(*,*) '                 SPHERE : domain = SP .'
+               WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
+               STOP
+            ENDIF
+            IF( quadrant(I,J).NE.'Q1' .AND. quadrant(I,J).NE.'Q2' .AND. &
+                quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' .AND. &
+                quadrant(I,J).NE.'HU' .AND. quadrant(I,J).NE.'HO' .AND. &
+                quadrant(I,J).NE.'HL' .AND. quadrant(I,J).NE.'HR' .AND. &
+                quadrant(I,J).NE.'PL' .AND. quadrant(I,J).NE.'PR' .AND. &
+                quadrant(I,J).NE.'SP' .AND. quadrant(I,J).NE.'PS' ) THEN
+               WRITE(*,*) 'WRONG INPUT OF quadrant.'
+               WRITE(*,*) '  CHOOSE BETWEEN QUADRANTS : quadrant = Q1,Q2,Q3,Q4 ,'
+               WRITE(*,*) '              HALF SPHERES : quadrant = HL,HR,HO,HU ,'
+               WRITE(*,*) '               FULL SPHERE : quadrant = SP ,'
+               WRITE(*,*) '   PROJECTION OF LEFT HALF : quadrant = PL ,'
+               WRITE(*,*) '  PROJECTION OF RIGHT HALF : quadrant = PL ,'
+               WRITE(*,*) ' PROJECTION OF FULL SPHERE : quadrant = PL .'
+               WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
+               STOP
+            ENDIF
+            IF( constantCoordinate(I,J).NE.'P' .AND. constantCoordinate(I,J).NE.'T' .AND. constantCoordinate(I,J).NE.'R' ) THEN
+               WRITE(*,*) 'WRONG INPUT OF CONSTANT COORDINATE constantCoordinate.'
+               WRITE(*,*) '          CHOOSE BETWEEN PHI : constantCoordinate = P ,'
+               WRITE(*,*) '                       THETA : constantCoordinate = T ,'
+               WRITE(*,*) '                           R : constantCoordinate = R ,'
+               WRITE(*,*) ' RADIAL FIELD FOR CONSTANT R : constantCoordinate = R .'
+               WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
+               STOP
+            ENDIF
+            IF( constantCoordinate(I,J).EQ.'R' ) normRadiusMax(I,J) = 1.E0
+   !
+            IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.360.E0 ) THEN
+               WRITE(*,*) 'PHI SHOULD BE GIVEN IN DEGREES < =  360.'
+               WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
+               STOP
+            ELSEIF( constantCoordinate(I,J).EQ.'T' .AND. constantCoordinateValue(I,J).GT.180.E0 ) THEN
+               WRITE(*,*) 'THETA SHOULD BE GIVEN IN DEGREES < =  180.'
+               WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
+               STOP
+            ELSEIF(  constantCoordinate(I,J).EQ.'R' .AND. ( constantCoordinateValue(I,J).LT.0.E0 .OR. constantCoordinateValue(I,J).GT.1.E0 )  )THEN
+               WRITE(*,*) 'RREL SHOULD BE > = 0 , < =  1 .'
+               WRITE(*,*) 'RREL IS DEFINED AS: R = RI+RREL*(RO-RI).'
+               WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
+               STOP
+            ENDIF
+            IF(  constantCoordinate(I,J).EQ.'P' ) THEN
+               IF( constantCoordinateValue(I,J).LT.0.E0 ) constantCoordinateValue(I,J) = constantCoordinateValue(I,J)+360.E0
+               IF(( quadrant(I,J).EQ.'Q1' .OR. &
+                    quadrant(I,J).EQ.'Q4' .OR. &
+                    quadrant(I,J).EQ.'HR' ) .AND. &
+                    constantCoordinateValue(I,J).GT.180.E0 .AND. &
+                    constantCoordinateValue(I,J).LT.360.E0 ) THEN
+                    constantCoordinateValue(I,J) = constantCoordinateValue(I,J) - 180.E0
+               ELSEIF(( quadrant(I,J).EQ.'Q2' .OR. &
+                        quadrant(I,J).EQ.'Q3' .OR. &
+                        quadrant(I,J).EQ.'HL' ) .AND. &
+                        constantCoordinateValue(I,J).LT.180.E0 .AND. &
+                        constantCoordinateValue(I,J).GT.0.E0 ) THEN
+                  constantCoordinateValue(I,J) = constantCoordinateValue(I,J) + 180.E0
+               ENDIF
+            ENDIF
+            IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MT' ) THEN
+               WRITE(*,*) 'FOR MT PHI HAS TO BE KEPT CONSTANT.'
+               constantCoordinate(I,J) = 'P'
+            ENDIF
+            IF( constantCoordinate(I,J).NE.'P' .AND. ( whatToPlot(I,J).EQ.'MP' .OR. whatToPlot(I,J).EQ.'BT' ) ) THEN
+               WRITE(*,*) 'FOR MP AND BT PHI HAS TO BE KEPT CONSTANT.'
+               constantCoordinate(I,J) = 'P'
+            ENDIF
+            IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MJ' ) THEN
+               WRITE(*,*) 'FOR  MJ PHI HAS TO BE KEPT CONSTANT.'
+               constantCoordinate(I,J) = 'P'
+            ENDIF
+            IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MC' ) THEN
+               WRITE(*,*) 'FOR  MC PHI HAS TO BE KEPT CONSTANT.'
+               constantCoordinate(I,J) = 'P'
+            ENDIF
+            IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'ZF' ) THEN
+               WRITE(*,*) 'FOR ZONAL FLOW PHI HAS TO BE KEPT CONSTANT.'
+               constantCoordinate(I,J) = 'P'
+            ENDIF
+            IF( constantCoordinate(I,J).NE.'P' .AND. whatToPlot(I,J).EQ.'MF' ) THEN
+               WRITE(*,*) 'FOR MERIDIONAL FLOW PHI HAS TO BE KEPT CONSTANT.'
+               constantCoordinate(I,J) = 'P'
+            ENDIF
+            IF( constantCoordinate(I,J).NE.'R' .AND. whatToPlot(I,J).EQ.'NU' ) THEN
+               WRITE(*,*) 'FOR NUSSELT NUMBER R HAS TO BE KEPT CONSTANT.'
+               constantCoordinate(I,J) = 'R'
+            ENDIF
+            if( constantCoordinate(I,J).EQ.'R' .and. quadrant(I,J)(:1).NE.'P' ) then
+               write(*,*) 'For R = const the subplot must be a projection.'
+               stop
+            endif
+            IF( domain(I).EQ.'QU' ) THEN
+               IF( nSubPlots(I).GT.1 ) THEN
+                  WRITE(*,*) 'ONLY ONE SUBPLOT ALLOWED FOR domain = QU.'
+                  WRITE(*,*) 'nSubPlots ASSUMED TO BE 1.'
+                  nSubPlots(I) = 1
+               ENDIF
+               IF( constantCoordinate(I,J).NE.'P' .AND. constantCoordinate(I,J).NE.'T' ) THEN
+                  WRITE(*,*) 'FOR domain = QU ONLY constantCoordinate = P OR constantCoordinate = T VALID.'
+                  WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
+                  STOP
+               ENDIF
+               IF( quadrant(I,J).NE.'Q1' .AND. quadrant(I,J).NE.'Q2' .AND. &
+                  quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' ) THEN
+                  WRITE(*,*) 'FOR domain = QU ONLY quadrant = Q1,Q2,Q3,Q4 VALID.'
+                  WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
+                  STOP
+               ENDIF
+            ELSEIF( domain(I).EQ.'HS' ) THEN
+               IF( nSubPlots(I).GT.2 ) THEN
+                  WRITE(*,*) 'ONLY TWO SUBPLOT MAXIMUM ALLOWED FOR domain = HS.'
+                  WRITE(*,*) 'nSubPlots ASSUMED TO BE 2.'
+                  nSubPlots(I) = 2
+               ENDIF
+               IF( constantCoordinate(I,J).NE.'P' .AND. constantCoordinate(I,J).NE.'T' ) THEN
+                  WRITE(*,*) 'FOR domain = HS ONLY constantCoordinate = P OR constantCoordinate = T VALID.'
+                  WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
+                  STOP
+               ENDIF
+               IF( quadrant(I,J).NE.'Q1' .AND. quadrant(I,J).NE.'Q2' .AND. &
+                   quadrant(I,J).NE.'Q3' .AND. quadrant(I,J).NE.'Q4' .AND. &
+                   quadrant(I,J).NE.'HO' .AND. quadrant(I,J).NE.'HU' ) THEN
+                  WRITE(*,*) 'FOR domain = HS ONLY quadrant = Q1,Q2,Q3,Q4,HO,HU VALID.'
+                  WRITE(*,'('' PLOT '',I3,'' , SUBPLOT '',I3)') I,J
+                  STOP
+               ENDIF
+               IF( quadrant(I,J).EQ.'HO' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
+                  quadrant(I,J) = 'Q1'
+                  IF( constantCoordinateValue(I,J).GT.180.E0 ) THEN
+                     constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
+                  ENDIF
+                  nSubPlots(I) = nSubPlots(I)+1
+                  quadrant(I,nSubPlots(I)) = 'Q2'
+                  constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
+                  IF( constantCoordinateValue(I,J).LT.180.E0 ) THEN
+                     constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,nSubPlots(I))+180.E0
+                  ENDIF
+                  whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
+                  normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
+                  contourPar(I,nSubPlots(I)) = contourPar(I,J)
+               ELSEIF( quadrant(I,J).EQ.'HU' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
+                  quadrant(I,J) = 'Q4'
+                        IF( constantCoordinateValue(I,J).GT.180.E0 ) THEN
+                     constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
+                  ENDIF
+                  nSubPlots(I) = nSubPlots(I)+1
+                  quadrant(I,nSubPlots(I)) = 'Q3'
+                  constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
+                        IF( constantCoordinateValue(I,J).LT.180.E0 ) THEN
+                     constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,nSubPlots(I))+180.E0
+                  ENDIF
+                  whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
+                  normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
+                  contourPar(I,nSubPlots(I)) = contourPar(I,J)
+               ENDIF
+            ELSEIF( domain(I).EQ.'SP' ) THEN
+               IF( nSubPlots(I).GT.4 ) THEN
+               WRITE(*,*) 'ONLY FOUR SUBPLOT MAXIMUM ALLOWED FOR domain = SP.'
+                  WRITE(*,*) 'nSubPlots ASSUMED TO BE 4.'
+                  nSubPlots(I) = 4
+               ENDIF
+               IF( quadrant(I,J).EQ.'HO' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
+                  quadrant(I,J) = 'Q1'
+                  IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.180.E0 ) then
+                     constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
+                  endif
+                  nSubPlots(I) = nSubPlots(I)+1
+                  quadrant(I,nSubPlots(I)) = 'Q2'
+                  constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
+                  IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).LT.180.E0 ) then
+                     constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,J)+180.E0
+                  endif
+                  whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
+                  normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
+                  contourPar(I,nSubPlots(I)) = contourPar(I,J)
+               ELSEIF( quadrant(I,J).EQ.'HU' .AND. constantCoordinate(I,J).EQ.'P' ) THEN
+                  quadrant(I,J) = 'Q4'
+                  IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).GT.180.E0 ) then
+                     constantCoordinateValue(I,J) = constantCoordinateValue(I,J)-180.E0
+                  endif
+                  nSubPlots(I) = nSubPlots(I)+1
+                  quadrant(I,nSubPlots(I)) = 'Q3'
+                  constantCoordinate(I,nSubPlots(I)) = constantCoordinate(I,J)
+                  IF( constantCoordinate(I,J).EQ.'P' .AND. constantCoordinateValue(I,J).LT.180.E0 ) then
+                     constantCoordinateValue(I,nSubPlots(I)) = constantCoordinateValue(I,J)+180.E0
+                  endif
+                  whatToPlot(I,nSubPlots(I)) = whatToPlot(I,J)
+                  normRadiusMax(I,nSubPlots(I)) = normRadiusMax(I,J)
+                  contourPar(I,nSubPlots(I)) = contourPar(I,J)
+               ENDIF
+            ENDIF
+         enddo
+      enddo
+      !-- SETTING OF CONSTANTS:
+      LTR = 1
+      NMC = NM
+      NMSC = NM
+      NAMC = NAM
+      NLMAC = NLMA
+
+      IF( timeSeriesControl.GT.0 ) TIME(1) = 0.D0
+
+      !-- READLA READS THE SET OF COEFFITIENTS TO BE PLOTTED ,
+      !   IT IS NECESSARY TO CALL IS HERE TO GET PARAMETERS.
+      TIMEO = TIME(1)
+      write(*,'(A,A,I3,D9.2)') 'reading data from ',INPUTFILE,dataSetNumber,TIME(1),'...'
+      CALL READLA(INPUTFILE,dataSetNumber,TIME(1),DX)
+      write(*,*) '...done'
+      RA = RAI
+      TA = TAI
+      PR = PRI
+      PM = PMI
+      ETA = ETAI
+      C = CI
+      OM = OMI
+      FTW = FTWI
+      FTG = FTGI
+      MF = 0
+      M0 = M0I
+      NTV = NTVI
+      NTH = NTHI
+      LTV = LTVI
+      LTH = LTHI
+      KTV = KTVI
+      KTH = KTHI
+      LD = LDI
+      LEV = LEVI
+      LRB = LRBI
+
+      IF( timeSeriesControl.GT.0 ) THEN
+         NSUBP = nSubPlots(1)
+         IF( LCALC.NE.3 .AND. LCALC.NE.4 ) THEN
+            WRITE(*,*) 'TIMESERIES WITH timeSeriesControl.GT.0 ONLY FOR TIME EXPANSION.'
+            STOP
+         ENDIF
+         IF( OM.LT.0.D-4 ) THEN
+            WRITE(*,*) 'OM TOO SMALL FOR timeSeriesControl.GT.0.'
+            STOP
+         ENDIF
+         IF( timeSeriesControl.EQ.1 ) THEN
+            nPlots = 6
+         ELSEIF( timeSeriesControl.EQ.2 ) THEN
+            nPlots = 8
+         ENDIF
+         TPERIOD = 2*PI/OM
+         DT = TPERIOD/nPlots
+         drawPlotNum = 3
+         TIME(1) = 0.D0
+         subPlotLabel(1,1) = '(a)'
+         DO J = 2,nSubPlots(1)
+            subPlotLabel(1,J) = '   '
+         enddo
+         DO I = 2,nPlots
+            domain(I) = domain(1)
+            nSubPlots(I) = nSubPlots(1)
+            IF( domain(I).EQ.'HS' ) THEN
+               NR = NR+1
+            ELSE
+               NQ = NQ+1
+            ENDIF
+            call setPlotTime(i)
+            DO J = 1,nSubPlots(1)
+               quadrant(I,J)                = quadrant(1,J)
+               constantCoordinate(I,J)      = constantCoordinate(1,J)
+               constantCoordinateValue(I,J) = constantCoordinateValue(1,J)
+               whatToPlot(I,J)              = whatToPlot(1,J)
+               normRadiusMax(I,J)           = normRadiusMax(1,J)
+               contourPar(I,J)              = -contourPar(1,J)
+               call setSubplotLabel(i,j)
+            enddo
+         enddo
+      ENDIF
+
+      !-- CALCULATION OF INNER AND OUTER RADIUS:
+      RI = ETA/(1.D0-ETA)
+      RO = 1.D0+RI
+      XRI = DBLE(RI)
+      XRO = DBLE(RO)
+
+      !-- ABG CALCULATES THE ALPHAS AND BETAS IN THE RADIAL FUNCTION
+      !   OF THE POLOIDAL MAGNETIC FIELD:
+      IF( LCALC.EQ.2 .OR. LCALC.EQ.4 .OR. LCALC.EQ.6 ) CALL ABG(ND,whatToPlot,L,N)
+
+      XLRAND = 3.0D0
+      XRRAND = 3.0D0
+      NROWR = NR
+      NROWQ = NQ/2
+      IF( MOD(NQ,2).NE.0 ) NROWQ = NROWQ+1
+      IF( timeSeriesControl.NE.0 ) THEN
+         NROWR = 0
+         NROWQ = 3
+      ELSE
+         NROWR = NR
+         NROWQ = NQ/2
+         IF( MOD(NQ,2).NE.0 ) NROWQ = NROWQ+1
+      ENDIF
+      NROW = NROWR+NROWQ
+      IF( plotSize.EQ.0 .AND. NROW.GT.3 ) THEN
+         WRITE(*,*) 'TOO MANY ROWS, ONLY 3 ALLOWED FOR plotSize = 0.',NROW
+         STOP
+      ELSEIF( plotSize.EQ.1 .AND. NROW.GT.2 ) THEN
+         WRITE(*,*) 'TOO MANY ROWS, ONLY 2 ALLOWED FOR plotSize = 1.',NROW
+         STOP
+      ELSEIF( plotSize.EQ.2 .AND. NROW.GT.1 ) THEN
+         WRITE(*,*) 'TOO MANY ROWS, ONLY 1 ALLOWED FOR plotSize = 2.',NROW
+         STOP
+      ENDIF
+      IF( NQ.LE.1 ) THEN
+         NCOL = 1
+      ELSE
+         NCOL = 2
+      ENDIF
+      IF( plotSize.EQ.2 .AND. NCOL.EQ.2 ) THEN
+         WRITE(*,*) 'TOO MANY COLUMNS, ONLY 1 ALLOWED FOR plotSize = 2.',NCOL
+         STOP
+      ENDIF
+      IF( IABS(timeSeriesControl).EQ.2 ) NCOL = 3
+      XTEXT = XLRAND
+
+      !-- GROESSE DER PLOTS:
+      IF( plotSize.EQ.0 ) THEN
+         YHR = 5.5D0
+         YHQ = 5.5D0
+         XLR = 2.0D0
+         XLQ = 1.5D0
+         XINTER = 1.D0
+         YINTER = 1.D0
+      ELSEIF( plotSize.EQ.1 ) THEN
+         YHR = 6.75D0
+         YHQ = 6.75D0
+         XLR = 0.75D0
+         XLQ = 0.0D0
+         XINTER = 1.5D0
+         YINTER = 1.5D0
+      ELSEIF( plotSize.EQ.2 ) THEN
+         YHR = 6.75D0
+         YHQ = 13.0
+         XLR = 1.0D0
+         XINTER = 0.0D0
+         YINTER = 0.0D0
+      ENDIF
+      XBQ = YHQ
+      XBR = 2*YHR
+
+      IF( drawHeader.EQ.0 ) THEN
+         headerSpaceY = 0.0D0
+      ELSEIF( drawHeader.EQ.1 ) THEN
+         headerSpaceY = 3.D0
+      ENDIF
+      IF( drawPlotNum.EQ.1 ) THEN
+         plotNumSpaceY = 5.0D0
+      ELSE
+         plotNumSpaceY = 0.0D0
+      ENDIF
+      YHPG = NROWR*YHR+NROWQ*YHQ+(NROW-1)*YINTER
+      IF( NQ.GT.0 ) THEN
+         XBPG = 2*XLQ+NCOL*XBQ+(NCOL-1)*XINTER
+      ELSE
+         XBPG = 2*XLR+XBR
+      ENDIF
+      XAREA = XLRAND+XBPG+XRRAND
+      YAREA = plotNumSpaceY+YHPG+headerSpaceY
+
+      !-- NZEI ZAEHLT ZEILEN , NSPA SPALTEN UND NP ZAHL DER PLOTS.
+      !   NQT ZAEHLT DIE ZAHL DER QUADRATE.
+      NP = 0
+      NQT = 0
+
+      !-- DIE DATEN FUER DIE EINZELNEN PLOTS WERDEN FESTGELEGT UND LINEAR
+      !   ABGESPEICHERT: URSPRUNG IN CM = (XORIG,YORIG) ,
+      !   PLOTGEBIET IN CM = (XAR,YAR) , RADIEN IN CM = (XRICM,XROCM,XRMCM).
+      DO I = 1,nPlots
+         IF( I.EQ.1 ) THEN
+            NSPA = 1
+            NZEI = 1
+            IF( domain(I).EQ.'HS' ) THEN
+               YHPLOT = YHR
+               XBPLOT = XBR
+               XLPLOT = XLR
+            ELSE
+               YHPLOT = YHQ
+               XBPLOT = XBQ
+               XLPLOT = XLQ
+            ENDIF
+         ELSEIF( domain(I).EQ.'HS' .OR. domain(I-1).EQ.'HS' ) THEN
+            NSPA = 1
+            NZEI = NZEI+1
+            YHPLOT = YHR
+            XBPLOT = XBR
+            XLPLOT = XLR
+         ELSE
+            IF( NSPA.EQ.NCOL ) THEN
+               NSPA = 1
+               NZEI = NZEI+1
+            ELSE
+               NSPA = NSPA+1
+               IF( IABS(timeSeriesControl).EQ.2 .AND. I.EQ.5 ) NSPA = NSPA+1
+            ENDIF
+            YHPLOT = YHQ
+            XBPLOT = XBQ
+            XLPLOT = XLQ
+         ENDIF
+         XORIG = XLRAND+XLPLOT+(NSPA-1)*(XBPLOT+XINTER)
+         YORIG = plotNumSpaceY+YHPG-NZEI*YHPLOT-(NZEI-1)*YINTER
+
+         IF( domain(I).EQ.'QU' .OR. domain(I).EQ.'SP' .AND. NCOL.GT.1 ) THEN
+            NQT = NQT+1
+            IF( NSPA.EQ.1 .AND. NQT.EQ.NQ ) XLQ = XLQ+(XBQ+XINTER)/2
+         ENDIF
+         DO J = 1,nSubPlots(I)
+            NP = NP+1
+            thisPlotQuadrant(NP)           = quadrant(I,J)
+            thisPlotWhatToPlot(NP)         = whatToPlot(I,J)
+            thisPlotconstantCoordinate(NP) = constantCoordinate(I,J)
+            ABCN(NP) = subPlotLabel(I,J)
+            IF( constantCoordinate(I,J).EQ.'R' ) THEN
+               XCP(NP) = XRI+constantCoordinateValue(I,J)
+            ELSE
+               XCP(NP) = constantCoordinateValue(I,J)
+            ENDIF
+            ZDP(NP)   = contourPar(I,J)
+            TIMEP(NP) = TIME(I)
+            IF( domain(I).EQ.'HS' ) THEN
+               IF( quadrant(I,J).EQ.'HO' .OR. quadrant(I,J).EQ.'HU' ) THEN
+                  XOR(NP) = XORIG
+                  XAR(NP) = XBR
+                  YOR(NP) = YORIG
+                  YAR(NP) = YHR
+                  XRMCM(NP) = XBR/2
+               ELSEIF( quadrant(I,J).EQ.'Q1' ) THEN
+                  XOR(NP) = XORIG+XBR/2
+                  XAR(NP) = XBR/2
+                  YOR(NP) = YORIG
+                  YAR(NP) = YHR
+                  XRMCM(NP) = XBR/2
+               ELSEIF( quadrant(I,J).EQ.'Q2' ) THEN
+                  XOR(NP) = XORIG
+                  XAR(NP) = XBR/2
+                  YOR(NP) = YORIG
+                  YAR(NP) = YHR
+                  XRMCM(NP) = XBR/2
+               ELSEIF( quadrant(I,J).EQ.'Q3' ) THEN
+                  XOR(NP) = XORIG
+                  XAR(NP) = XBR/2
+                  YOR(NP) = YORIG
+                  YAR(NP) = YHR
+                  XRMCM(NP) = XBR/2
+               ELSEIF( quadrant(I,J).EQ.'Q4' ) THEN
+                  XOR(NP) = XORIG+XBR/2
+                  XAR(NP) = XBR/2
+                  YOR(NP) = YORIG
+                  YAR(NP) = YHR
+                  XRMCM(NP) = XBR/2
+               ENDIF
+            ELSEIF( domain(I).EQ.'QU' ) THEN
+               XOR(NP) = XORIG
+               XAR(NP) = XBQ
+               YOR(NP) = YORIG
+               YAR(NP) = YHQ
+               XRMCM(NP) = XBQ
+            ELSEIF( domain(I).EQ.'SP' ) THEN
+               IF( quadrant(I,J).EQ.'Q1' ) THEN
+                  XOR(NP) = XORIG+XBQ/2
+                  XAR(NP) = XBQ/2
+                  YOR(NP) = YORIG+YHQ/2
+                  YAR(NP) = YHQ/2
+                  XRMCM(NP) = XBQ/2
+               ELSEIF( quadrant(I,J).EQ.'Q2' ) THEN
+                  XOR(NP) = XORIG
+                  XAR(NP) = XBQ/2
+                  YOR(NP) = YORIG+YHQ/2
+                  YAR(NP) = YHQ/2
+                  XRMCM(NP) = XBQ/2
+               ELSEIF( quadrant(I,J).EQ.'Q3' ) THEN
+                  XOR(NP) = XORIG
+                  XAR(NP) = XBQ/2
+                  YOR(NP) = YORIG
+                  YAR(NP) = YHQ/2
+                  XRMCM(NP) = XBQ/2
+               ELSEIF( quadrant(I,J).EQ.'Q4' ) THEN
+                  XOR(NP) = XORIG+XBQ/2
+                  XAR(NP) = XBQ/2
+                  YORIG = YORIG
+                  YOR(NP) = YORIG
+                  YAR(NP) = YHQ/2
+                  XRMCM(NP) = XBQ/2
+               ELSEIF( quadrant(I,J).EQ.'HU' ) THEN
+                  XOR(NP) = XORIG
+                  XAR(NP) = XBQ
+                  YOR(NP) = YORIG
+                  YAR(NP) = YHQ/2
+                  XRMCM(NP) = XBQ/2
+               ELSEIF( quadrant(I,J).EQ.'HO' ) THEN
+                  XOR(NP) = XORIG
+                  XAR(NP) = XBQ
+                  YOR(NP) = YORIG+YHQ/2
+                  YAR(NP) = YHQ/2
+                  XRMCM(NP) = XBQ/2
+               ELSEIF( quadrant(I,J).EQ.'HL' ) THEN
+                  XOR(NP) = XORIG
+                  XAR(NP) = XBQ/2
+                  YOR(NP) = YORIG
+                  YAR(NP) = YHQ
+                  XRMCM(NP) = XBQ/2
+               ELSEIF( quadrant(I,J).EQ.'HR' ) THEN
+                  XOR(NP) = XORIG+XBQ/2
+                  XAR(NP) = XBQ/2
+                  YOR(NP) = YORIG
+                  YAR(NP) = YHQ
+                  XRMCM(NP) = XBQ/2
+               ELSEIF( quadrant(I,J).EQ.'SP' .OR. quadrant(I,J).EQ.'PS' .OR. quadrant(I,J).EQ.'PL' ) THEN
+                  XOR(NP) = XORIG
+                  XAR(NP) = XBQ
+                  YOR(NP) = YORIG
+                  YAR(NP) = YHQ
+                  XRMCM(NP) = XBQ/2
+               ELSEIF( quadrant(I,J).EQ.'PR' ) THEN
+                  XOR(NP) = XORIG
+                  XAR(NP) = XBQ
+                  YOR(NP) = YORIG
+                  YAR(NP) = YHQ
+                  XRMCM(NP) = XBQ/2
+               ENDIF
+            ENDIF
+            XRM(NP) = normRadiusMax(I,J)*XRO
+            XROCM(NP) = XRMCM(NP)*XRO/XRM(NP)
+            XRICM(NP) = XRMCM(NP)*XRI/XRM(NP)
+         enddo
+      enddo
+
+      YTEXT = plotNumSpaceY-1.0E0
+   end subroutine
    !------------------------------------------------------------------------
    !     calculates the field Z and makes one subplot.
    SUBROUTINE PLO(NPLOT,NSUBP,driftRate,DX,countourParIsNumber,plotSize,drawFrame,contourPar,TIME,quadrant,whatToPlot,constantCoordinate,constantCoordinateValue, &

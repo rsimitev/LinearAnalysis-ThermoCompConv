@@ -4,8 +4,8 @@ FFLAGS=-O2 -g3 --fixed-line-length-none
 
 default:lara
 
-lara_estream.o: lara_estream.f
-	$(FC) $(FFLAGS) -c lara_estream.f
+lara_estream.o: lara_estream.f90
+	$(FC) $(FFLAGS) -c lara_estream.f90
 
 lara: lara_estream.o readla.o plms.o input.o
 	$(FC) $(FFLAGS) $(LDFLAGS) -o lara lara_estream.o readla.o plms.o input.o
