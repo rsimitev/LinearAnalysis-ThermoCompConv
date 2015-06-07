@@ -422,8 +422,7 @@ contains
       NUC=0
       NUOM=0
       MF=0
-      WRITE(unitOut,9100) C0,OMM,NUC,NUOM,MF
-9100      FORMAT(2D17.10,3I4,'    C,OM, WHERE?,FLOQUET')
+      WRITE(unitOut,"(2D17.10,3I4,'    C,OM, WHERE?,FLOQUET')") C0,OMM,NUC,NUOM,MF
 
       LMAX=2*Truncation+M0-1
       ! poloidal flow:
