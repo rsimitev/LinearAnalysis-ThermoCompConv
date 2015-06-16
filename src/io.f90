@@ -79,6 +79,7 @@ contains
       WRITE(unitOut,'(A11,E12.5,A2)') '# UpperLimit   ', UpperLimit, '#'
       WRITE(unitOut,'(A11,E12.5,A2)') '# StepSize     ', StepSize,   '#'
       WRITE(unitOut,'(A11,I12,A2)')   '# Truncation   ', Truncation, '#'
+      WRITE(unitOut,'(A11,A3,A2)')   '# Variable par ',VariablePar , '         #'
       WRITE(unitOut,*)  '# see definition of LCALC for output. LCALC:', LCALC,'   #'
       WRITE(unitOut,*)  '#                                      #'
    end subroutine
@@ -97,23 +98,5 @@ contains
 999      CONTINUE
       END subroutine
 
-! *************************************************************************
-!      subroutine writeConfigFile(outputfile)
-!         implicit none
-!         CHARACTER(len=*), intent(in):: outputfile
-!
-!         OPEN(99,FILE=outputfile,STATUS='UNKNOWN')
-!         WRITE(99,*) ' Symmetry (0/1/2) | LCALC (1/2/3/4) |'
-!         WRITE(99,'(A,2I12)') ' ',Symmetry, LCALC
-!         WRITE(99,*) '|  RAYLEIGH  |  TAU     |  PRANTEL  |  ETA  | Lewis |   Rconc   |'
-!         WRITE(99,'(1P,E17.6,5(A,E17.6))') Rt,' ',TAU,' ',Pt,' ',ETA,' ',Le,' ',Rc
-!         WRITE(99,*) '|   NTRUNC (>=1) | MODE |'
-!         WRITE(99,'(A,2I12)') ' ',Truncation, M0
-!         WRITE(99,*) '|   DRA   | ABSERR  |  RELERR  | NSMAX |'
-!         WRITE(99,'(1PG13.6,A,1PG12.5,A,1PG12.5,A,I4)') DRt,' ',ABSE,' ',RELE,' ',NSMAX
-!         WRITE(99,*) '|  StepSize  | UpperLimit'
-!         WRITE(99,'(1P,2G11.4)') StepSize, UpperLimit
-!         CLOSE(99)
-!      end subroutine writeConfigFile
 end module io
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
