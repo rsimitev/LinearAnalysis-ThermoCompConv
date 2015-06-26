@@ -165,10 +165,13 @@ contains
    !! magnitude of the value of the parameter (for example, if we are steping in
    !! Rt and Rt is 5*10^3, then the step size is 10^3). The step size is never
    !! smaller than \a StepSize.
+   !!
+   !! The output is written to file as "par, GR, W"
    subroutine fixedParGrowthRate()
       implicit none
       INTEGER:: aux
-      double precision:: GroR, factor, par
+      double complex:: MaxEval
+      double precision:: factor, par
       double precision:: dPar
 
       call saveParameterValue(par)
@@ -180,16 +183,16 @@ contains
       do while(abs(par-UpperLimit) > abs(0.11*UpperLimit))
          aux  = int(log10(abs(par)))
          dPar = factor*10.0d0**(aux-1)
-         if (dPar < StepSize) dPar = StepSize
+         if (dPar < StepSize.or.par==0.0d0) dPar = StepSize
          par  = par + dPar
-         GROR = MaxGrowthRate(par)
-         WRITE(*,*) par, GROR
-         Write(unitOut, *) par, GroR
+         MaxEval = MaxGrowthRateCmplx(par)
+         WRITE(*,*) par, dimag(MaxEval), dble(MaxEval)
+         Write(unitOut, *) par, dimag(MaxEval), dble(MaxEval)
       enddo
 
-      WRITE(*,*) 'R=',Rt,' TAU=',TAU,' P=',Pt,' M0=',M0,' eta=',ETA
-      WRITE(*,*) 'Most unstable growth rate', GROR
-      WRITE(*,*) 'If growth rate < 0 then above onset'
+      WRITE(*,*) '# R=',Rt,' TAU=',TAU,' P=',Pt,' M0=',M0,' eta=',ETA
+      WRITE(*,*) '# Most unstable growth rate', dble(MaxEval)
+      WRITE(*,*) '# If growth rate < 0 then above onset'
    end subroutine
 
    !**********************************************************************
@@ -666,7 +669,7 @@ contains
    subroutine CriticalRtSameAsRc()
       implicit none
       double precision:: dRtRel, Rt_old, Rc_old, dRc, dRc_old
-      double precision, parameter:: adv = 0.3d0 !< The advance fraction.
+      double precision, parameter:: adv = 1.0d0/3.0d0 !< The advance fraction.
       integer:: counter
       !Rt=(tau*Pt)**(4.0d0/3.0d0)
       !Rc=(tau*Pt)**(4.0d0/3.0d0)
@@ -687,30 +690,28 @@ contains
          if(LowerLimit==0.or.m0==0) LowerLimit=20
          ! Update the Rc steps
          dRc_old = dRc
-         ! We want the next iteration to have a an Rc that bridged \a adv of the
-         ! gap based on its previous evolution. But only if it was a sane
-         ! iteration, otherwise go back.
-         if( Rt*Rt_old.gt.0 ) then
-            dRc = adv*(Rc-Rt)/((Rt-Rt_old)/dRc_old-adv)
-         elseif(Rt.lt.0) then
-            dRc = -0.9*dRc_old
+         if(counter.lt.2) then
+            dRc = ( Rt - Rc )*adv
          else
-            dRc = (Rt - Rc)*adv
+            ! We want the next iteration to have a an Rc that bridged \a adv of the
+            ! gap based on its previous evolution. But only if it was a sane
+            ! iteration, otherwise go back.
+            if( Rt*Rt_old.gt.0 ) then
+               dRc = adv*(Rc-Rt)/((Rt-Rt_old)/dRc_old-adv)
+            elseif(Rt.lt.0) then
+               dRc = -0.9*dRc_old
+            else
+               dRc = (Rt - Rc)*adv
+            endif
+            if (dRc.gt.(Rt - Rc)*adv) dRc = (Rt - Rc)*adv
          endif
-         !if(abs(dRc).gt.abs(dRc_old)) dRc=abs(dRc_old)*dRc/abs(dRc)
          ! Update the Rc
-         ! If Rayleigh became negative we went too far
-         if(counter.eq.1) then
-            ! Cover 20% of the difference
-            Rc = ( Rt*0.1d0 + Rc*0.9d0 )
-         else
-            Rc = Rc + dRc
-         endif
+         Rc = Rc + dRc
          ! Cache this steps's Rc and Rt
          Rt_old = Rt
          Rc_old = Rc
          call GrowthRateUpdatePar(Rc=Rc)
-         Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc, 'dRc = ', dRc
+         Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc, ', dRc = ', dRc
       enddo
       if (dRtRel .le. 1.0d-7) then
          WRITE(*,*) ">>",Rt, Rc, m0
