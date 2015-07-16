@@ -188,9 +188,9 @@ contains
       else
          factor = 1.0d0
       endif
-      do while(abs(par-UpperLimit) > abs(0.11*UpperLimit))
+      do while(abs(par-UpperLimit) > abs(0.01*UpperLimit))
          aux  = int(log10(abs(par)))
-         dPar = factor*10.0d0**(aux-1)
+         dPar = factor*10.0d0**(aux-1)/2.0d0
          if (abs(dPar) < abs(StepSize).or.par==0.0d0) dPar = factor*abs(StepSize)
          par  = par + dPar
          MaxEval = MaxGrowthRateCmplx(par)
