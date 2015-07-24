@@ -342,31 +342,34 @@ contains
                      stop
                   endIF
                   IF( LI.EQ.LJ ) THEN
-                     ZB(I+1,J+1) = DCMPLX(0.D0,                      -DIII2(NI,NJ,LPI,1))
-                     ZA(I+1,J+1) = DCMPLX(DIII1(NI,NJ,LPI),           DIII3(tau_i,mm_i, NI,NJ,LPI,1))
-                     ZA(I+1,J+2) = DCMPLX(DIII5(Rt_i, NI,NJ,LPI),     0.D0)
-                     ! -- concentration driving
-                     ZA(I+1,J+4) = DCMPLX(DIII5conc(Rc_i,NI,NJ,LPI),  0.D0)
+                     ! these are the terms on the LHS
+                     ZB(I+1,J+1) = DCMPLX(0.D0, -pol_LHS(          NI, NJ, LPI, 1))
+                     ZB(I+2,J+2) = DCMPLX(0.D0, -scalar_LHS( Pt_i, NI, NJ, 1)) ! temperature
+                     ZB(I+3,J+3) = DCMPLX(0.D0, -tor_LHS   (       NI, NJ, LTI, 1))
+                     ZB(I+4,J+4) = DCMPLX(0.D0, -scalar_LHS( Pt_i, NI, NJ, 1)) ! concentration
 
-                     ZB(I+2,J+2) = DCMPLX(0.D0,                      -DI1(Pt_i, NI,NJ,1))
-                     ZA(I+2,J+1) = DCMPLX(DI3(NI,NJ,LPI),             0.D0)
-                     ZA(I+2,J+2) = DCMPLX(DI2(NI,NJ,LPI),             0.D0)
-                     ZB(I+3,J+3) = DCMPLX(0.D0,                      -DII2(NI,NJ,LTI,1))
-                     ZA(I+3,J+3) = DCMPLX(DII1(NI,NJ,LTI),            DII3(tau_i, mm_i, NI,NJ,1))
-                     ! -- concentration equation
-                     ZB(I+4,J+4) = DCMPLX(0.D0,                      -DI1(Pt_i, NI,NJ,1))
-                     ZA(I+4,J+1) = DCMPLX(DI3(NI,NJ,LPI),             0.D0)
-                     ZA(I+4,J+4) = DCMPLX(DI2(NI,NJ,LPI)/Le_i,        0.D0)
+                     ! NS
+                     ZA(I+1,J+1) = DCMPLX(Diffusion_pol(NI,NJ,LPI),         Coriolis_pol2pol(tau_i, mm_i, NI, NJ, LPI, 1))
+                     ZA(I+3,J+3) = DCMPLX(Diffusion_tor(NI,NJ,LTI),         Coriolis_tor2tor(tau_i, mm_i, NI, NJ, 1))
+                     ZA(I+1,J+2) = DCMPLX(Buoyancy_temp(Rt_i, NI, NJ, LPI), 0.D0)
+                     ZA(I+1,J+4) = DCMPLX(Buoyancy_conc(Rc_i, NI, NJ, LPI), 0.D0)
+                     ! HE
+                     ZA(I+2,J+1) = DCMPLX(Advection_scalar(NI, NJ, LPI),    0.D0)
+                     ZA(I+2,J+2) = DCMPLX(Diffusion_scalar(NI, NJ, LPI),    0.D0)
+                     ! CE
+                     ZA(I+4,J+1) = DCMPLX(Advection_scalar(NI,NJ,LPI),      0.D0)
+                     ZA(I+4,J+4) = DCMPLX(Diffusion_scalar(NI,NJ,LPI)/Le_i, 0.D0)
                   endIF
+                  ! The remaining cross-pol/tor terms of the Coriolis force.
                   IF( LPI.EQ.LTJ+1 ) THEN
-                     ZA(I+1,J+3) = DCMPLX(DIII4A(tau_i, mm_i,NI,NJ,LPI,1),        0.D0)
+                     ZA(I+1,J+3) = DCMPLX(DIII4A(tau_i, mm_i, NI, NJ, LPI, 1),  0.D0)
                   ELSEIF( LPI.EQ.LTJ-1 ) THEN
-                     ZA(I+1,J+3) = DCMPLX(DIII4B(tau_i, mm_i,NI,NJ,LPI,1),        0.D0)
+                     ZA(I+1,J+3) = DCMPLX(DIII4B(tau_i, mm_i, NI, NJ, LPI, 1),  0.D0)
                   endIF
                   IF( LTI.EQ.LPJ+1 ) THEN
-                     ZA(I+3,J+1) = DCMPLX(DII4A(tau_i,mm_i, NI,NJ,LTI,1),         0.D0)
+                     ZA(I+3,J+1) = DCMPLX(DII4A(tau_i, mm_i, NI, NJ, LTI, 1),   0.D0)
                   ELSEIF( LTI.EQ.LPJ-1 ) THEN
-                     ZA(I+3,J+1) = DCMPLX(DII4B(tau_i,mm_i, NI,NJ,LTI,1),         0.D0)
+                     ZA(I+3,J+1) = DCMPLX(DII4B(tau_i, mm_i, NI, NJ, LTI, 1),   0.D0)
                   endIF
                   J=J+4
                enddo
@@ -472,48 +475,48 @@ contains
    !************************************************************************
    ! - GALERKIN TERMS:
    !************************************************************************
-   double precision function DI1(Pt, N1,N2,NU1)
+   double precision function scalar_LHS(Pt, N1,N2,NU1)
    ! ---- HEAT EQUATION, TIME DERIVATIVE
       implicit none
       double precision, intent(in):: Pt
       integer, intent(in):: N1, N2, NU1
-      DI1=Pt*NU1*R('SS ',2,N1,N2,0)
+      scalar_LHS=Pt*NU1*R('SS ',2,N1,N2,0)
    end function
 
-   double precision function DI2(N1,N2,L1)
+   double precision function Diffusion_scalar(N1,N2,L1)
    ! ---- HEAT EQUATION , DISSIPATION
       implicit none
       integer:: N1, N2, l1
-      DI2=N2**2*DPI**2*R('SS ',2,N1,N2,0) - 2*N2*DPI*R('SC ',1,N1,N2,0) + DL(L1)*R('SS ',0,N1,N2,0)
+      Diffusion_scalar=N2**2*DPI**2*R('SS ',2,N1,N2,0) - 2*N2*DPI*R('SC ',1,N1,N2,0) + llp1(L1)*R('SS ',0,N1,N2,0)
    end function
 
-   double precision function DI3(N1,N2,L1)
+   double precision function Advection_scalar(N1,N2,L1)
    ! ---- HEAT EQUATION , SOURCE
       implicit none
       integer:: N1, N2, l1
-      DI3 =-DL(L1)*R('SS ',2,N1,N2,0)
+      Advection_scalar =-llp1(L1)*R('SS ',2,N1,N2,0)
    end function
 
-   double precision function DII1(N1,N2,L1)
+   double precision function Diffusion_tor(N1,N2,L1)
    ! ---- TOROIDAL EQUATION , DISSIPATION
       implicit none
       integer:: N1, N2, l1
-      DII1=DL(L1)*( (N2-1)**2*DPI**2*R('CC ',4,N1-1,N2-1,0)+4*(N2-1)*DPI*R('CS ',3,N1-1,N2-1,0)+(DL(L1)-2)*R('CC ',2,N1-1,N2-1,0) )
+      Diffusion_tor=llp1(L1)*( (N2-1)**2*DPI**2*R('CC ',4,N1-1,N2-1,0)+4*(N2-1)*DPI*R('CS ',3,N1-1,N2-1,0)+(llp1(L1)-2)*R('CC ',2,N1-1,N2-1,0) )
    end function
 
-   double precision function DII2(N1,N2,L1,NU1)
+   double precision function tor_LHS(N1,N2,L1,NU1)
    ! ---- TOROIDAL EQUATION , TIME DERIVATIVE
       implicit none
       integer:: N1, N2, l1, NU1
-      DII2=NU1*DL(L1)*R('CC ',4,N1-1,N2-1,0)
+      tor_LHS=NU1*llp1(L1)*R('CC ',4,N1-1,N2-1,0)
    end function
 
-   double precision function DII3(tau, mm, N1,N2,NU1)
+   double precision function Coriolis_tor2tor(tau, mm, N1,N2,NU1)
    ! ---- TOROIDAL EQUATION , CORRIOLIS
       implicit none
       double precision, intent(in):: tau
       integer, intent(in):: N1, N2, NU1, mm
-      DII3=-tau*NU1*mm*R('CC ',4,N1-1,N2-1,0)
+      Coriolis_tor2tor=-tau*NU1*mm*R('CC ',4,N1-1,N2-1,0)
    end function
 
    double precision function DII4A(tau,mm, N1,N2,L1,NU1)
@@ -532,30 +535,30 @@ contains
       DII4B= tau*DSQRT( DBLE(L1-NU1*mm+1)*(L1+NU1*mm+1)/(2*L1+1)/(2*L1+3) )*( (1-(L1+1)**2)*(L1+2)*R('CS ',2,N1-1,N2,0)  - L1*(L1+2)*N2*DPI*R('CC ',3,N1-1,N2,0)  )
    end function
 
-   double precision function DIII1(N1,N2,L1)
+   double precision function Diffusion_pol(N1,N2,L1)
    ! ---- POLOIDAL EQUOATION , DISSIPATION
       implicit none
       integer:: N1, N2, l1
-      DIII1=DL(L1)* ( N2**4*DPI**4*R('SS ',2,N1,N2,0) - 4*N2**3*DPI**3*R('SC ',1,N1,N2,0)+2*DL(L1)*N2**2*DPI**2*R('SS ',0,N1,N2,0)+(DL(L1)**2-2*DL(L1))*R('SS ',-2,N1,N2,0) )
+      Diffusion_pol=llp1(L1)* ( N2**4*DPI**4*R('SS ',2,N1,N2,0) - 4*N2**3*DPI**3*R('SC ',1,N1,N2,0)+2*llp1(L1)*N2**2*DPI**2*R('SS ',0,N1,N2,0)+(llp1(L1)**2-2*llp1(L1))*R('SS ',-2,N1,N2,0) )
    end function
 
-   double precision function DIII2(N1,N2,L1,NU1)
    ! ---- POLOIDAL EQUATION , TIME DERIVATIVE
+   double precision function pol_LHS(N1,N2,L1,NU1)
       implicit none
       integer:: N1, N2, l1, NU1
-      DIII2= -NU1*DL(L1)*( -N2**2*DPI**2*R('SS ',2,N1,N2,0) + 2*N2*DPI*R('SC ',1,N1,N2,0) - DL(L1)*R('SS ',0,N1,N2,0) )
+      pol_LHS= -NU1*llp1(L1)*( -N2**2*DPI**2*R('SS ',2,N1,N2,0) + 2*N2*DPI*R('SC ',1,N1,N2,0) - llp1(L1)*R('SS ',0,N1,N2,0) )
    end function
 
-   double precision function DIII3(tau,mm, N1,N2,L1,NU1)
+   double precision function Coriolis_pol2pol(tau, mm, N1,N2,L1,NU1)
    ! ---- POLOIDAL EQUATION , CORRIOLIS
       implicit none
       double precision, intent(in):: tau
       integer, intent(in):: N1, N2, l1, NU1, mm
-      DIII3= tau*NU1*mm*( -N2**2*DPI**2*R('SS ',2,N1,N2,0)+2*N2*DPI*R('SC ',1,N1,N2,0) - DL(L1)*R('SS ',0,N1,N2,0) )
+      Coriolis_pol2pol= tau*NU1*mm*( -N2**2*DPI**2*R('SS ',2,N1,N2,0)+2*N2*DPI*R('SC ',1,N1,N2,0) - llp1(L1)*R('SS ',0,N1,N2,0) )
    end function
 
    double precision function DIII4A(tau,mm,  N1, N2, L1, NU1)
-   ! ---- POLOIDAL EUQUATION , Q-TERM 1 (L1=L3+1)
+   ! ---- POLOIDAL EQUATION , Q-TERM 1 (L1=L3+1)
       implicit none
       double precision, intent(in):: tau
       integer, intent(in):: N1, N2, l1, NU1, mm
@@ -570,29 +573,29 @@ contains
       DIII4B= tau*DSQRT( DBLE(L1-mm*NU1+1)*(L1+mm*NU1+1)/(2*L1+1)/(2*L1+3) ) * ( (L1+2)*(2-(L1+1)*(L1+2))*R('SC ',2,N1,N2-1,0) + L1*(L1+2)*(N2-1)*DPI*R('SS ',3,N1,N2-1,0) )
    end function
 
-   double precision function DIII5(Ra,N1,N2,L1)
+   double precision function Buoyancy_temp(Ra,N1,N2,L1)
    ! ---- POLOIDAL EQUATION ,
       implicit none
       integer:: N1, N2, l1
       double precision:: Ra
-      DIII5=-Ra*DL(L1)*R('SS ',2,N1,N2,0)
+      Buoyancy_temp=-Ra*llp1(L1)*R('SS ',2,N1,N2,0)
    end function
 
-   double precision function DIII5conc(Ra,N1,N2,L1)
+   double precision function Buoyancy_conc(Ra,N1,N2,L1)
    ! ---- POLOIDAL EQUATION ,
       implicit none
       integer:: N1, N2, l1
       double precision:: Ra
-      DIII5conc=-Ra*DL(L1)*R('SS ',2,N1,N2,0)
+      Buoyancy_conc=-Ra*llp1(L1)*R('SS ',2,N1,N2,0)
    end function
 
    !**************************************************************************
    !-- SUBROUTINES:
    !**************************************************************************
-   pure double precision function DL(L)
+   pure double precision function llp1(L)
       implicit none
       integer, intent(in):: l
-      DL = DBLE(L*(L+1))
+      llp1 = DBLE(L*(L+1))
    end function
 
 !-----------------------------------------------------------------------
@@ -625,7 +628,7 @@ contains
             IF (I.EQ.0) THEN
                RINT = 0D0
             ELSE
-               RINT = 1D0 / 2D0*(S0 (I - J)+S0 (I+J) )
+               RINT = 1D0 / 2D0*(two_over_nPi_odd (I - J)+two_over_nPi_odd (I+J) )
             ENDIF
          ELSEIF (TRI.EQ.'CC ') THEN
             RINT = 1D0 / 2D0*(delta (I+J)+delta (I - J) )
@@ -633,13 +636,11 @@ contains
             IF (I*J*K.EQ.0) THEN
                RINT = 0D0
             ELSE
-               RINT = 1D0 / 4D0*(S0 (I - J+K)+S0 (I+J - K)      &
-               - S0 (I - J - K) - S0 (I+J+K) )
+               RINT = 1D0 / 4D0*( two_over_nPi_odd(I-J+K) + two_over_nPi_odd(I+J-K) - two_over_nPi_odd(I-J-K) - two_over_nPi_odd(I+J+K) )
             ENDIF
          ELSEIF (TRI.EQ.'SSC') THEN
             IF (I*J.NE.0) THEN
-               RINT = 1D0 / 4D0*(delta (I - J - K) - delta (I+J+K)      &
-              +delta (I - J+K) - delta (I+J - K) )
+               RINT = 1D0 / 4D0*(delta (I - J - K) - delta (I+J+K) +delta (I - J+K) - delta (I+J - K) )
             ELSE
                RINT = 0D0
             ENDIF
@@ -647,12 +648,10 @@ contains
             IF (I.EQ.0) THEN
                RINT = 0D0
             ELSE
-               RINT = 1D0 / 4D0*(S0 (I+J - K)+S0 (I+J+K)      &
-              +S0 (I - J+K)+S0 (I - J - K) )
+               RINT = 1D0 / 4D0*(two_over_nPi_odd (I+J - K)+two_over_nPi_odd (I+J+K) +two_over_nPi_odd (I - J+K)+two_over_nPi_odd (I - J - K) )
             ENDIF
          ELSEIF (TRI.EQ.'CCC') THEN
-            RINT = 1D0 / 4D0*(delta (I+J+K)+delta (I+J - K)+delta (I &
-            - J+K)+delta (I - J - K) )
+            RINT = 1D0 / 4D0*( delta (I+J+K) + delta(I+J-K) + delta(I-J+K) + delta (I-J-K) )
          ENDIF
       ELSEIF (Symmetry_i.EQ.1) THEN
          IF (TRI.EQ.'SS ') THEN
@@ -673,13 +672,11 @@ contains
             IF (I*J*K.EQ.0) THEN
                RINT = 0D0
             ELSE
-               RINT = 1D0 / 4D0*(S1 (I - J+K)+S1 (I+J - K)      &
-               - S1 (I - J - K) - S1 (I+J+K) )
+               RINT = 1D0 / 4D0*(S1 (I - J+K)+S1 (I+J - K) - S1 (I - J - K) - S1 (I+J+K) )
             ENDIF
          ELSEIF (TRI.EQ.'SSC') THEN
             IF (I*J.NE.0) THEN
-               RINT = 1D0 / 4D0*(C1 (I - J - K) - C1 (I+J+K)      &
-              +C1 (I - J+K) - C1 (I+J - K) )
+               RINT = 1D0 / 4D0*(C1 (I - J - K) - C1 (I+J+K) +C1 (I - J+K) - C1 (I+J - K) )
             ELSE
                RINT = 0D0
             ENDIF
@@ -687,12 +684,10 @@ contains
             IF (I.EQ.0) THEN
                RINT = 0D0
             ELSE
-               RINT = 1D0 / 4D0*(S1 (I+J - K)+S1 (I+J+K)      &
-              +S1 (I - J+K)+S1 (I - J - K) )
+               RINT = 1D0 / 4D0*(S1 (I+J - K)+S1 (I+J+K) +S1 (I - J+K)+S1 (I - J - K) )
             ENDIF
          ELSEIF (TRI.EQ.'CCC') THEN
-            RINT = 1D0 / 4D0*(C1 (I+J+K)+C1 (I+J - K)+C1 (I &
-            - J+K)+C1 (I - J - K) )
+            RINT = 1D0 / 4D0*(C1 (I+J+K)+C1 (I+J - K)+C1 (I - J+K)+C1 (I - J - K) )
          ENDIF
       ELSEIF (Symmetry_i.EQ.2) THEN
          IF (TRI.EQ.'SS ') THEN
@@ -713,13 +708,11 @@ contains
             IF (I*J*K.EQ.0) THEN
                RINT = 0D0
             ELSE
-               RINT = 1D0 / 4D0*(S2 (I - J+K)+S2 (I+J - K)      &
-               - S2 (I - J - K) - S2 (I+J+K) )
+               RINT = 1D0 / 4D0*(S2 (I - J+K)+S2 (I+J - K) - S2 (I - J - K) - S2 (I+J+K) )
             ENDIF
          ELSEIF (TRI.EQ.'SSC') THEN
             IF (I*J.NE.0) THEN
-               RINT = 1D0 / 4D0*(C2 (I - J - K) - C2 (I+J+K)      &
-              +C2 (I - J+K) - C2 (I+J - K) )
+               RINT = 1D0 / 4D0*(C2 (I - J - K) - C2 (I+J+K) +C2 (I - J+K) - C2 (I+J - K) )
             ELSE
                RINT = 0D0
             ENDIF
@@ -727,12 +720,10 @@ contains
             IF (I.EQ.0) THEN
                RINT = 0D0
             ELSE
-               RINT = 1D0 / 4D0*(S2 (I+J - K)+S2 (I+J+K)      &
-              +S2 (I - J+K)+S2 (I - J - K) )
+               RINT = 1D0 / 4D0*(S2 (I+J - K)+S2 (I+J+K) +S2 (I - J+K)+S2 (I - J - K) )
             ENDIF
          ELSEIF (TRI.EQ.'CCC') THEN
-            RINT = 1D0 / 4D0*(C2 (I+J+K)+C2 (I+J - K)+C2 (I &
-            - J+K)+C2 (I - J - K) )
+            RINT = 1D0 / 4D0*(C2 (I+J+K)+C2 (I+J - K)+C2 (I - J+K)+C2 (I - J - K) )
          ENDIF
       ELSEIF (Symmetry_i.EQ.3) THEN
          IF (TRI.EQ.'SS') THEN
@@ -753,13 +744,11 @@ contains
             IF (I*J*K.EQ.0) THEN
                RINT = 0D0
             ELSE
-               RINT = 1D0 / 4D0*(S3 (I - J+K)+S3 (I+J - K)      &
-               - S3 (I - J - K) - S3 (I+J+K) )
+               RINT = 1D0 / 4D0*(S3 (I - J+K)+S3 (I+J - K) - S3 (I - J - K) - S3 (I+J+K) )
             ENDIF
          ELSEIF (TRI.EQ.'SSC') THEN
             IF (I*J.NE.0) THEN
-               RINT = 1D0 / 4D0*(C3 (I - J - K) - C3 (I+J+K)      &
-              +C3 (I - J+K) - C3 (I+J - K) )
+               RINT = 1D0 / 4D0*(C3 (I - J - K) - C3 (I+J+K) +C3 (I - J+K) - C3 (I+J - K) )
             ELSE
                RINT = 0D0
             ENDIF
@@ -767,12 +756,10 @@ contains
             IF (I.EQ.0) THEN
                RINT = 0D0
             ELSE
-               RINT = 1D0 / 4D0*(S3 (I+J - K)+S3 (I+J+K)      &
-              +S3 (I - J+K)+S3 (I - J - K) )
+               RINT = 1D0 / 4D0*(S3 (I+J - K)+S3 (I+J+K) +S3 (I - J+K)+S3 (I - J - K) )
             ENDIF
          ELSEIF (TRI.EQ.'CCC') THEN
-            RINT = 1D0 / 4D0*(C3 (I+J+K)+C3 (I+J - K)+C3 (I &
-            - J+K)+C3 (I - J - K) )
+            RINT = 1D0 / 4D0*(C3 (I+J+K)+C3 (I+J - K)+C3 (I - J+K)+C3 (I - J - K) )
          ENDIF
       ELSEIF (Symmetry_i.EQ.4) THEN
          IF (TRI.EQ.'SS') THEN
@@ -945,17 +932,17 @@ contains
       END SUBROUTINE TAUSCH
 !-----------------------------------------------------------------------
 !
-!
+!> Returns 2/(n*pi) in case n is odd.
 !-----------------------------------------------------------------------
-   pure double precision function S0 (N)
+   pure double precision function two_over_nPi_odd (N)
       implicit none
       integer, intent(in):: N
       IF (even_odd(N) .EQ.1) THEN
-         S0 = 0D0
+         two_over_nPi_odd = 0D0
       ELSE
-         S0 = 2D0 / (N * DPI)
+         two_over_nPi_odd = 2D0 / (N * DPI)
       ENDIF
-   END FUNCTION S0
+   END FUNCTION two_over_nPi_odd
 !-----------------------------------------------------------------------
 !
 !> Returns 1 id N is equal to 0. Returns 0 otherwise.

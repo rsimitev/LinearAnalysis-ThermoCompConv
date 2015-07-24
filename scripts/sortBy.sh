@@ -1,5 +1,8 @@
 # Function that sorts strings obeying a certain template according to 
-# a certain substring.
+# a certain substring. The substring must be of the form <par>=<val>.
+# It takes two positional parameters:
+# 1. the parameter string, <par> to sort by;
+# 2. the template string <par> apears in.
 function sortBy() 
 {    
    local par=$1;    

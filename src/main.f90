@@ -57,26 +57,31 @@ program linearOnset
       !> Varies the thermal Rayleigh number and computes the growth rate for
       !! other parameters fixed.
       case(-1)
+         call writeOutputHeader(unitOut)
          call fixedParGrowthRate()
       !> Computes the critical Thermal Rayleigh number for the onset of 
       !! convections for all other parameters fixed.
       case(0)
+         call writeOutputHeader(unitOut)
          call fixedParCriticalRa()
       !> Writes the (complex) eigenvalues of the problem for fixed parameters.
       !! The real part of the eigenvalues is the frequency of oscillation of the
       !! mode. The imaginary part is the symmetric of the growth rate.
       !! Modes are sorted from heighest to lowest growth rate.
       case(1)
+         call writeOutputHeader(unitOut)
          call fixedParEigenValues()
       !> Computes the critical thermal Rayleigh number as a function of tau
       !! for all other parameters fixed.
       case(2)
          LowerLimit = tau
+         call writeOutputHeader(unitOut)
          call varyTauCriticalRt(LowerLimit, UpperLimit)
       !> Computes the lowest critical thermal Rayleigh number of all m's
       !! as a function of tau for all other parameters fixed.
       case(3)
          LowerLimit = tau
+         call writeOutputHeader(unitOut)
          call varyTauCriticalState(LowerLimit, UpperLimit)
       !> Computes the eigen vector (equatorial render)
       !! Corresponding to the critical value of Rt with all other parameters 
@@ -87,6 +92,7 @@ program linearOnset
       !! azimuthal wave-numbers m.
       case(5)
          LowerLimit = m0
+         call writeOutputHeader(unitOut)
          call varyMCriticalRt(int(LowerLimit), int(UpperLimit))
       !> Varies the Lewis number and computes the critical
       !! thermal Rayleigh number for fixed other parameters.
@@ -94,6 +100,7 @@ program linearOnset
       !! not restore it at the end.
       case(6)
          LowerLimit = Le
+         call writeOutputHeader(unitOut)
          call varyLeCriticalRt(LowerLimit, UpperLimit)
       case(7) ! Loops through the m's to find the critical Par and m_c.
          if(trim(VariablePar)=='m') then
@@ -102,11 +109,13 @@ program linearOnset
             stop ERR_UNUSABLE_VARIABLE_PAR
          endif
          LowerLimit = m0
+         call writeOutputHeader(unitOut)
          call fixedParCriticalParAndM0_v2()
       case(8) ! Loops through the m's to find the critical Rt=Rc and m_c.
          VariablePar = 'Rt'
          call setVariableParam(VariablePar)
          LowerLimit = m0
+         call writeOutputHeader(unitOut)
          call CriticalRtSameAsRc()
       case default
          Write(*,*) 'Unknown computation type:', LCALC
@@ -136,7 +145,6 @@ contains
 
       ! ----OUTPUT:
       OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
-      call writeOutputHeader(unitOut)
    END subroutine
 
    !**********************************************************************
@@ -165,10 +173,13 @@ contains
    !! magnitude of the value of the parameter (for example, if we are steping in
    !! Rt and Rt is 5*10^3, then the step size is 10^3). The step size is never
    !! smaller than \a StepSize.
+   !!
+   !! The output is written to file as "par, GR, W"
    subroutine fixedParGrowthRate()
       implicit none
       INTEGER:: aux
-      double precision:: GroR, factor, par
+      double complex:: MaxEval
+      double precision:: factor, par
       double precision:: dPar
 
       call saveParameterValue(par)
@@ -177,19 +188,19 @@ contains
       else
          factor = 1.0d0
       endif
-      do while(abs(par-UpperLimit) > abs(0.11*UpperLimit))
+      do while(abs(par-UpperLimit) > abs(0.01*UpperLimit))
          aux  = int(log10(abs(par)))
-         dPar = factor*10.0d0**(aux-1)
-         if (dPar < StepSize) dPar = StepSize
+         dPar = factor*10.0d0**(aux-1)/2.0d0
+         if (abs(dPar) < abs(StepSize).or.par==0.0d0) dPar = factor*abs(StepSize)
          par  = par + dPar
-         GROR = MaxGrowthRate(par)
-         WRITE(*,*) par, GROR
-         Write(unitOut, *) par, GroR
+         MaxEval = MaxGrowthRateCmplx(par)
+         WRITE(*,*) par, dimag(MaxEval), dble(MaxEval)
+         Write(unitOut, *) par, dimag(MaxEval), dble(MaxEval)
       enddo
 
-      WRITE(*,*) 'R=',Rt,' TAU=',TAU,' P=',Pt,' M0=',M0,' eta=',ETA
-      WRITE(*,*) 'Most unstable growth rate', GROR
-      WRITE(*,*) 'If growth rate < 0 then above onset'
+      WRITE(*,*) '# R=',Rt,' TAU=',TAU,' P=',Pt,' M0=',M0,' eta=',ETA
+      WRITE(*,*) '# Most unstable growth rate', dble(MaxEval)
+      WRITE(*,*) '# If growth rate < 0 then above onset'
    end subroutine
 
    !**********************************************************************
@@ -244,9 +255,6 @@ contains
       Write(*,*) '#----------------------------------------'
       Write(*,*) '#       ', trim(VariablePar)//'_c', '      m'
       !
-      WRITE(unitOut,*) '#TAU=',TAU,' Pt=',Pt,' M0=',M0,' eta=',ETA
-      WRITE(unitOut,*) '#Le=',Le,' Rc=',Rc
-      Write(unitOut,*) '# Truncation = ', Truncation
       Write(unitOut,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
       DO m0=nint(LowerLimit), nint(UpperLimit), nint(StepSize)
          call GrowthRateUpdatePar(m=m0)
@@ -665,7 +673,7 @@ contains
    subroutine CriticalRtSameAsRc()
       implicit none
       double precision:: dRtRel, Rt_old, Rc_old, dRc, dRc_old
-      double precision, parameter:: adv = 0.3d0 !< The advance fraction.
+      double precision, parameter:: adv = 1.0d0/3.0d0 !< The advance fraction.
       integer:: counter
       !Rt=(tau*Pt)**(4.0d0/3.0d0)
       !Rc=(tau*Pt)**(4.0d0/3.0d0)
@@ -686,30 +694,28 @@ contains
          if(LowerLimit==0.or.m0==0) LowerLimit=20
          ! Update the Rc steps
          dRc_old = dRc
-         ! We want the next iteration to have a an Rc that bridged \a adv of the
-         ! gap based on its previous evolution. But only if it was a sane
-         ! iteration, otherwise go back.
-         if( Rt*Rt_old.gt.0 ) then
-            dRc = adv*(Rc-Rt)/((Rt-Rt_old)/dRc_old-adv)
-         elseif(Rt.lt.0) then
-            dRc = -0.9*dRc_old
+         if(counter.lt.2) then
+            dRc = ( Rt - Rc )*adv
          else
-            dRc = (Rt - Rc)*adv
+            ! We want the next iteration to have a an Rc that bridged \a adv of the
+            ! gap based on its previous evolution. But only if it was a sane
+            ! iteration, otherwise go back.
+            if( Rt*Rt_old.gt.0 ) then
+               dRc = adv*(Rc-Rt)/((Rt-Rt_old)/dRc_old-adv)
+            elseif(Rt.lt.0) then
+               dRc = -0.9*dRc_old
+            else
+               dRc = (Rt - Rc)*adv
+            endif
+            if (dRc.gt.(Rt - Rc)*adv) dRc = (Rt - Rc)*adv
          endif
-         !if(abs(dRc).gt.abs(dRc_old)) dRc=abs(dRc_old)*dRc/abs(dRc)
          ! Update the Rc
-         ! If Rayleigh became negative we went too far
-         if(counter.eq.1) then
-            ! Cover 20% of the difference
-            Rc = ( Rt*0.1d0 + Rc*0.9d0 )
-         else
-            Rc = Rc + dRc
-         endif
+         Rc = Rc + dRc
          ! Cache this steps's Rc and Rt
          Rt_old = Rt
          Rc_old = Rc
          call GrowthRateUpdatePar(Rc=Rc)
-         Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc, 'dRc = ', dRc
+         Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc, ', dRc = ', dRc
       enddo
       if (dRtRel .le. 1.0d-7) then
          WRITE(*,*) ">>",Rt, Rc, m0
