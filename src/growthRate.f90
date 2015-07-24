@@ -60,16 +60,18 @@ contains
       endif
    end subroutine
 
+   !***********************************************************************
    subroutine writeAllParameters()
       implicit none
       Write(*,*) '---BEGIN'
       Write(*,*) 'WAP1: ', Rt_i, Rc_i, Pt_i
       Write(*,*) 'WAP2: ', Le_i, tau_i, eta_i
-      Write(*,*) 'WAP3: ', ri, ro 
+      Write(*,*) 'WAP3: ', ri, ro
       Write(*,*) 'WAP4: ', mm_i, Symmetry_i, truncation_i
       Write(*,*) '---END'
    end subroutine
 
+   !***********************************************************************
    subroutine setLminAndLD(Sym, mm, LMIN, LD)
       implicit none
       integer, intent(in):: Sym, mm
@@ -93,7 +95,6 @@ contains
    ! - DETERMINATION OF DIMENSION of the problem:
    ! - for each value of L the number of possible N-values is added
    SUBROUTINE setEigenProblemSize(LMIN,LD,truncation,M)
-   !***************************************************************************
       implicit none
       integer, intent(in):: LMIN,LD,truncation,M
       integer:: L
@@ -110,7 +111,7 @@ contains
    !***************************************************************************
    integer function getEigenProblemSize()
       implicit none
-      getEigenProblemSize = NEigenModes 
+      getEigenProblemSize = NEigenModes
    end function
 
 
@@ -380,11 +381,11 @@ contains
       Pt_i=1.0d0
       Le_i=0.30d0
       eta_i=0.35d0
-      mm_i=18 
+      mm_i=18
       Symmetry_i=2
       truncation_i=10
       Write(*,*) ZA_refFile,' ', ZB_refFile
-      Write(*,*) tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, Nmodes 
+      Write(*,*) tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, Nmodes
       RI = ETA_i/(1.0d0-ETA_i)
       RO = 1.0D0 + RI
       call setLminAndLD(Symmetry_i, mm_i, LMIN, LD)
@@ -434,13 +435,13 @@ contains
                      do k2=1, 4
                         Read(444,*) ZA_ref
                         Write(*,*) 'ZA(',i+k1,',',j+k2,')=',ZA(i+k1,j+k2),'.vs.',ZA_ref
-                        if(abs(ZA(i+k1,j+k2)-ZA_ref)/abs(ZA_ref).gt.1.0e-10) then 
+                        if(abs(ZA(i+k1,j+k2)-ZA_ref)/abs(ZA_ref).gt.1.0e-10) then
                            error=1
                            return
                         endif
                         Read(445,*) ZB_ref
                         Write(*,*) 'ZB(',i+k1,',',j+k2,')=',ZB(i+k1,j+k2),'.vs.',ZB_ref
-                        if(abs(ZB(i+k1,j+k2)-ZB_ref)/abs(ZB_ref).gt.1.0e-10) then 
+                        if(abs(ZB(i+k1,j+k2)-ZB_ref)/abs(ZB_ref).gt.1.0e-10) then
                            error=2
                            return
                         endif
@@ -1289,7 +1290,7 @@ contains
       double precision, parameter, dimension(4):: AG=(/ 42.242855D0, 302.757865D0, 352.018498D0, 21.821899D0 /)
       double precision, parameter, dimension(4):: BG=(/ 48.196927D0, 482.485984D0, 1114.978885D0, 449.690326D0 /)
       F = ( X**8 + AF(1)*X**6 + AF(2)*X**4 + AF(3)*X**2 + AF(4) ) / &
-          ( X**8 + BF(1)*X**6 + BF(2)*X**4 + BF(3)*X**2 + BF(4) ) / X                                              
+          ( X**8 + BF(1)*X**6 + BF(2)*X**4 + BF(3)*X**2 + BF(4) ) / X
       G = ( X**8 + AG(1)*X**6 + AG(2)*X**4 + AG(3)*X**2 + AG(4) ) / &
           ( X**8 + BG(1)*X**6 + BG(2)*X**4 + BG(3)*X**2 + BG(4) ) / X**2
       CIA = F*DSIN (X) - G*DCOS (X)
@@ -1304,7 +1305,7 @@ contains
       integer:: Jz, Jn, i, j
       double precision, intent(in):: x
       double precision:: CISN, CISO, CISZ
-      
+
       CISO = DLOG (X)+C
       DO I = 1, 200000
          JZ = 0
