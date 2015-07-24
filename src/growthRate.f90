@@ -4,7 +4,7 @@ module GrowthRateMod
    private
    double precision, parameter:: DPI=3.141592653589793D0
    !> Internally used parameters
-   double precision:: Rt_i, Rc_i, Le_i, Pt_i, tau_i
+   double precision:: Rt_i, Rc_i, Le_i, Pt_i, tau_i, Ra_i, alpha_i
    double precision:: ri, ro, eta_i
    character(len=3):: variable='Rt'
    integer:: Symmetry_i, mm_i, NEigenmodes, lmin, ld, Truncation_i
@@ -33,6 +33,18 @@ contains
       ro = 1.0D0 + ri
       call setLminAndLD(Symmetry, m, LMIN, LD)
       call setEigenProblemSize(LMIN,LD,truncation,M)
+   end subroutine
+
+   !***********************************************************************
+   !> Initializes the module with fixed parameters.
+   subroutine GrowthRateInitAlpha(Ra, alpha, Pt, Le, tau, eta, m, Symmetry, truncation)
+      implicit none
+      double precision, intent(in)::Ra, alpha, Pt, Le, tau, eta
+      integer, intent(in):: m, Symmetry, truncation
+      double precision:: Rt, Rc
+      Rt = Ra*cos(alpha)
+      Rc = Ra*sin(alpha)
+      call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m, Symmetry, truncation)
    end subroutine
 
    !***********************************************************************
