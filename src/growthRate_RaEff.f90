@@ -18,7 +18,7 @@ contains
    !> Initializes the module with fixed parameters.
    subroutine GrowthRateInit(Ra, alpha, Pt, Le, tau, eta, m, Symmetry, truncation)
       implicit none
-      double precision, intent(in)::Rt, Rc, Pt, Le, tau, eta
+      double precision, intent(in)::Ra, alpha, Pt, Le, tau, eta
       integer, intent(in):: m, Symmetry, truncation
       Ra_i  = Ra
       alpha_i  = alpha

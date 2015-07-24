@@ -29,6 +29,7 @@ program CriticalRaEff
    print*,  trim(infile),' - ',trim(outfile)
 
    call init(trim(infile),trim(outfile))
+   Print*, 'Out of init()'
 
    call computeCriticalCurve()
    
@@ -66,13 +67,14 @@ contains
    subroutine computeCriticalCurve()
       implicit none
       double precision, parameter:: DPI=3.141592653589793D0
-      double precision:: CriticalRa
-      double precision:: Omega, alpha, dalpha
+      double precision:: CriticalRa, CriticalRaAlpha0
+      double precision:: alpha, dalpha
       double precision:: RaMin, RaMax, gr1,gr2
       double complex:: frequency
-      integer:: i, ii
-      integer:: info, idx
+      integer:: i
+      integer:: info
 
+      print*, 'In computeCriticalCurve()'
       info=0
       dalpha = 2.d0*dpi/3600.d0
       ! Start at alpha=0
@@ -80,36 +82,43 @@ contains
       ! At this point a critical Ra is certain to exist so,
       ! increase the interval, until we find it.
       RaMin = 0
-      RaMax = 10*CriticalRa
+      RaMax = 10*Ra
       do
          gr1 = MaxGrowthRate(RaMin)
          gr2 = MaxGrowthRate(RaMax)
+         Print*, 'RaMin=',RaMin,' -> gr1 = ', gr1, 'RaMax=', Ramax, ' -> gr2 = ', gr2
          if (gr1*gr2.gt.0.0d0) then
             RaMin = RaMax
-            RaMax = 10*RaMin
+            RaMax = 2*RaMax
+	 else
+            exit
          endif
       enddo
       ! Now that we found an interval find the critical value for Ra.
       call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
       ! Cache this value for future use.
       CriticalRaAlpha0 = CriticalRa
+      print*, 'First minimisation found CriticalRaAlpha0 =',  CriticalRa
       do i=1, 1800
          alpha = alpha + dalpha
+         call GrowthRateUpdatePar(Ra=CriticalRa, alpha=alpha)
          RaMin = 0.5d0*CriticalRa
          RaMax = 1.5d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
-         if (info.NE.2) exit
+         if (info.NE.0) exit
          frequency = MaxGrowthRateCmplx(CriticalRa)
          WRITE(*,*)        alpha, CriticalRa, dimag(frequency), dble(frequency)
          Write(unitOut, *) alpha, CriticalRa, dimag(frequency), dble(frequency)
       enddo
       alpha = 0.0d0
+      CriticalRa = CriticalRaAlpha0
       do i=1, 1800
          alpha = alpha - dalpha
+         call GrowthRateUpdatePar(Ra=CriticalRa, alpha=alpha)
          RaMin = 0.5d0*CriticalRa
          RaMax = 1.5d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
-         if (info.NE.2) exit
+         if (info.NE.0) exit
          frequency = MaxGrowthRateCmplx(CriticalRa)
          WRITE(*,*)        alpha, CriticalRa, dimag(frequency), dble(frequency)
          Write(unitOut, *) alpha, CriticalRa, dimag(frequency), dble(frequency)
