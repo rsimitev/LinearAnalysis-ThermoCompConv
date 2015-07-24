@@ -2,6 +2,8 @@ module parameters
   implicit none
   ! Adimensional parameters
   double precision:: TAU,Rt,Pt,C,Le,Rc,eta
+  ! Alternative parametrisation for the Rayleigh numbers
+  double precision:: Ra, alpha
   ! Dimensions
   integer::Truncation,M0,Symmetry, NSMAX, LCALC
   double precision:: LowerLimit,UpperLimit,StepSize,ABSE,RELE
@@ -12,7 +14,9 @@ contains
       Symmetry = 2
       LCALC = 2
       Rt   = 4.D3
-      Rc   = 4.D3
+      Rc   = 0.D0
+      Ra   = Rt
+      alpha = 0.0d0
       TAU  = 100.0D0
       LowerLimit  = TAU
       UpperLimit  = 10*LowerLimit

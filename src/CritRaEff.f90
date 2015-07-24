@@ -5,8 +5,8 @@
 #include "version.h"
 program CriticalRaEff
    use parameters
-   use growthRateMod
-   use io
+   use GrowthRateRaEffMod
+   use CritRaEff_io
    implicit none
    character*60 infile,outfile
    integer, parameter:: unitOut=16
@@ -30,7 +30,8 @@ program CriticalRaEff
 
    call init(trim(infile),trim(outfile))
 
-
+   call computeCriticalCurve()
+   
    close(unitOut)
 contains
 
@@ -51,7 +52,7 @@ contains
         M0 = 1
       ENDIF
 
-      call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+      call GrowthRateInit(Ra, alpha, Pt, Le, tau, eta, m0, Symmetry, Truncation)
       call setVariableParam(VariablePar)
 
       ! ----OUTPUT:
@@ -62,51 +63,57 @@ contains
    !**********************************************************************
    !> Computes the lowest critical thermal Rayleigh number of all m's
    !! for all other parameters fixed.
-   subroutine fixedParCriticalRaAndM0()
+   subroutine computeCriticalCurve()
       implicit none
       double precision, parameter:: DPI=3.141592653589793D0
       double precision:: CriticalRa
-      double precision:: Omega, alpha
+      double precision:: Omega, alpha, dalpha
       double precision:: RaMin, RaMax, gr1,gr2
       double complex:: frequency
       integer:: i, ii
       integer:: info, idx
 
-      DO m0=int(LowerLimit), int(UpperLimit)
-         info=0
-         call GrowthRateUpdatePar(m=m0)
-         alpha = 0.0d0
-         ! Increase the interval, until we find a critical Ra
-         RaMin = 0
-         RtMax = 10*CriticalRa
-         do
-            gr1 = MaxGrowthRate(RaMin)
-            gr2 = MaxGrowthRate(RaMax)
-            if (gr1*gr2.gt.0.0d0) then
-               RaMin = RaMax
-               RaMax = 10*RaMin
-            endif
-         enddo
-         ! Now that we found an interval find the critical value for Ra.
-         call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
-         ! Cache this value for future use.
-         CriticalRaAlpha0 = CriticalRa
-         do
-            call minimizer(MaxGrowthRate, RtMin, RtMax, RELE ,ABSE, NSMAX, CriticalRt, info)
-            if (info.NE.2) exit
-         enddo
-         if(info.NE.0) then
-            Write(*,*) 'Failed to find roots: error:', info
-            stop 5
+      info=0
+      dalpha = 2.d0*dpi/3600.d0
+      ! Start at alpha=0
+      alpha = 0.0d0
+      ! At this point a critical Ra is certain to exist so,
+      ! increase the interval, until we find it.
+      RaMin = 0
+      RaMax = 10*CriticalRa
+      do
+         gr1 = MaxGrowthRate(RaMin)
+         gr2 = MaxGrowthRate(RaMax)
+         if (gr1*gr2.gt.0.0d0) then
+            RaMin = RaMax
+            RaMax = 10*RaMin
          endif
-         ! Compute the grouth rate for each case so we can output it for
-         ! debug purposes.
-         frequency = MaxGrowthRateCmplx(CriticalRt)
-         GRORi(ii) = dimag(frequency)
-         OMI(II) = -dble(frequency)
-         RACI(II)= CriticalRt
-         LLI(II) = info
-         write( *,'(1X,1P,4E17.6,I4,A3,2E17.6)') TAU, CriticalRt, OMI(II), GRORi(ii), M0,' | ', CriticalRt*(1/(1-eta))**4*(2/TAU),(OMI(II)*2.0/TAU)
       enddo
+      ! Now that we found an interval find the critical value for Ra.
+      call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
+      ! Cache this value for future use.
+      CriticalRaAlpha0 = CriticalRa
+      do i=1, 1800
+         alpha = alpha + dalpha
+         RaMin = 0.5d0*CriticalRa
+         RaMax = 1.5d0*CriticalRa
+         call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
+         if (info.NE.2) exit
+         frequency = MaxGrowthRateCmplx(CriticalRa)
+         WRITE(*,*)        alpha, CriticalRa, dimag(frequency), dble(frequency)
+         Write(unitOut, *) alpha, CriticalRa, dimag(frequency), dble(frequency)
+      enddo
+      alpha = 0.0d0
+      do i=1, 1800
+         alpha = alpha - dalpha
+         RaMin = 0.5d0*CriticalRa
+         RaMax = 1.5d0*CriticalRa
+         call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
+         if (info.NE.2) exit
+         frequency = MaxGrowthRateCmplx(CriticalRa)
+         WRITE(*,*)        alpha, CriticalRa, dimag(frequency), dble(frequency)
+         Write(unitOut, *) alpha, CriticalRa, dimag(frequency), dble(frequency)
+      enddo
+   end subroutine
 end program
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
