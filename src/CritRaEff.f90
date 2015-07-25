@@ -8,8 +8,18 @@ program CriticalRaEff
    use GrowthRateRaEffMod
    use CritRaEff_io
    implicit none
+   type GlobalCrit
+      double precision:: alpha
+      double precision:: Ra
+      double precision:: w
+      integer:: m
+   end type
+   double precision, parameter:: DPI=3.141592653589793D0
+   integer, parameter:: NN = 7200
    character*60 infile,outfile
    integer, parameter:: unitOut=16
+   double precision:: alphas(NN)
+   type(GlobalCrit):: crit(NN)
 
 !---------------------------------------------------------
 !  arg #1 - filename or usage ?
@@ -31,7 +41,17 @@ program CriticalRaEff
    call init(trim(infile),trim(outfile))
    Print*, 'Out of init()'
 
-   call computeCriticalCurve()
+   call createAlphas(alphas)
+   select case(LCALC)
+      case(0)
+         ! Single m
+	 call computeCriticalCurveSingleM(alphas,crit)
+	 call writeCriticalCurve(crit)
+      case(1)
+         ! Global
+	 call computeCriticalCurve(alphas,crit)
+	 call writeCriticalCurve(crit)
+   end select
    
    close(unitOut)
 contains
@@ -54,7 +74,7 @@ contains
       ENDIF
 
       call GrowthRateInit(Ra, alpha, Pt, Le, tau, eta, m0, Symmetry, Truncation)
-      call setVariableParam(VariablePar)
+      call setVariableParam('Ra ')
 
       ! ----OUTPUT:
       OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
@@ -62,35 +82,52 @@ contains
    END subroutine
 
    !**********************************************************************
-   !> Computes the lowest critical thermal Rayleigh number of all m's
-   !! for all other parameters fixed.
-   subroutine computeCriticalCurve()
+   subroutine createAlphas(alphas)
       implicit none
-      double precision, parameter:: DPI=3.141592653589793D0
+      double precision, intent(out):: alphas(:)
+      double precision:: dalpha
+      integer:: n, i
+      n=size(alphas,1)
+      dalpha=2.0d0*dpi/n
+      alphas(1)=-dpi
+      
+      do i=2, n
+         alphas(i) = alphas(i-1) + dalpha
+      enddo
+   end subroutine
+   
+   !**********************************************************************
+   !> Computes the lowest critical effective Rayleigh number as a function of alpha
+   !! for all other parameters fixed.
+   subroutine computeCriticalCurveM(alpha, crit)
+      implicit none
+      double precision, intent(in):: alpha(:)
+      double precision, intent(out):: crit(:,:)
       double precision:: CriticalRa, CriticalRaAlpha0
-      double precision:: alpha, dalpha
       double precision:: RaMin, RaMax, gr1,gr2
       double complex:: frequency
-      integer:: i
+      integer:: i, N, HalfN
       integer:: info
-
-      print*, 'In computeCriticalCurve()'
-      info=0
-      dalpha = 2.d0*dpi/3600.d0
-      ! Start at alpha=0
-      alpha = 0.0d0
-      ! At this point a critical Ra is certain to exist so,
-      ! increase the interval, until we find it.
+      
+      N     = size(alphas,1)
+      HalfN = N/2
+      Write(*,*) N, HalfN
+      info  = 0
+      crit(:,1) = huge(1.0d0)
+      crit(:,2) = 0.0d0
+      
       RaMin = 0
       RaMax = 10*Ra
+      call GrowthRateUpdatePar(alpha=0.0d0)
+      ! At this point a critical Ra is certain to exist so,
+      ! increase the interval, until we find it.
       do
          gr1 = MaxGrowthRate(RaMin)
          gr2 = MaxGrowthRate(RaMax)
-         Print*, 'RaMin=',RaMin,' -> gr1 = ', gr1, 'RaMax=', Ramax, ' -> gr2 = ', gr2
          if (gr1*gr2.gt.0.0d0) then
             RaMin = RaMax
             RaMax = 2*RaMax
-	 else
+         else
             exit
          endif
       enddo
@@ -98,30 +135,105 @@ contains
       call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
       ! Cache this value for future use.
       CriticalRaAlpha0 = CriticalRa
-      print*, 'First minimisation found CriticalRaAlpha0 =',  CriticalRa
-      do i=1, 1800
-         alpha = alpha + dalpha
-         call GrowthRateUpdatePar(Ra=CriticalRa, alpha=alpha)
-         RaMin = 0.5d0*CriticalRa
-         RaMax = 1.5d0*CriticalRa
+      ! Compute the positive half of the alphas
+      do i=HalfN, N
+         call GrowthRateUpdatePar(Ra=CriticalRa, alpha=alpha(i))
+         RaMin = 0.05d0*CriticalRa
+         RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
          if (info.NE.0) exit
-         frequency = MaxGrowthRateCmplx(CriticalRa)
-         WRITE(*,*)        alpha, CriticalRa, dimag(frequency), dble(frequency)
-         Write(unitOut, *) alpha, CriticalRa, dimag(frequency), dble(frequency)
+         crit(i,1) = CriticalRa
+         crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
       enddo
-      alpha = 0.0d0
+      info = 0
       CriticalRa = CriticalRaAlpha0
-      do i=1, 1800
-         alpha = alpha - dalpha
-         call GrowthRateUpdatePar(Ra=CriticalRa, alpha=alpha)
-         RaMin = 0.5d0*CriticalRa
-         RaMax = 1.5d0*CriticalRa
+      ! and the negative half
+      do i=HalfN-1, 1, -1
+         call GrowthRateUpdatePar(Ra=CriticalRa, alpha=alpha(i))
+         RaMin = 0.05d0*CriticalRa
+         RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
-         if (info.NE.0) exit
-         frequency = MaxGrowthRateCmplx(CriticalRa)
-         WRITE(*,*)        alpha, CriticalRa, dimag(frequency), dble(frequency)
-         Write(unitOut, *) alpha, CriticalRa, dimag(frequency), dble(frequency)
+         if (info.NE.0) then
+	    exit
+	 endif
+         crit(i,1) = CriticalRa
+         crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
+      enddo
+   end subroutine
+
+   !**********************************************************************
+   !>
+   subroutine computeCriticalCurve(alpha, crit)
+      implicit none
+      double precision, intent(in):: alpha(:)
+      type(GlobalCrit), intent(out):: crit(:)
+      double precision, allocatable:: crit_new(:,:)
+      integer:: m, N, i
+      integer:: info
+      
+      N     = size(alpha,1)
+      allocate(crit_new(N,2))
+      info  = 0
+      crit_new(:,1) = huge(1.0d0)
+      crit_new(:,2) = 0.0d0
+      do i=1, N
+         crit(i)%alpha = alpha(i)
+         crit(i)%m  = Huge(1)
+         crit(i)%w  = Huge(1.0d0)
+         crit(i)%Ra = Huge(1.0d0)
+      enddo
+
+      do m=1, m0
+         call GrowthRateUpdatePar(m=m)
+         Write(*,*) 'Computing critical value for m =', m
+         call computeCriticalCurveM(alpha, crit_new)
+         do i=1,N
+            if(crit_new(i,1).lt.crit(i)%Ra) then
+               crit(i)%Ra = crit_new(i,1)
+               crit(i)%w  = crit_new(i,2)
+               crit(i)%m  = m
+            endif
+         enddo
+      enddo
+      deallocate(crit_new)
+   end subroutine
+
+   !**********************************************************************
+   !>
+   subroutine computeCriticalCurveSingleM(alpha, crit)
+      implicit none
+      double precision, intent(in):: alpha(:)
+      type(GlobalCrit), intent(out):: crit(:)
+      double precision, allocatable:: crit_new(:,:)
+      integer:: N, i
+      integer:: info
+      
+      N     = size(alpha,1)
+      allocate(crit_new(N,2))
+      info  = 0
+      crit_new(:,1) = huge(1.0d0)
+      crit_new(:,2) = 0.0d0
+      call GrowthRateUpdatePar(m=m0)
+      Write(*,*) 'Computing critical value for m =', m0
+      call computeCriticalCurveM(alpha, crit_new)
+      do i=1,N
+         crit(i)%alpha = alpha(i)
+         crit(i)%Ra = crit_new(i,1)
+         crit(i)%w  = crit_new(i,2)
+         crit(i)%m  = m0
+      enddo
+      deallocate(crit_new)
+   end subroutine
+
+   !**********************************************************************
+   !>
+   subroutine writeCriticalCurve(crit)
+      implicit none
+      type(GlobalCrit), intent(in):: crit(:)
+      integer:: N, i
+      N = size(crit,1)
+      do i=1, N
+         Write(unitOut,*) crit(i)%alpha, crit(i)%Ra, crit(i)%m, crit(i)%w  
       enddo
    end subroutine
 end program

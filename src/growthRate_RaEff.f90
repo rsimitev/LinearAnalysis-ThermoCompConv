@@ -288,7 +288,7 @@ contains
       integer:: nj, j, njmax, lj, lpj, ltj
 
       Rt_i = Ra_i*cos(alpha_i)
-      Rc_i = Ra_i*sin(alpha_i)
+      Rc_i = Ra_i/Le_i*sin(alpha_i)
 
       ZA(:,:)=DCMPLX(0D0,0D0)
       ZB(:,:)=DCMPLX(0D0,0D0)
