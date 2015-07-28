@@ -25,6 +25,7 @@ set(CriticalRaEff_SRCS
 add_executable(CritRaEff ${CriticalRaEff_SRCS})
 target_link_libraries(CritRaEff mylapack ${BLAS_LIBRARIES})
 set_target_properties(CritRaEff PROPERTIES LINK_FLAGS "${BLAS_LINKER_FLAGS}")
+install(TARGETS CritRaEff RUNTIME DESTINATION bin)
 
 if(BUILD_UTILS)
    add_subdirectory(modeTracker)
