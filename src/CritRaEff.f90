@@ -16,7 +16,7 @@ program CriticalRaEff
    end type
    double precision, parameter:: DPI=3.141592653589793D0
    integer, parameter:: NN = 7200
-   character*60 infile,outfile
+   character*60:: infile,outfile
    integer, parameter:: unitOut=16
    double precision:: alphas(NN)
    type(GlobalCrit):: crit(NN)
@@ -45,12 +45,12 @@ program CriticalRaEff
    select case(LCALC)
       case(0)
          ! Single m
-	 call computeCriticalCurveSingleM(alphas,crit)
-	 call writeCriticalCurve(crit)
+    call computeCriticalCurveSingleM(alphas,crit)
+    call writeCriticalCurve(crit)
       case(1)
          ! Global
-	 call computeCriticalCurve(alphas,crit)
-	 call writeCriticalCurve(crit)
+    call computeCriticalCurve(alphas,crit)
+    call writeCriticalCurve(crit)
    end select
    
    close(unitOut)
@@ -153,9 +153,7 @@ contains
          RaMin = 0.05d0*CriticalRa
          RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
-         if (info.NE.0) then
-	    exit
-	 endif
+         if (info.NE.0) exit
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
       enddo
@@ -171,9 +169,9 @@ contains
       integer:: m, N, i
       integer:: info
       
-      N     = size(alpha,1)
+      N = size(alpha,1)
       allocate(crit_new(N,2))
-      info  = 0
+      info = 0
       crit_new(:,1) = huge(1.0d0)
       crit_new(:,2) = 0.0d0
       do i=1, N
@@ -187,6 +185,7 @@ contains
          call GrowthRateUpdatePar(m=m)
          Write(*,*) 'Computing critical value for m =', m
          call computeCriticalCurveM(alpha, crit_new)
+         call writeCriticalCurveSingleM(alpha, crit_new, m)
          do i=1,N
             if(crit_new(i,1).lt.crit(i)%Ra) then
                crit(i)%Ra = crit_new(i,1)
@@ -235,6 +234,25 @@ contains
       do i=1, N
          Write(unitOut,*) crit(i)%alpha, crit(i)%Ra, crit(i)%m, crit(i)%w  
       enddo
+   end subroutine
+
+   !**********************************************************************
+   !>
+   subroutine writeCriticalCurveSingleM(alpha, crit, m)
+      implicit none
+      double precision, intent(in):: alpha(:)
+      double precision, intent(in):: crit(:,:)
+      integer, intent(in):: m
+      character(len=3):: num
+      integer:: N, i
+      integer, parameter:: unitm=999
+      N = size(crit,1)
+      Write(num,'(I3.3)') m
+      open(unit=unitm,file=trim(outfile)//'.'//trim(num), status='UNKNOWN')
+      do i=1, N
+         Write(unitm,*) alpha(i), crit(i,1), crit(i,2)
+      enddo
+      close(unitm)
    end subroutine
 end program
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
