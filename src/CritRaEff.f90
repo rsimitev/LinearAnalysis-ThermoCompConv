@@ -52,7 +52,7 @@ program CriticalRaEff
     call computeCriticalCurve(alphas,crit)
     call writeCriticalCurve(crit)
    end select
-   
+
    close(unitOut)
 contains
 
@@ -90,12 +90,12 @@ contains
       n=size(alphas,1)
       dalpha=2.0d0*dpi/n
       alphas(1)=-dpi
-      
+
       do i=2, n
          alphas(i) = alphas(i-1) + dalpha
       enddo
    end subroutine
-   
+
    !**********************************************************************
    !> Computes the lowest critical effective Rayleigh number as a function of alpha
    !! for all other parameters fixed.
@@ -108,14 +108,14 @@ contains
       double complex:: frequency
       integer:: i, N, HalfN
       integer:: info
-      
+
       N     = size(alphas,1)
       HalfN = N/2
       Write(*,*) N, HalfN
       info  = 0
       crit(:,1) = huge(1.0d0)
       crit(:,2) = 0.0d0
-      
+
       RaMin = 0
       RaMax = 10*Ra
       call GrowthRateUpdatePar(alpha=0.0d0)
@@ -168,7 +168,7 @@ contains
       double precision, allocatable:: crit_new(:,:)
       integer:: m, N, i
       integer:: info
-      
+
       N = size(alpha,1)
       allocate(crit_new(N,2))
       info = 0
@@ -206,7 +206,7 @@ contains
       double precision, allocatable:: crit_new(:,:)
       integer:: N, i
       integer:: info
-      
+
       N     = size(alpha,1)
       allocate(crit_new(N,2))
       info  = 0
