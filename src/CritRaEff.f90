@@ -142,6 +142,7 @@ contains
          RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
          if (info.NE.0) exit
+         Write(*,*) '  alpha = ', alpha(i), CriticalRa
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
       enddo
@@ -154,6 +155,7 @@ contains
          RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
          if (info.NE.0) exit
+         Write(*,*) '  alpha = ', alpha(i), CriticalRa
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
       enddo
