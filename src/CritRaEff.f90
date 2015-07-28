@@ -15,7 +15,7 @@ program CriticalRaEff
       integer:: m
    end type
    double precision, parameter:: DPI=3.141592653589793D0
-   integer, parameter:: NN = 7200
+   integer, parameter:: NN = 3600
    character*60:: infile,outfile
    integer, parameter:: unitOut=16
    double precision:: alphas(NN)
