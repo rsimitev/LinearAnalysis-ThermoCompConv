@@ -57,26 +57,31 @@ program linearOnset
       !> Varies the thermal Rayleigh number and computes the growth rate for
       !! other parameters fixed.
       case(-1)
+         call writeOutputHeader(unitOut)
          call fixedParGrowthRate()
       !> Computes the critical Thermal Rayleigh number for the onset of
       !! convections for all other parameters fixed.
       case(0)
+         call writeOutputHeader(unitOut)
          call fixedParCriticalRa()
       !> Writes the (complex) eigenvalues of the problem for fixed parameters.
       !! The real part of the eigenvalues is the frequency of oscillation of the
       !! mode. The imaginary part is the symmetric of the growth rate.
       !! Modes are sorted from heighest to lowest growth rate.
       case(1)
+         call writeOutputHeader(unitOut)
          call fixedParEigenValues()
       !> Computes the critical thermal Rayleigh number as a function of tau
       !! for all other parameters fixed.
       case(2)
          LowerLimit = tau
+         call writeOutputHeader(unitOut)
          call varyTauCriticalRt(LowerLimit, UpperLimit)
       !> Computes the lowest critical thermal Rayleigh number of all m's
       !! as a function of tau for all other parameters fixed.
       case(3)
          LowerLimit = tau
+         call writeOutputHeader(unitOut)
          call varyTauCriticalState(LowerLimit, UpperLimit)
       !> Computes the eigen vector
       !! Corresponding to the critical value of Rt with all other parameters
@@ -87,6 +92,7 @@ program linearOnset
       !! azimuthal wave-numbers m.
       case(5)
          LowerLimit = m0
+         call writeOutputHeader(unitOut)
          call varyMCriticalRt(int(LowerLimit), int(UpperLimit))
       !> Varies the Lewis number and computes the critical
       !! thermal Rayleigh number for fixed other parameters.
@@ -94,6 +100,7 @@ program linearOnset
       !! not restore it at the end.
       case(6)
          LowerLimit = Le
+         call writeOutputHeader(unitOut)
          call varyLeCriticalRt(LowerLimit, UpperLimit)
       case(7) ! Loops through the m's to find the critical Par and m_c.
          if(trim(VariablePar)=='m') then
@@ -102,11 +109,13 @@ program linearOnset
             stop ERR_UNUSABLE_VARIABLE_PAR
          endif
          LowerLimit = m0
+         call writeOutputHeader(unitOut)
          call fixedParCriticalParAndM0_v2()
       case(8) ! Loops through the m's to find the critical Rt=Rc and m_c.
          VariablePar = 'Rt'
          call setVariableParam(VariablePar)
          LowerLimit = m0
+         call writeOutputHeader(unitOut)
          call CriticalRtSameAsRc()
       case default
          Write(*,*) 'Unknown computation type:', LCALC
@@ -136,7 +145,6 @@ contains
 
       ! ----OUTPUT:
       OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
-      call writeOutputHeader(unitOut)
    END subroutine
 
    !**********************************************************************
@@ -180,10 +188,10 @@ contains
       else
          factor = 1.0d0
       endif
-      do while(abs(par-UpperLimit) > abs(0.11*UpperLimit))
+      do while(abs(par-UpperLimit) > abs(0.01*UpperLimit))
          aux  = int(log10(abs(par)))
-         dPar = factor*10.0d0**(aux-1)
-         if (dPar < StepSize.or.par==0.0d0) dPar = StepSize
+         dPar = factor*10.0d0**(aux-1)/2.0d0
+         if (abs(dPar) < abs(StepSize).or.par==0.0d0) dPar = factor*abs(StepSize)
          par  = par + dPar
          MaxEval = MaxGrowthRateCmplx(par)
          WRITE(*,*) par, dimag(MaxEval), dble(MaxEval)
@@ -247,9 +255,6 @@ contains
       Write(*,*) '#----------------------------------------'
       Write(*,*) '#       ', trim(VariablePar)//'_c', '      m'
       !
-      WRITE(unitOut,*) '#TAU=',TAU,' Pt=',Pt,' M0=',M0,' eta=',ETA
-      WRITE(unitOut,*) '#Le=',Le,' Rc=',Rc
-      Write(unitOut,*) '# Truncation = ', Truncation
       Write(unitOut,*) '# Finding critical ', trim(VariablePar), ' arround ', origParVal
       DO m0=nint(LowerLimit), nint(UpperLimit), nint(StepSize)
          call GrowthRateUpdatePar(m=m0)

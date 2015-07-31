@@ -1,10 +1,10 @@
-module GrowthRateMod
+module GrowthRateRaEffMod
 #include "errorcodes.h"
    implicit none
    private
    double precision, parameter:: DPI=3.141592653589793D0
    !> Internally used parameters
-   double precision:: Rt_i, Rc_i, Le_i, Pt_i, tau_i, Ra_i, alpha_i
+   double precision:: Le_i, Pt_i, tau_i, Ra_i, alpha_i
    double precision:: ri, ro, eta_i
    character(len=3):: variable='Rt'
    integer:: Symmetry_i, mm_i, NEigenmodes, lmin, ld, Truncation_i
@@ -16,12 +16,12 @@ contains
 
    !***********************************************************************
    !> Initializes the module with fixed parameters.
-   subroutine GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m, Symmetry, truncation)
+   subroutine GrowthRateInit(Ra, alpha, Pt, Le, tau, eta, m, Symmetry, truncation)
       implicit none
-      double precision, intent(in)::Rt, Rc, Pt, Le, tau, eta
+      double precision, intent(in)::Ra, alpha, Pt, Le, tau, eta
       integer, intent(in):: m, Symmetry, truncation
-      Rt_i  = Rt
-      Rc_i  = Rc
+      Ra_i  = Ra
+      alpha_i  = alpha
       Pt_i  = Pt
       Le_i  = Le
       tau_i = tau
@@ -36,27 +36,13 @@ contains
    end subroutine
 
    !***********************************************************************
-   !> Initializes the module with fixed parameters.
-   subroutine GrowthRateInitAlpha(Ra, alpha, Pt, Le, tau, eta, m, Symmetry, truncation)
-      implicit none
-      double precision, intent(in)::Ra, alpha, Pt, Le, tau, eta
-      integer, intent(in):: m, Symmetry, truncation
-      double precision:: Rt, Rc
-      Rt = Ra*cos(alpha)
-      Rc = Ra*sin(alpha)
-      call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m, Symmetry, truncation)
-   end subroutine
-
-   !***********************************************************************
    !> Updates the specified parameters.
    !> @par Ra is the effective Rayleigh number
    !> @par alpha is the Rayleigh angle
-   subroutine GrowthRateUpdatePar(Ra, alpha, Rt, Rc, Pt, Le, tau, eta, m, Symmetry, truncation)
+   subroutine GrowthRateUpdatePar(Ra, alpha, Pt, Le, tau, eta, m, Symmetry, truncation)
       implicit none
-      double precision, optional, intent(in)::Rt, Rc, Pt, Le, tau, eta, Ra, alpha
+      double precision, optional, intent(in)::Pt, Le, tau, eta, Ra, alpha
       integer,optional, intent(in):: m, Symmetry, truncation
-      if(present(Rt))  Rt_i  = Rt
-      if(present(Rc))  Rc_i  = Rc
       if(present(Pt))  Pt_i  = Pt
       if(present(Le))  Le_i  = Le
       if(present(tau)) tau_i = tau
@@ -80,7 +66,7 @@ contains
    subroutine writeAllParameters()
       implicit none
       Write(*,*) '---BEGIN'
-      Write(*,*) 'WAP1: ', Rt_i, Rc_i, Pt_i
+      Write(*,*) 'WAP1: ', Ra_i, alpha_i, Pt_i
       Write(*,*) 'WAP2: ', Le_i, tau_i, eta_i
       Write(*,*) 'WAP3: ', ri, ro
       Write(*,*) 'WAP4: ', mm_i, Symmetry_i, truncation_i
@@ -139,7 +125,7 @@ contains
       implicit none
       character(len=3), intent(in):: par
       select case(trim(par))
-         case ('Ra','aa','Rt','Rc','Pt','Le','tau','eta','m')
+         case ('Ra','aa','Pt','Le','tau','eta','m')
             variable = par
          case default
             variable = 'Ra'
@@ -157,10 +143,6 @@ contains
             Ra_i = val
          case ('aa')
             alpha_i = val
-         case ('Rt')
-            Rt_i = val
-         case ('Rc')
-            Rc_i = val
          case ('Pt')
             Pt_i = val
          case ('Le')
@@ -172,7 +154,7 @@ contains
          case ('m')
             mm_i = nint(val)
          case default
-            Rt_i = val
+            Ra_i = val
       end select
    end subroutine
 
@@ -183,10 +165,10 @@ contains
       implicit none
       double precision, intent(out):: val
       select case(trim(variable))
-         case ('Rt')
-            val = Rt_i
-         case ('Rc')
-            val = Rc_i
+         case ('Ra')
+            val = Ra_i
+         case ('aa')
+            val = alpha_i
          case ('Pt')
             val = Pt_i
          case ('Le')
@@ -198,7 +180,7 @@ contains
          case ('m')
             val = dble(mm_i)
          case default
-            val = Rt_i
+            val = Ra_i
       end select
    end subroutine
 
@@ -257,9 +239,9 @@ contains
       double complex:: ZEVEC(NEigenmodes), ZSAVE, ZWORK(3*NEigenmodes)
       double precision:: RWORK(8*NEigenmodes)
       integer:: i, j, k, info
-
+      
       ! - MAT SETS THE complex(8) MATRICES ZA AND ZB SETTING OF MATRIX:
-      CALL MAT(tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB, NEigenmodes)
+      CALL MAT(tau_i, Ra_i, alpha_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB, NEigenmodes)
 
 !       SUBROUTINE zGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
 !     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
@@ -295,15 +277,18 @@ contains
 
    !************************************************************************
    ! - SETS THE complex(8) MATRICES ZA AND ZB.
-   SUBROUTINE MAT(tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB,NDIM)
+   SUBROUTINE MAT(tau_i, Ra_i, alpha_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB,NDIM)
       implicit none
       integer, intent(in):: ndim, mm_i, Symmetry_i
       double complex, intent(out):: ZA(ndim,ndim),ZB(ndim,ndim)
-      double precision, intent(in):: tau_i, Rt_i, Rc_i, Pt_i, Le_i
+      double precision, intent(in):: tau_i, Ra_i, alpha_i, Pt_i, Le_i
+      double precision:: Rt_i, Rc_i
       integer:: lmax
       integer:: ni, i, nimax, li, lpi, lti
       integer:: nj, j, njmax, lj, lpj, ltj
 
+      Rt_i = Ra_i*cos(alpha_i)
+      Rc_i = Ra_i/Le_i*sin(alpha_i)
 
       ZA(:,:)=DCMPLX(0D0,0D0)
       ZB(:,:)=DCMPLX(0D0,0D0)
@@ -394,6 +379,7 @@ contains
       integer, intent(out):: error
       double complex:: ZA(Nmodes,Nmodes),ZB(Nmodes,Nmodes)
       double complex:: ZA_ref,ZB_ref
+      double precision:: Rt_i, Rc_i
       integer:: i,j,k1, k2
       integer:: lmax
       integer:: ni, nimax, li, lpi, lti
