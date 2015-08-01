@@ -186,8 +186,12 @@ contains
       do m=1, m0
          call GrowthRateUpdatePar(m=m)
          Write(*,*) 'Computing critical value for m =', m
-         call computeCriticalCurveM(alpha, crit_new)
-         call writeCriticalCurveSingleM(alpha, crit_new, m)
+         if(wasPreviouslyComputed(m)) then
+            call readCriticalCurveSingleM(crit_new,m)
+         else
+            call computeCriticalCurveM(alpha, crit_new)
+            call writeCriticalCurveSingleM(alpha, crit_new, m)
+         endif
          do i=1,N
             if(crit_new(i,1).lt.crit(i)%Ra) then
                crit(i)%Ra = crit_new(i,1)
@@ -256,5 +260,36 @@ contains
       enddo
       close(unitm)
    end subroutine
+   
+   !**********************************************************************
+   !>
+   subroutine readCriticalCurveSingleM(crit, m)
+      implicit none
+      double precision, intent(out):: crit(:,:)
+      integer, intent(in):: m
+      double precision:: alpha
+      character(len=3):: num
+      integer:: N, i
+      integer, parameter:: unitm=999
+      N = size(crit,1)
+      Write(num,'(I3.3)') m
+      open(unit=unitm,file=trim(outfile)//'.'//trim(num), status='OLD')
+      do i=1, N
+         ! TODO: Deal with the possibility that the files may not have been
+         !       written at the same resolution.
+         read(unitm,*) alpha, crit(i,1), crit(i,2)
+      enddo
+      close(unitm)
+   end subroutine
+   
+   !**********************************************************************
+   !> 
+   logical function wasPreviouslyComputed(m)
+      implicit none
+      integer, intent(in):: m
+      character(len=3):: num
+      Write(num,'(I3.3)') m
+      inquire(file=trim(outfile)//'.'//trim(num), EXIST=wasPreviouslyComputed)
+   end function
 end program
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
