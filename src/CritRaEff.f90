@@ -45,12 +45,12 @@ program CriticalRaEff
    select case(LCALC)
       case(0)
          ! Single m
-    call computeCriticalCurveSingleM(alphas,crit)
-    call writeCriticalCurve(crit)
+         call computeCriticalCurveSingleM(alphas,crit)
+         call writeCriticalCurve(crit)
       case(1)
          ! Global
-    call computeCriticalCurve(alphas,crit)
-    call writeCriticalCurve(crit)
+         call computeCriticalCurve(alphas,crit)
+         call writeCriticalCurve(crit)
    end select
 
    close(unitOut)
@@ -58,7 +58,7 @@ contains
 
    !**********************************************************************
    !> Initialises things.
-   SUBROUTINE init(inputfile,outputfile)
+   subroutine init(inputfile,outputfile)
       implicit none
       CHARACTER(len=*) inputfile,outputfile
 
@@ -79,7 +79,7 @@ contains
       ! ----OUTPUT:
       OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
       call writeOutputHeader(unitOut)
-   END subroutine
+   end subroutine
 
    !**********************************************************************
    subroutine createAlphas(alphas)
