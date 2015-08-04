@@ -50,10 +50,8 @@ program CriticalRaEff
       case(1)
          ! Global
          call computeCriticalCurve(alphas,crit)
-         call writeCriticalCurve(crit)
    end select
 
-   close(unitOut)
 contains
 
    !**********************************************************************
@@ -76,9 +74,6 @@ contains
       call GrowthRateInit(Ra, alpha, Pt, Le, tau, eta, m0, Symmetry, Truncation)
       call setVariableParam('Ra ')
 
-      ! ----OUTPUT:
-      OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
-      call writeOutputHeader(unitOut)
    end subroutine
 
    !**********************************************************************
@@ -199,6 +194,7 @@ contains
                crit(i)%m  = m
             endif
          enddo
+         call writeCriticalCurve(crit)
       enddo
       deallocate(crit_new)
    end subroutine
@@ -236,10 +232,14 @@ contains
       implicit none
       type(GlobalCrit), intent(in):: crit(:)
       integer:: N, i
+      ! ----OUTPUT:
+      OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
+      call writeOutputHeader(unitOut)
       N = size(crit,1)
       do i=1, N
          Write(unitOut,*) crit(i)%alpha, crit(i)%Ra, crit(i)%m, crit(i)%w  
       enddo
+      close(unitOut)
    end subroutine
 
    !**********************************************************************
