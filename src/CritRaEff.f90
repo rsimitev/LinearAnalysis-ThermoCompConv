@@ -233,7 +233,7 @@ contains
       type(GlobalCrit), intent(in):: crit(:)
       integer:: N, i
       ! ----OUTPUT:
-      OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
+      OPEN(unitOut,FILE=outfile,STATUS='UNKNOWN')
       call writeOutputHeader(unitOut)
       N = size(crit,1)
       do i=1, N
