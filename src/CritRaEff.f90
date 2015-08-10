@@ -46,7 +46,6 @@ program CriticalRaEff
       case(0)
          ! Single m
          call computeCriticalCurveSingleM(alphas,crit)
-         call writeCriticalCurve(crit)
       case(1)
          ! Global
          call computeCriticalCurve(alphas,crit)
@@ -216,7 +215,12 @@ contains
       crit_new(:,2) = 0.0d0
       call GrowthRateUpdatePar(m=m0)
       Write(*,*) 'Computing critical value for m =', m0
-      call computeCriticalCurveM(alpha, crit_new)
+      if(wasPreviouslyComputed(m)) then
+         call readCriticalCurveSingleM(crit_new,m)
+      else
+         call computeCriticalCurveM(alpha, crit_new)
+         call writeCriticalCurveSingleM(alpha, crit_new, m)
+      endif
       do i=1,N
          crit(i)%alpha = alpha(i)
          crit(i)%Ra = crit_new(i,1)
