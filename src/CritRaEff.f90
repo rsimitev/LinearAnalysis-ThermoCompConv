@@ -215,11 +215,11 @@ contains
       crit_new(:,2) = 0.0d0
       call GrowthRateUpdatePar(m=m0)
       Write(*,*) 'Computing critical value for m =', m0
-      if(wasPreviouslyComputed(m)) then
-         call readCriticalCurveSingleM(crit_new,m)
+      if(wasPreviouslyComputed(m0)) then
+         call readCriticalCurveSingleM(crit_new,m0)
       else
          call computeCriticalCurveM(alpha, crit_new)
-         call writeCriticalCurveSingleM(alpha, crit_new, m)
+         call writeCriticalCurveSingleM(alpha, crit_new, m0)
       endif
       do i=1,N
          crit(i)%alpha = alpha(i)
