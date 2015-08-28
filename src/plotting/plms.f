@@ -44,7 +44,7 @@ C
       PLMS=PLMST(NTHETA,LM)
 C
       RETURN
-      END
+      END function
 C
 c--------------------------------------------------------------------
 C   stores the values PLM in PLMST(nmt,nmlm) for theta=theta(1..nmtheta).
@@ -124,6 +124,6 @@ c
       nmls = lm
 c
       return
-      end
+      end subroutine
 c
 c------------------------------------------------------------------------

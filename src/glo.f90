@@ -386,8 +386,6 @@ contains
       double precision:: GroR, Omega, Ta
       complex(8), allocatable:: ZEVEC(:), zew(:), ZEVAL(:,:)
       integer:: info, i, ni, li, lti, lpi, Nmodes
-      integer:: NTH, KTV, KTH, LTV, LTH, lst, NUC
-      double precision:: GRR, GRI, Pm, C0,CriticalRt, OMM
       integer:: nuom, MF, LMAX, NIMAX
 
       Ta = TAU*TAU
@@ -413,24 +411,9 @@ contains
       ! outputFormat=1 formatted Hirsching
       ! outputFormat=3 unformatted
       outputFormat=0
-      WRITE(unitOut,'(2I2,'' LINEAR ONSET '')')  outputFormat,LCALC
-      NTH=0
-      KTV=0
-      KTH=0
-      LTV=0
-      LTH=0
-      GRR=0.D0
-      GRI=0.D0
-      WRITE(unitOut,'(I2,7I3,2D16.8,'' M0,TRUNC,LD,GROTH,DRIFT'')')  M0,Truncation,NTH,KTV,KTH,LTV,LTH,LD,GRR,GRI
-      NUDS=1
-      PM=0.D0
-      WRITE(unitOut, '(I5,2D14.6,D9.2,D13.6,D9.2,'' I,Ta,Rt,Pt,PM,E'')') 0,Ta,Rt,Pt,PM,ETA
-      C0 = OMEGA/M0
-      OMM=0.D0
-      NUC=0
-      NUOM=0
-      MF=0
-      WRITE(unitOut,"(2D17.10,3I4,'    C,OM, WHERE?,FLOQUET')") C0,OMM,NUC,NUOM,MF
+      WRITE(unitOut,*) '# Linear onset coefficients'
+      WRITE(unitOut,'(3I5,2D16.8,'' M0, TRUNC, LD, GR, DRIFT'')')  M0, Truncation, LD, GROR, Omega
+      WRITE(unitOut, '(2D14.6,D9.2,D13.6,D9.2,'' Ta, Rt, Rc, Pt, Pc, eta'')') Ta, Rt, Rc, Pt, Pc, ETA
 
       LMAX=2*Truncation+M0-1
       ! poloidal flow:
@@ -439,11 +422,7 @@ contains
          LPI = LI
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
          DO NI=1,NIMAX
-            IF( outputFormat.EQ.0 ) THEN
-               WRITE(unitOut,'(1X,A1,4I3,4D16.8)') 'V',LPI,M0,NI,0, DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),0.D0,0.D0
-            ELSEIF(outputFormat.EQ.3) THEN
-               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''V ''',LPI,M0,NI,0,' ', DREAL(ZEVEC(I+1)),DIMAG(ZEVEC(I+1)),' .0D+00 .0D+00 '
-            ENDIF
+            WRITE(unitOut,'(1X,A1,3I3,2D16.8)') 'V', LPI, M0, NI, DREAL(ZEVEC(I+1)), DIMAG(ZEVEC(I+1))
             I=I+4
          enddo
       enddo
@@ -459,11 +438,7 @@ contains
          ENDIF
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
          DO NI=1,NIMAX
-            IF( outputFormat.EQ.0 ) THEN
-               WRITE(unitOut,'(1X,A1,4I3,4D16.8)') 'W',LTI,M0,NI,0, DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),0.D0,0.D0
-            ELSEIF(outputFormat.EQ.3) THEN
-               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''W ''',LTI,M0,NI,0,' ', DREAL(ZEVEC(I+3)),DIMAG(ZEVEC(I+3)),' .0D+00 .0D+00 '
-            ENDIF
+            WRITE(unitOut,'(1X,A1,3I3,2D16.8)') 'W', LTI, M0, NI, DREAL(ZEVEC(I+3)), DIMAG(ZEVEC(I+3))
             I=I+4
          enddo
       enddo
@@ -472,11 +447,7 @@ contains
       DO LI=LMIN,LMAX,LD
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
          DO NI=1,NIMAX
-            IF( outputFormat.EQ.0 ) THEN
-               WRITE(unitOut,'(1X,A1,4I3,4D16.8)') 'T',LI,M0,NI,0, DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),0.D0,0.D0
-            ELSEIF(outputFormat.EQ.3) THEN
-               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''T ''',LI,M0,NI,0,' ', DBLE(ZEVEC(I+2)),DIMAG(ZEVEC(I+2)),' .0D+00 .0D+00 '
-            ENDIF
+            WRITE(unitOut,'(1X,A1,3I3,2D16.8)') 'T', LI, M0, NI, DBLE(ZEVEC(I+2)), DIMAG(ZEVEC(I+2))
             I=I+4
          enddo
       enddo
@@ -485,11 +456,7 @@ contains
       DO LI=LMIN,LMAX,LD
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
          DO NI=1,NIMAX
-            IF( outputFormat.EQ.0 ) THEN
-               WRITE(unitOut,'(1X,A1,4I3,4D16.8)') 'G',LI,M0,NI,0, DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),0.D0,0.D0
-            ELSEIF(outputFormat.EQ.3) THEN
-               WRITE(unitOut,'(A,4I3,A,2F11.7,A)') ' ''G ''',LI,M0,NI,0,' ', DREAL(ZEVEC(I+4)),DIMAG(ZEVEC(I+4)),' .0D+00 .0D+00 '
-            ENDIF
+            WRITE(unitOut,'(1X,A1,3I3,2D16.8)') 'G', LI, M0, NI, DREAL(ZEVEC(I+4)), DIMAG(ZEVEC(I+4))
             I=I+4
          enddo
       enddo

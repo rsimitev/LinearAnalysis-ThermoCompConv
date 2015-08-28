@@ -79,7 +79,7 @@ contains
       WRITE(unitOut,'(A11,E12.5,A2)') '# UpperLimit   ', UpperLimit, '#'
       WRITE(unitOut,'(A11,E12.5,A2)') '# StepSize     ', StepSize,   '#'
       WRITE(unitOut,'(A11,I12,A2)')   '# Truncation   ', Truncation, '#'
-      WRITE(unitOut,'(A11,A3,A2)')   '# Variable par ',VariablePar , '         #'
+      WRITE(unitOut,'(A11,A3,A2)')    '# Variable par ',VariablePar , '         #'
       WRITE(unitOut,*)  '# see definition of LCALC for output. LCALC:', LCALC,'   #'
       WRITE(unitOut,*)  '#                                      #'
    end subroutine

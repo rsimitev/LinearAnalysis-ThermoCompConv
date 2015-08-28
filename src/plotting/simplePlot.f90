@@ -34,8 +34,7 @@ PROGRAM LARA
    character(len=2):: domain(nPlotsMAX), quadrant(nPlotsMAX,nSubPlotsMAX), thisPlotQuadrant(NPAM), XCP(NPAM)
    double precision:: zdo
    DIMENSION ZDP(NPAM),TIMEP(NPAM)
-   DIMENSION XOR(NPAM),YOR(NPAM),XAR(NPAM),YAR(NPAM)
-   DIMENSION XROCM(NPAM),XRICM(NPAM),XRMCM(NPAM),XRM(NPAM)
+   DIMENSION XRICM(NPAM),XRMCM(NPAM),XRM(NPAM)
 
    NCPLOT = 0
    ZDO = 0.E0
@@ -69,7 +68,7 @@ PROGRAM LARA
    DO I = 1,nPlots
       !----- nSubPlots IS NUMBER OF SUBPLOTS, domain DESTINGUISHES BETWEEN
       !      QUADRANT (domain = 'QU'), HALFSPHERE (domain = 'HS') AND FULL SPHERE (domain = 'SP').
-      !      TIME IS THE TIME OF THE PLOTTED FIELD FOR TIME DEPENDENCE.
+      !      TIME IS THE TIME OF THE PLOTTED FIELD FOR TIME DEPendENCE.
       READ(*,*)
       READ(*,*) domain(I),TIME(I),nSubPlots(I)
       nSubPlots(I)=1
@@ -78,7 +77,7 @@ PROGRAM LARA
          NR = NR+1
       ELSE
          NQ = NQ+1
-      ENDIF
+      endif
 
       !--- quadrant DESTINGUSHES BETWEEN:
       !     QUADRANTS:
@@ -94,14 +93,14 @@ PROGRAM LARA
       !           PHI = constantCoordinateValue (constantCoordinate = 'P') OR
       !         THETA = constantCoordinateValue (constantCoordinate = 'T') IS KEPT CONSTANT ,
       !    whatToPlot DETERMINS THE FIELD TO BE PLOTTED:
-      !      'VS' : STREAMFUNCTIONS OF VELOCITY FIELD IN BUSSE NOTATION,
-      !      'BS' : STREAMFUNCTIONS OF MAGNETIC FIELD IN BUSSE NOTATION,
-      !      'JS' : STREAMFUNCTIONS OF ELECTRIC CURRENT IN BUSSE NOTATION,
+      !      'VS' : STREAMfunctionS OF VELOCITY FIELD IN BUSSE NOTATION,
+      !      'BS' : STREAMfunctionS OF MAGNETIC FIELD IN BUSSE NOTATION,
+      !      'JS' : STREAMfunctionS OF ELECTRIC CURRENT IN BUSSE NOTATION,
       !      'VR' : RADIAL VELOCITY FIELD,
       !      'BR' : RADIAL MAGNETIC FIELD,
       !      'TE' : TEMPERATURE FIELD Theta,
       !      'ZF' : ZONAL FLOW ( Mean part of phi comp. of velocity),
-      !      'MF' : MERIDIONAL FLOW ( MEAN STREAM FUNCTION IN PHI = CONST. PLANE ),
+      !      'MF' : MERIDIONAL FLOW ( MEAN STREAM function IN PHI = CONST. PLANE ),
       !      'MT' : MEAN TOROIDAL MAGNETIC FIELD FOR PHI = CONST,
       !      'BT' : TOROIDAL MAGNETIC FIELD FOR PHI = CONST,
       !      'MP' : STREAMLINES OF MEAN POLOIDAL MAGNETIC FIELD FOR PHI = CONST,
@@ -144,13 +143,9 @@ PROGRAM LARA
    ETA = ETAI
    C = CI
    OM = OMI
-   FTW = FTWI
-   FTG = FTGI
    MF = 0
    M0 = M0I
-   NTV = NTVI
    NTH = NTHI
-   LTV = LTVI
    LTH = LTHI
    KTV = KTVI
    KTH = KTHI
@@ -164,7 +159,7 @@ PROGRAM LARA
    XRI = DBLE(RI)
    XRO = DBLE(RO)
 
-   !-- ABG CALCULATES THE ALPHAS AND BETAS IN THE RADIAL FUNCTION
+   !-- ABG CALCULATES THE ALPHAS AND BETAS IN THE RADIAL function
    !   OF THE POLOIDAL MAGNETIC FIELD:
    IF( LCALC.EQ.2 .OR. LCALC.EQ.4 .OR. LCALC.EQ.6 ) CALL ABG(ND,whatToPlot,L,N)
 
@@ -185,7 +180,7 @@ PROGRAM LARA
       XBPG = 2*XLQ+NCOL*XBQ+(NCOL-1)*XINTER
    ELSE
       XBPG = 2*XLR+XBR
-   ENDIF
+   endif
    XAREA = XLRAND+XBPG+XRRAND
    YAREA = plotNumSpaceY+YHPG
 
@@ -209,7 +204,7 @@ PROGRAM LARA
             YHPLOT = YHQ
             XBPLOT = XBQ
             XLPLOT = XLQ
-         ENDIF
+         endif
       ELSEIF( domain(I).EQ.'HS' .OR. domain(I-1).EQ.'HS' ) THEN
          NSPA = 1
          NZEI = NZEI+1
@@ -222,18 +217,18 @@ PROGRAM LARA
             NZEI = NZEI+1
          ELSE
             NSPA = NSPA+1
-         ENDIF
+         endif
          YHPLOT = YHQ
          XBPLOT = XBQ
          XLPLOT = XLQ
-      ENDIF
+      endif
       XORIG = XLRAND+XLPLOT+(NSPA-1)*(XBPLOT+XINTER)
       YORIG = plotNumSpaceY+YHPG-NZEI*YHPLOT-(NZEI-1)*YINTER
 
       IF( domain(I).EQ.'QU' .OR. domain(I).EQ.'SP' .AND. NCOL.GT.1 ) THEN
          NQT = NQT+1
          IF( NSPA.EQ.1 .AND. NQT.EQ.NQ ) XLQ = XLQ+(XBQ+XINTER)/2
-      ENDIF
+      endif
       DO J = 1,nSubPlots(I)
          NP = NP+1
          thisPlotQuadrant(NP)           = quadrant(I,J)
@@ -243,7 +238,7 @@ PROGRAM LARA
             XCP(NP) = XRI+constantCoordinateValue(I,J)
          ELSE
             XCP(NP) = constantCoordinateValue(I,J)
-         ENDIF
+         endif
          ZDP(NP)   = contourPar(I,J)
          TIMEP(NP) = TIME(I)
       enddo
@@ -253,290 +248,23 @@ PROGRAM LARA
 
    !-- PLO FUEHRT DIE EINZELNEN SUBPLOTS AUS:
 
-   DO I = 1,NP
-      write(14,*) 'Plot Nr. ',I,':'
+   CALL READLA(INPUTFILE,DX)
+   CALL PLO(DX)
 
-      IF( TIMEP(I).NE.TIMEO .AND. LT.EQ.1 ) CALL READLA(INPUTFILE,dataSetNumber,TIMEP(I),DX)
-
-      CALL PLO(I,NSUBP,driftRate,DX,countourParIsNumber,plotSize,drawFrame,&
-                     ZDP(I),TIMEP(I),thisPlotQuadrant(I),thisPlotWhatToPlot(I), &
-                     thisPlotconstantCoordinate(I),XCP(I),        &
-                     XOR(I),YOR(I),XAR(I),YAR(I),                       &
-                     XRI,XRO,XRM(I),XRICM(I),XROCM(I),XRMCM(I),XP,YP)
-
-   enddo
    CLOSE(14)
 
 contains
 
    !------------------------------------------------------------------------
    !     calculates the field Z and makes one subplot.
-   SUBROUTINE PLO(NPLOT,NSUBP,driftRate,DX,countourParIsNumber,plotSize,drawFrame,contourPar,TIME,quadrant,whatToPlot,constantCoordinate,constantCoordinateValue, &
-             XOR,YOR,XAR,YAR,XRI,XRO,XRM,XRICM,XROCM,XRMCM,XP,YP)
-      IMPLICIT REAL*8(A-H,O-W)
-      IMPLICIT REAL*8(X,Y,Z)
-      CHARACTER*1 constantCoordinate,CCC
-      CHARACTER*2 quadrant,whatToPlot,CPC
+   SUBROUTINE PLO()
       character*20 filez,filex,filey
 
       DIMENSION DX(*),THETA(NMY),XIDL(NMX,NMY),YIDL(NMX,NMY)
-      DIMENSION Z(NMX,NMY),XML(2),YML(2),ZDS(4)
-
-      COMMON/PARI/RA,TA,PR,PM,ETA,C,OM,FTW,FTG,MF
-      COMMON/CNULL/ZNULL
-      integer on_a_sphere
-
-      !-- COUNTER
-      NCPLOT = NCPLOT+1
-      WRITE(14,'(2X,''TIME =  '',2D16.6)') TIME
-
-      !-- UEBERGABE AN COMMONBLOCK FUER TRANS:
-      CCC = constantCoordinate
-      CPC = quadrant
-      XCC = constantCoordinateValue
-
-      !-- INITIALISIERUNG VON DISSPLA UND ZEICHNEN EINES RAHMENS (FRAME):
-      DXY = XRO/100
-
-      !-- FESTLEGEN DER X BZW Y ACHSE UND ZEICHNEN DES INNEREN UND
-      !   AEUSSEREN KERNS MIT ARC:
-      IF( quadrant.EQ.'Q1' ) THEN
-         XML(1) = XRI
-         YML(1) = 0.E0
-         XML(2) = XRO
-         YML(2) = 0.E0
-         XML(1) = 0.E0
-         YML(1) = XRI
-         XML(2) = 0.E0
-         YML(2) = XRO
-         XMIN = XRI
-         XMAX = XRM
-         IF( constantCoordinate.EQ.'T' ) THEN
-            YMIN = 90.E0
-            YMAX = 180.E0
-         ELSEIF( constantCoordinate.EQ.'P' ) THEN
-            YMIN = 0.E0
-            YMAX = 90.E0
-         ENDIF
-      ELSEIF( quadrant.EQ.'Q2' ) THEN
-         XMIN = XRI
-         XMAX = XRM
-         IF( constantCoordinate.EQ.'T' ) THEN
-            YMIN = 180.E0
-            YMAX = 270.E0
-         ELSEIF( constantCoordinate.EQ.'P' ) THEN
-            YMIN = 0.E0
-            YMAX = 90.E0
-         ENDIF
-         XML(1) = -XRO
-         YML(1) = 0.E0
-         XML(2) = -XRI
-         YML(2) = 0.E0
-         XML(1) = 0.E0
-         YML(1) = XRI
-         XML(2) = 0.E0
-         YML(2) = XRO
-      ELSEIF( quadrant.EQ.'Q3' ) THEN
-         XMIN = XRI
-         XMAX = XRM
-         IF( constantCoordinate.EQ.'T' ) THEN
-            YMIN = 270.E0
-            YMAX = 360.E0
-         ELSEIF( constantCoordinate.EQ.'P' ) THEN
-            YMIN = 90.E0
-            YMAX = 180.E0
-         ENDIF
-         XML(1) = -XRO
-         YML(1) = 0.E0
-         XML(2) = -XRI
-         YML(2) = 0.E0
-         XML(1) = 0.E0
-         YML(1) = -XRI
-         XML(2) = 0.E0
-         YML(2) = -XRO
-      ELSEIF( quadrant.EQ.'Q4' ) THEN
-         XMIN = XRI
-         XMAX = XRM
-         IF( constantCoordinate.EQ.'T' ) THEN
-            YMIN = 0.E0
-            YMAX = 90.E0
-         ELSEIF( constantCoordinate.EQ.'P' ) THEN
-            YMIN = 90.E0
-            YMAX = 180.E0
-         ENDIF
-         XML(1) = XRI
-         YML(1) = 0.E0
-         XML(2) = XRO
-         YML(2) = 0.E0
-         XML(1) = 0.E0
-         YML(1) = -XRI
-         XML(2) = 0.E0
-         YML(2) = -XRO
-      ELSEIF( quadrant.EQ.'HO' ) THEN
-         XMIN = XRI
-         XMAX = XRM
-         IF( constantCoordinate.EQ.'T' ) THEN
-            YMIN = 90.E0-XP
-            YMAX = 270.E0-XP
-         ELSEIF( constantCoordinate.EQ.'P' ) THEN
-            YMIN = 0.E0
-            YMAX = 90.E0
-         ENDIF
-         XML(1) = -XRO
-         YML(1) = 0.E0
-         XML(2) = -XRI
-         YML(2) = 0.E0
-         XML(1) = XRI
-         YML(1) = 0.E0
-         XML(2) = XRO
-         YML(2) = 0.E0
-      ELSEIF( quadrant.EQ.'HU' ) THEN
-         XMIN = XRI
-         XMAX = XRM
-         IF( constantCoordinate.EQ.'T' ) THEN
-            YMIN = 270.E0-XP
-            YMAX = 450.E0-XP
-         ELSEIF( constantCoordinate.EQ.'P' ) THEN
-            YMIN = 90.E0
-            YMAX = 180.E0
-         ENDIF
-         XML(1) = -XRO
-         YML(1) = 0.E0
-         XML(2) = -XRI
-         YML(2) = 0.E0
-         XML(1) = XRI
-         YML(1) = 0.E0
-         XML(2) = XRO
-         YML(2) = 0.E0
-      ELSEIF( quadrant.EQ.'HL' ) THEN
-         XMIN = XRI
-         XMAX = XRM
-         IF( constantCoordinate.EQ.'T' ) THEN
-            YMIN = 180.E0
-            YMAX = 360.E0
-         ELSEIF( constantCoordinate.EQ.'P' ) THEN
-            YMIN = 0.E0
-            YMAX = 180.E0
-         ENDIF
-         XML(1) = 0.D0
-         YML(1) = -XRO
-         XML(2) = 0.D0
-         YML(2) = -XRI
-         XML(1) = 0.E0
-         YML(1) = XRI
-         XML(2) = 0.E0
-         YML(2) = XRO
-      ELSEIF( quadrant.EQ.'HR' ) THEN
-         XMIN = XRI
-         XMAX = XRM
-         IF( constantCoordinate.EQ.'T' ) THEN
-            YMIN = 0.E0
-            YMAX = 180.E0
-         ELSEIF( constantCoordinate.EQ.'P' ) THEN
-            YMIN = 0.E0
-            YMAX = 180.E0
-         ENDIF
-         XML(1) = 0.E0
-         YML(1) = -XRO
-         XML(2) = 0.E0
-         YML(2) = -XRI
-         XML(1) = 0.E0
-         YML(1) = XRI
-         XML(2) = 0.E0
-         YML(2) = XRO
-      ELSEIF( quadrant.EQ.'SP' ) THEN
-         XMIN = XRI
-         XMAX = XRM
-         IF( constantCoordinate.EQ.'T' ) THEN
-            YMIN = 0.E0
-            YMAX = 360.E0
-         ELSEIF( constantCoordinate.EQ.'P' ) THEN
-            YMIN = 0.E0
-            YMAX = 180.E0
-         ENDIF
-      ELSEIF( quadrant.EQ.'PS' ) THEN
-         XMIN = -180.E0-XP
-         XMAX = 180.E0-XP
-         YMIN = 180.E0-YP
-         YMAX = 0.E0-YP
-      ELSEIF( quadrant.EQ.'PL' ) THEN
-         XMIN = -180.E0-XP
-         XMAX = 180.E0-XP
-         YMIN = 180.E0-YP
-         YMAX = 0.E0-YP
-         XML(1) = 0.5E0
-         YML(1) = 0.E0
-         XML(2) = 0.5E0
-         YML(2) = 1.E0
-      ELSEIF( quadrant.EQ.'PR' ) THEN
-         XMIN = -180.E0-XP
-         XMAX = 180.E0-XP
-         YMIN = 180.E0-YP
-         YMAX = 0.E0-YP
-         XML(1) = 0.5E0
-         YML(1) = 0.E0
-         XML(2) = 0.5E0
-         YML(2) = 1.E0
-      ENDIF
-
-      !-- IST DER MAXIMALE RADIUS XRM GROESSER ALS DER AEUSSERE RADIUS RO
-      !   UND EXISTIERT ABER NUR FUER R< = RO EIN FELD , SO MUESSEN DAS
-      !   PLOTGEBIET UND DER URSPRUNG ENTSPRECHEND ANGEPASST WERDEN.
-      !   TEILWEISE WIRD ZUDEM DIE X-ACHSE AUF R< = RO EINGESCHRAENKT.
-      IF( ( ( whatToPlot.NE.'BS' .AND. whatToPlot.NE.'MP' ) .OR. &
-            ( whatToPlot.EQ.'BS' .AND. constantCoordinate.EQ.'R' ) ) .AND. &
-            XROCM.NE.XRMCM ) THEN
-         IF( quadrant(:1).EQ.'Q' ) THEN
-            XAR = XROCM
-            YAR = XROCM
-            XMAX = XRO
-            IF( quadrant.EQ.'Q2' ) THEN
-               XOR = XOR+XRMCM-XROCM
-            ELSEIF( quadrant.EQ.'Q3' ) THEN
-               XOR = XOR+XRMCM-XROCM
-               YOR = YOR+XRMCM-XROCM
-            ELSEIF( quadrant.EQ.'Q4' ) THEN
-               YOR = YOR+XRMCM-XROCM
-            ENDIF
-         ELSEIF( quadrant.EQ.'HL' ) THEN
-            XAR = XROCM
-            YAR = 2*XROCM
-            XMAX = XRO
-            XOR = XOR+XRMCM-XROCM
-            YOR = YOR+XRMCM-XROCM
-         ELSEIF( quadrant.EQ.'HR' ) THEN
-            XAR = XROCM
-            YAR = 2*XROCM
-            XMAX = XRO
-            YOR = YOR+XRMCM-XROCM
-         ELSEIF( quadrant.EQ.'HO' ) THEN
-            XAR = 2*XROCM
-            YAR = XROCM
-            XMAX = XRO
-            XOR = XOR+XRMCM-XROCM
-         ELSEIF( quadrant.EQ.'HU' ) THEN
-            XAR = 2*XROCM
-            YAR = XROCM
-            XMAX = XRO
-            XOR = XOR+XRMCM-XROCM
-            YOR = YOR+XRMCM-XROCM
-         ELSEIF( quadrant.EQ.'SP' .OR. quadrant(:1).EQ.'P' ) THEN
-            XAR = 2*XROCM
-            YAR = 2*XROCM
-            IF( quadrant.EQ.'SP' ) XMAX = XRO
-            XOR = XOR+XRMCM-XROCM
-            YOR = YOR+XRMCM-XROCM
-         ENDIF
-      ENDIF
-      XARC = XAR
-      YARC = YAR
-
+      DIMENSION Z(NMX,NMY),ZDS(4)
+      
       write(*,*) 'computing the fields...'
 
-      !-- BERECHNEN DER Z-WERTE FUER EIN RASTER MIT JE NXM PUNKTEN IN
-      !   X-RICHTUNG UND NYM PUNKTEN IN Y-RICHTUNG:
-      !   THETA WIRD EIN INTEGER NTHETA ZUGEORDNET UNTER DEM PLM(THETA)
-      !   ABGESPEICHERT WIRD, NMTHETA IST DIE ANZAHL DER BENOETIGTEN THETA.
       IF( constantCoordinate.EQ.'T' ) THEN
          NMTHETA = 1
          THETA(NMTHETA) = DBLE(constantCoordinateValue)
@@ -544,7 +272,7 @@ contains
          PHI = DBLE(constantCoordinateValue)
       ELSEIF( constantCoordinate.EQ.'R' ) THEN
          R = DBLE(constantCoordinateValue)
-      ENDIF
+      endif
       XD = (XMAX-XMIN)/(NMX-1)
       YD = (YMAX-YMIN)/(NMY-1)
       IF( constantCoordinate.NE.'T' ) THEN
@@ -552,7 +280,7 @@ contains
          DO I = 1, NMTHETA
             THETA(I) = DBLE(YMIN+(I-1)*YD)
          enddo
-      ENDIF
+      endif
 
       !-- BESTIMMUNG DER PLM(THETA) , ABSPEICHERUNG:
       CALL STOREPLM(THETA,NMTHETA)
@@ -573,10 +301,10 @@ contains
             ELSEIF( constantCoordinate.EQ.'R' ) THEN
                PHI = DBLE(X)
                NTHETA = J
-            ENDIF
-            !cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-            ! IDL
-            !cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            endif
+            !-------------------------------------------------------------------
+            ! IDL- generate x and y coordinates.
+            !-------------------------------------------------------------------
             if( constantCoordinate.eq.'T' ) then
                XIDL(I,J) = R*COS(pi*PHI/180.d0)
                YIDL(I,J) = R*SIN(pi*PHI/180.d0)
@@ -593,7 +321,7 @@ contains
                stop
             endif
             !-------- R,PHI UND THETA SIND DIE KUGELKOORDINATEN:
-            Z(I,J) = REAL(flow_r(DX,whatToPlot,R,PHI,NTHETA,TIME,driftRate))
+            Z(I,J) = flow_r(DX,R,PHI,THETA)
             IF( Z(I,J).GT.ZMAX ) ZMAX = Z(I,J)
             IF( Z(I,J).LT.ZMIN ) ZMIN = Z(I,J)
          enddo
@@ -605,26 +333,9 @@ contains
       ZANULL = 1.E-13
       ZSCALE = 1.E0
 
-      IF( contourPar.GT.0.E0 ) THEN
-         IF( range.LT.ZANULL ) THEN
-            WRITE(14,*) 'ZMAX AND ZMIN CLOSE TO ZERO: ',ZMAX,ZMIN
-            WRITE(14,*) 'NO PLOT POSSIBLE.'
-            GOTO 9000
-         ELSEIF( ZNULL.LE.ZNULLM ) THEN
-            ZSCALE = 1.E0/ZNULLM
-            WRITE(14,*) 'SCALED BY ',ZSCALE
-            DO IX = 1,NMX
-               DO IY = 1,NMY
-                  Z(IX,IY) = ZSCALE*Z(IX,IY)
-               enddo
-            enddo
-         ENDIF
-      ENDIF
-
-9000  CONTINUE
-      !cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      !-------------------------------------------------------------------------
       ! IDL
-      !cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      !-------------------------------------------------------------------------
       write(*,*) 'writing files idl.z, idl.x, idl.y ...'
 
       filez = 'idl.z'
@@ -656,13 +367,138 @@ contains
                write(23,*) yidl(i,j)
             enddo
          enddo
-      ENDIF
+      endif
 
       close(21)
       close(22)
       close(23)
-9999  CONTINUE
-   END subroutine plo
+   end subroutine plo
+   
+   
+   !------------------------------------------------------------------------
+   ! Radiales Geschw.feld: U_r = L_2/r v
+   !
+   !     optimized for K = 0.
+   function flow_r(X,R,PHI,THETA)
+      IMPLICIT none
+      double precision, intent(in):: x(:), R(:), theta(:), phi(:)
+
+      PPHI = PHI*PI/180.D0
+      RI = ETA/(1.D0-ETA)
+      RF = 0.D0
+
+      DO I = NDOMIN,NDOMAX
+         IF( M(I).EQ.0 ) THEN
+            EPSM = 1.D0
+         ELSE
+            EPSM = 2.D0
+         endif
+         IF( K(I).EQ.0 ) THEN
+            EPSK = 1.D0
+         ELSE
+            EPSK = 2.D0
+         endif
+         
+         RFT = EPSM*EPSK*L(I)*(L(I)+1) * PLMS(L(I),M(I),NTHETA) / R
+         
+         IF( whatToPlot(I).EQ.'V' ) THEN
+            RFT = RFT*DSIN( N(I)*PI*(R-RI) )
+         ELSEIF( whatToPlot(I).EQ.'H' ) THEN
+            NR = NAB(L(I),N(I))
+            IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
+               WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
+               STOP
+            endif
+            RFT = RFT*DCOS( A(NR)*R-B(NR) )
+         endif
+
+         if(K(I).EQ.0) then
+            IF( CRR(I).EQ.'RR' ) THEN
+               RFT = RFT * X(I) * DCOS( M(I)*PPHI )
+            ELSEIF( CRR(I).EQ.'IR' ) THEN
+               RFT = -RFT * X(I) * DSIN( M(I)*PPHI )
+            ELSE
+               RFT = 0.D0
+            endif
+         else
+            IF( CRR(I).EQ.'RR' ) THEN
+               RFT = RFT * X(I) * DCOS( M(I)*PPHI ) * DCOS(K(I)*OM*TIME)
+            ELSEIF( CRR(I).EQ.'IR' ) THEN
+               RFT = -RFT * X(I) * DSIN( M(I)*PPHI ) * DCOS(K(I)*OM*TIME)
+            ELSEIF( CRR(I).EQ.'RI' ) THEN
+               RFT = -RFT * X(I) * DCOS( M(I)*PPHI ) * DSIN(K(I)*OM*TIME)
+            ELSEIF( CRR(I).EQ.'II' ) THEN
+               RFT = RFT * X(I) * DSIN( M(I)*PPHI ) * DSIN(K(I)*OM*TIME)
+            endif
+         endif
+         flow_r = flow_r + RFT
+      enddo
+   end function
+
+   !------------------------------------------------------------------------
+   !   Temperaturfeld Theta ( =  Abweichung vom Grundzust.)
+   !   optimized for K = 0.
+   function TEMP(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+      IMPLICIT REAL*8(A-H,O-Z)
+      CHARACTER*2 CRR,whatToPlot(:)
+      integer, intent(in):: NTHETA
+      double precision, intent(in):: x(:)
+
+      IF( NM.NE.NMC ) THEN
+         WRITE(*,*) 'WRONG DIMENSION NM IN TEMP.'
+         STOP
+      endif
+
+      TEMP = 0.D0
+      PPHI = PHI*PI/180.D0
+      RI = ETA/(1.D0-ETA)
+      IF( whatToPlot.EQ.'TE' ) THEN
+         NDOMIN = 1+NDV+NDW
+         NDOMAX = NDV+NDW+NDT
+      ELSE
+         WRITE(*,*) 'WRONG whatToPlot IN TEMP, SHOULD BE TE BUT IS: ',whatToPlot
+         STOP
+      endif
+
+      DO I = NDOMIN, NDOMAX
+         IF( whatToPlot(I).NE.'T' ) THEN
+            WRITE(*,*) 'WRONG whatToPlot IN TEMP, SHOULD BE T BUT IS: ', whatToPlot(I)
+            STOP
+         endif
+         IF( M(I).EQ.0 ) THEN
+            EPSM = 1.D0
+         ELSE
+            EPSM = 2.D0
+         endif
+         IF( K(I).EQ.0 ) THEN
+            EPSK = 1.D0
+         ELSE
+            EPSK = 2.D0
+         endif
+         TEM = EPSM*EPSK*PLMS(L(I),M(I),NTHETA)*DSIN( N(I)*PI*(R-RI) )
+
+         if(K(I).EQ.0) then
+            IF( CRR(I).EQ.'RR' ) THEN
+               TEM = TEM * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
+            ELSEIF( CRR(I).EQ.'IR' ) THEN
+               TEM = -TEM * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
+            ELSE
+               TEM = 0.D0
+            endif
+         else
+            IF( CRR(I).EQ.'RR' ) THEN
+               TEM = TEM * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+            ELSEIF( CRR(I).EQ.'IR' ) THEN
+               TEM = -TEM * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+            ELSEIF( CRR(I).EQ.'RI' ) THEN
+               TEM = -TEM * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+            ELSEIF( CRR(I).EQ.'II' ) THEN
+               TEM = TEM * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+            endif
+         endif
+         TEMP = TEMP+TEM
+      enddo
+   end function temp
 
    !------------------------------------------------------------------------
    !   Stromfunktion fuer theta = konstant:
@@ -671,7 +507,7 @@ contains
    !              F_theta = r dphi g
    !
    !     optimized for K = 0.
-   FUNCTION FT(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function FT(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       double precision, intent(in):: x(:)
       character(len=2), intent(in):: whatToPlot(:)
@@ -681,11 +517,11 @@ contains
       IF( NAM.NE.NAMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NAM IN FT.'
          STOP
-      ENDIF
+      endif
       IF( NM.NE.NMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NM IN FT.'
          STOP
-      ENDIF
+      endif
 
       PPHI = PHI*PI/180.D0
       RI = ETA/(1.D0-ETA)
@@ -703,24 +539,24 @@ contains
       ELSE
          WRITE(*,*) 'WRONG whatToPlot IN FT, SHOULD BE VS OR BS OR JS BUT IS: ',whatToPlot
          STOP
-      ENDIF
+      endif
       DO  I = NDOMIN,NDOMAX
          IF( .NOT.( ( whatToPlot(I).EQ.'V' .AND. whatToPlot.EQ.'VS' ) .OR. &
                     ( whatToPlot(I).EQ.'H' .AND. whatToPlot.EQ.'BS' ) .OR. &
                     ( whatToPlot(I).EQ.'G' .AND. whatToPlot.EQ.'JS' )  )  ) THEN
             WRITE(*,*) 'WRONG whatToPlot IN FT, SHOULD BE V OR H OR G BUT IS: ',whatToPlot(I)
             STOP
-         ENDIF
+         endif
          IF( M(I).EQ.0 ) THEN
             EPSM = 1.D0
          ELSE
             EPSM = 2.D0
-         ENDIF
+         endif
          IF( K(I).EQ.0 ) THEN
             EPSK = 1.D0
          ELSE
             EPSK = 2.D0
-         ENDIF
+         endif
          FTT = EPSM*EPSK*M(I)*PLMS(L(I),M(I),NTHETA)*R
          IF( whatToPlot(I).EQ.'V' .OR. whatToPlot(I).EQ.'G' ) THEN
             FTT = FTT*DSIN( N(I)*PI*(R-RI) )
@@ -730,16 +566,16 @@ contains
                IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
                   WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
                   STOP
-               ENDIF
+               endif
                FTT = -FTT*DCOS( A(NR)*R-B(NR) )
             ELSE
                IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
                   WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
                   STOP
-               ENDIF
+               endif
                FTT = -FTT * (RO/R)**(L(I)+1) * DCOS( A(NR)*RO-B(NR) )
-            ENDIF
-         ENDIF
+            endif
+         endif
 
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
@@ -748,7 +584,7 @@ contains
                FTT = -FTT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
             ELSE
                FTT = 0.D0
-            ENDIF
+            endif
          else
             IF( CRR(I).EQ.'RR' ) THEN
                FTT = -FTT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
@@ -758,11 +594,11 @@ contains
                FTT = FTT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
                FTT = FTT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
-            ENDIF
+            endif
          endif
          FT = FT-FTT
       enddo
-   END function ft
+   end function ft
 
    !------------------------------------------------------------------------
    ! Stromfunktion fuer phi = konstant:
@@ -771,7 +607,7 @@ contains
    !              F_phi = r sin(theta) dtheta g
    !
    !     optimized for K = 0.
-   FUNCTION FP(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function FP(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       double precision, intent(in):: x(:)
       integer, intent(in):: NTHETA
@@ -780,11 +616,11 @@ contains
       IF( NM.NE.NMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NM IN FP.'
          STOP
-      ENDIF
+      endif
       IF( NAM.NE.NAMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NAM IN FP.'
          STOP
-      ENDIF
+      endif
 
       PPHI = PHI*PI/180.D0
       RI = ETA/(1.D0-ETA)
@@ -803,24 +639,24 @@ contains
       ELSE
          WRITE(*,*) 'WRONG whatToPlot IN FP, SHOULD BE VS OR BS OR JS BUT IS: ',whatToPlot
          STOP
-      ENDIF
+      endif
       DO I = NDOMIN,NDOMAX
          IF( .NOT.( ( whatToPlot(I).EQ.'V' .AND. whatToPlot.EQ.'VS' ) .OR.&
                    ( whatToPlot(I).EQ.'H' .AND. whatToPlot.EQ.'BS' ) .OR. &
                    ( whatToPlot(I).EQ.'G' .AND. whatToPlot.EQ.'JS' )  )  ) THEN
             WRITE(*,*) 'WRONG whatToPlot IN FP, SHOULD BE V OR H OR G BUT IS: ',whatToPlot(I)
             STOP
-         ENDIF
+         endif
          IF( M(I).EQ.0 ) THEN
             EPSM = 1.D0
          ELSE
             EPSM = 2.D0
-         ENDIF
+         endif
          IF( K(I).EQ.0 ) THEN
             EPSK = 1.D0
          ELSE
             EPSK = 2.D0
-         ENDIF
+         endif
          FPT = EPSM*EPSK*R * ( &
                  DBLE(L(I))*DSQRT( DBLE( (L(I)-M(I)+1)*(L(I)+M(I)+1) ) /  &
                  DBLE( (2*L(I)+1)*(2*L(I)+3) ) ) * PLMS(L(I)+1,M(I),NTHETA) -     &
@@ -835,16 +671,16 @@ contains
                IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
                   WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
                   STOP
-               ENDIF
+               endif
                FPT = FPT*DCOS( A(NR)*R-B(NR) )
             ELSE
                IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
                   WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
                   STOP
-               ENDIF
+               endif
                FPT = FPT * (RO/R)**(L(I)+1) * DCOS( A(NR)*RO-B(NR) )
-            ENDIF
-         ENDIF
+            endif
+         endif
 
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
@@ -853,7 +689,7 @@ contains
                FPT = -FPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
             ELSE
                FPT = 0.D0
-            ENDIF
+            endif
          else
             IF( CRR(I).EQ.'RR' ) THEN
                FPT = FPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
@@ -863,11 +699,11 @@ contains
                FPT = -FPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
                FPT = FPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
-            ENDIF
+            endif
          endif
          FP = FP+FPT
       enddo
-   END function FP
+   end function FP
 
    !------------------------------------------------------------------------
    !   Stromfunktion fuer r = konstant:
@@ -876,7 +712,7 @@ contains
    !                     F_r = - laplace h
    !
    !     optimized for K = 0.
-   FUNCTION FR(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function FR(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -885,7 +721,7 @@ contains
       IF( NM.NE.NMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NM IN FR.'
          STOP
-      ENDIF
+      endif
 
       PPHI = PHI*PI/180.D0
       RI = ETA/(1.D0-ETA)
@@ -902,24 +738,24 @@ contains
       ELSE
          WRITE(*,*) 'WRONG whatToPlot IN FR, SHOULD BE VS OR BS OR JS BUT IS: ',whatToPlot
          STOP
-      ENDIF
+      endif
       DO I = NDOMIN,NDOMAX
          IF(  .NOT.( ( whatToPlot.EQ.'VS' .AND. whatToPlot(I).EQ.'W' ) .OR.&
                      ( whatToPlot.EQ.'BS' .AND. whatToPlot(I).EQ.'G' ) .OR.&
                      ( whatToPlot.EQ.'JS' .AND. whatToPlot(I).EQ.'H' )  )  ) THEN
             WRITE(*,*) 'WRONG whatToPlot IN FR, SHOULD BE W OR G OR H BUT IS: ',whatToPlot(I)
             STOP
-         ENDIF
+         endif
          IF( M(I).EQ.0 ) THEN
             EPSM = 1.D0
          ELSE
             EPSM = 2.D0
-         ENDIF
+         endif
          IF( K(I).EQ.0 ) THEN
             EPSK = 1.D0
          ELSE
             EPSK = 2.D0
-         ENDIF
+         endif
          FRT = EPSM*EPSK*PLMS(L(I),M(I),NTHETA)
          IF( whatToPlot(I).EQ.'W' ) THEN
             FRT = FRT*R*DCOS( (N(I)-1)*PI*(R-RI) )
@@ -930,9 +766,9 @@ contains
             IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
                WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
                STOP
-            ENDIF
+            endif
             FRT = FRT*( ( A(NR)*A(NR)+DBLE(L(I)*(L(I)+1))/(R*R) ) * DCOS( A(NR)*R-B(NR) ) + 2*A(NR)/R * DSIN( A(NR)*R-B(NR) )  )
-         ENDIF
+         endif
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
                FRT = FRT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
@@ -940,7 +776,7 @@ contains
                FRT = -FRT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
             ELSE
                FRT = 0.D0
-            ENDIF
+            endif
          else
             IF( CRR(I).EQ.'RR' ) THEN
                FRT = FRT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
@@ -950,164 +786,17 @@ contains
                FRT = -FRT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
                FRT = FRT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
-            ENDIF
+            endif
          endif
          FR = FR+FRT
       enddo
-   END function fr
+   end function fr
 
-   !------------------------------------------------------------------------
-   ! Radiales Geschw.feld: U_r = L_2/r v
-   !
-   !     optimized for K = 0.
-   FUNCTION flow_r(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
-      IMPLICIT REAL*8(A-H,O-Z)
-      integer, intent(in):: NTHETA
-      double precision, intent(in):: x(:)
-      CHARACTER*2 CRR,whatToPlot(:)
-
-      IF( NM.NE.NMC ) THEN
-         WRITE(*,*) 'WRONG DIMENSION NM IN RF.'
-         STOP
-      ENDIF
-      IF( NAM.NE.NAMC ) THEN
-         WRITE(*,*) 'WRONG DIMENSION NAM IN RF.'
-         STOP
-      ENDIF
-
-      PPHI = PHI*PI/180.D0
-      RI = ETA/(1.D0-ETA)
-      RF = 0.D0
-      IF( whatToPlot.EQ.'VR' ) THEN
-         NDOMIN = 1
-         NDOMAX = NDV
-      ELSEIF( whatToPlot.EQ.'BR' ) THEN
-         NDOMIN = NDV+NDW+NDT+1
-         NDOMAX = NDV+NDW+NDT+NDH
-      ELSE
-         WRITE(*,*) 'WRONG whatToPlot IN RF, SHOULD BE V OR H BUT IS: ',whatToPlot
-         STOP
-      ENDIF
-      DO I = NDOMIN,NDOMAX
-         IF( .NOT.( ( whatToPlot(I).EQ.'V' .AND. whatToPlot.EQ.'VR' ) .OR. &
-                    ( whatToPlot(I).EQ.'H' .AND. whatToPlot.EQ.'BR' )  ) ) THEN
-            WRITE(*,*) 'WRONG whatToPlot IN RF, SHOULD BE V OR H BUT IS: ', whatToPlot(I)
-            STOP
-         ENDIF
-         IF( M(I).EQ.0 ) THEN
-            EPSM = 1.D0
-         ELSE
-            EPSM = 2.D0
-         ENDIF
-         IF( K(I).EQ.0 ) THEN
-            EPSK = 1.D0
-         ELSE
-            EPSK = 2.D0
-         ENDIF
-         RFT = EPSM*EPSK*L(I)*(L(I)+1) * PLMS(L(I),M(I),NTHETA) / R
-         IF( whatToPlot(I).EQ.'V' ) THEN
-            RFT = RFT*DSIN( N(I)*PI*(R-RI) )
-         ELSEIF( whatToPlot(I).EQ.'H' ) THEN
-            NR = NAB(L(I),N(I))
-            IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
-               WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
-               STOP
-            ENDIF
-            RFT = RFT*DCOS( A(NR)*R-B(NR) )
-         ENDIF
-
-         if(K(I).EQ.0) then
-            IF( CRR(I).EQ.'RR' ) THEN
-               RFT = RFT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
-            ELSEIF( CRR(I).EQ.'IR' ) THEN
-               RFT = -RFT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
-            ELSE
-               RFT = 0.D0
-            ENDIF
-         else
-            IF( CRR(I).EQ.'RR' ) THEN
-               RFT = RFT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
-            ELSEIF( CRR(I).EQ.'IR' ) THEN
-               RFT = -RFT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
-            ELSEIF( CRR(I).EQ.'RI' ) THEN
-               RFT = -RFT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
-            ELSEIF( CRR(I).EQ.'II' ) THEN
-               RFT = RFT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
-            ENDIF
-         endif
-         flow_r = flow_r+RFT
-      enddo
-   END function
-
-   !------------------------------------------------------------------------
-   !   Temperaturfeld Theta ( =  Abweichung vom Grundzust.)
-   !   optimized for K = 0.
-   FUNCTION TEMP(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
-      IMPLICIT REAL*8(A-H,O-Z)
-      CHARACTER*2 CRR,whatToPlot(:)
-      integer, intent(in):: NTHETA
-      double precision, intent(in):: x(:)
-
-      IF( NM.NE.NMC ) THEN
-         WRITE(*,*) 'WRONG DIMENSION NM IN TEMP.'
-         STOP
-      ENDIF
-
-      TEMP = 0.D0
-      PPHI = PHI*PI/180.D0
-      RI = ETA/(1.D0-ETA)
-      IF( whatToPlot.EQ.'TE' ) THEN
-         NDOMIN = 1+NDV+NDW
-         NDOMAX = NDV+NDW+NDT
-      ELSE
-         WRITE(*,*) 'WRONG whatToPlot IN TEMP, SHOULD BE TE BUT IS: ',whatToPlot
-         STOP
-      ENDIF
-
-      DO I = NDOMIN, NDOMAX
-         IF( whatToPlot(I).NE.'T' ) THEN
-            WRITE(*,*) 'WRONG whatToPlot IN TEMP, SHOULD BE T BUT IS: ', whatToPlot(I)
-            STOP
-         ENDIF
-         IF( M(I).EQ.0 ) THEN
-            EPSM = 1.D0
-         ELSE
-            EPSM = 2.D0
-         ENDIF
-         IF( K(I).EQ.0 ) THEN
-            EPSK = 1.D0
-         ELSE
-            EPSK = 2.D0
-         ENDIF
-         TEM = EPSM*EPSK*PLMS(L(I),M(I),NTHETA)*DSIN( N(I)*PI*(R-RI) )
-
-         if(K(I).EQ.0) then
-            IF( CRR(I).EQ.'RR' ) THEN
-               TEM = TEM * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
-            ELSEIF( CRR(I).EQ.'IR' ) THEN
-               TEM = -TEM * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
-            ELSE
-               TEM = 0.D0
-            ENDIF
-         else
-            IF( CRR(I).EQ.'RR' ) THEN
-               TEM = TEM * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
-            ELSEIF( CRR(I).EQ.'IR' ) THEN
-               TEM = -TEM * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
-            ELSEIF( CRR(I).EQ.'RI' ) THEN
-               TEM = -TEM * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
-            ELSEIF( CRR(I).EQ.'II' ) THEN
-               TEM = TEM * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
-            ENDIF
-         endif
-         TEMP = TEMP+TEM
-      enddo
-   END function temp
-
+   
    !------------------------------------------------------------------------
    !     temperature field Theta + Ts
    !     optimized for K = 0.
-   FUNCTION TT(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function TT(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -1116,7 +805,7 @@ contains
       IF( NM.NE.NMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NM IN TT.'
          STOP
-      ENDIF
+      endif
 
       PPHI = PHI*PI/180.D0
       RI = ETA/(1.D0-ETA)
@@ -1127,22 +816,22 @@ contains
       ELSE
          WRITE(*,*) 'WRONG whatToPlot IN TT, SHOULD TT BUT IS: ',whatToPlot
          STOP
-      ENDIF
+      endif
       DO I = NDOMIN,NDOMAX
          IF( whatToPlot(I).NE.'T' ) THEN
             WRITE(*,*) 'WRONG whatToPlot IN T, SHOULD BE T BUT IS: ', whatToPlot(I)
             STOP
-         ENDIF
+         endif
          IF( M(I).EQ.0 ) THEN
             EPSM = 1.D0
          ELSE
             EPSM = 2.D0
-         ENDIF
+         endif
          IF( K(I).EQ.0 ) THEN
             EPSK = 1.D0
          ELSE
             EPSK = 2.D0
-         ENDIF
+         endif
          TT = EPSM*EPSK*PLMS(L(I),M(I),NTHETA)
          TT = TT*DSIN( N(I)*PI*(R-RI) )
 
@@ -1155,7 +844,7 @@ contains
             TT = 0.0D0
           ELSEIF( CRR(I).EQ.'II' ) THEN
             TT = 0.0D0
-          ENDIF
+          endif
          ELSE
           IF( CRR(I).EQ.'RR' ) THEN
             TT = TT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )  * DCOS(K(I)*OM*TIME)
@@ -1165,20 +854,20 @@ contains
             TT = -TT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
           ELSEIF( CRR(I).EQ.'II' ) THEN
             TT = TT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
-          ENDIF
-         ENDIF
+          endif
+         endif
          T = T+TT
       enddo
 
       !  add basic temperature field Ts:
       T = T - R * R / ( 2.D0 * PR )
       TT = T
-   END
+   end
 
    !------------------------------------------------------------------------
    !   local Nusselt number NU(r = ri)
    !   optimized for K = 0.
-   FUNCTION localNusselt(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function localNusselt(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -1188,7 +877,7 @@ contains
       IF( NM.NE.NMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NM IN localNusselt.'
          STOP
-      ENDIF
+      endif
 
       localNusselt = 0.D0
       PPHI = PHI*PI/180.D0
@@ -1199,23 +888,23 @@ contains
       ELSE
          WRITE(*,*) 'WRONG whatToPlot IN localNusselt, SHOULD BE NU BUT IS: ',whatToPlot
          STOP
-      ENDIF
+      endif
 
       DO I = NDOMIN,NDOMAX
          IF( whatToPlot(I).NE.'T' ) THEN
             WRITE(*,*) 'WRONG whatToPlot IN TEMP, SHOULD BE T BUT IS: ', whatToPlot(I)
             STOP
-         ENDIF
+         endif
          IF( M(I).EQ.0 ) THEN
             EPSM = 1.D0
          ELSE
             EPSM = 2.D0
-         ENDIF
+         endif
          IF( K(I).EQ.0 ) THEN
             EPSK = 1.D0
          ELSE
             EPSK = 2.D0
-         ENDIF
+         endif
          localNusseltT = EPSM*EPSK*PLMS(L(I),M(I),NTHETA)*DBLE(N(I))*PI
 
          if(K(I).EQ.0) then
@@ -1225,7 +914,7 @@ contains
                localNusseltT = -localNusseltT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
             ELSE
                localNusseltT = 0.D0
-            ENDIF
+            endif
          else
             IF( CRR(I).EQ.'RR' ) THEN
                localNusseltT = localNusseltT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
@@ -1235,19 +924,19 @@ contains
                localNusseltT = -localNusseltT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
                localNusseltT = localNusseltT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
-            ENDIF
+            endif
          endif
          localNusselt = localNusselt+localNusseltT
       enddo
       localNusselt = 1.D0 - PR/RI*localNusselt
-   END function localNusselt
+   end function localNusselt
 
    !------------------------------------------------------------------------
    !   Zonaler Fluss = gemittelte phi-Komponente der Geschwindigkeit:
    !          < u_phi > = - dtheta w   (m = 0)
    !
    !     optimized for K = 0.
-   FUNCTION flow_p_zonal(X,R,NTHETA,TIME)
+   function flow_p_zonal(X,R,NTHETA,TIME)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -1257,7 +946,7 @@ contains
       IF( NM.NE.NMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NM IN flow_p_zonal.'
          STOP
-      ENDIF
+      endif
 
       flow_p_zonal = 0.D0
       RI = ETA/(1.D0-ETA)
@@ -1268,7 +957,7 @@ contains
          IF( whatToPlot(I).NE.'W' ) THEN
             WRITE(*,*) 'WRONG whatToPlot IN flow_p_zonal, SHOULD BE W BUT IS: ', whatToPlot(I)
             STOP
-         ENDIF
+         endif
 
          IF( M(I).NE.0 ) cycle
 
@@ -1276,7 +965,7 @@ contains
             EPSK = 1.D0
          ELSE
             EPSK = 2.D0
-         ENDIF
+         endif
          ZON = EPSK*DSQRT(DBLE(L(I)*(L(I)+1))) * PLMS(L(I),1,NTHETA) * R * DCOS( (N(I)-1)*PI*(R-RI) )
 
          if(K(I).EQ.0) then
@@ -1284,7 +973,7 @@ contains
                ZON = ZON * X(I)
             ELSE
                ZON = 0.D0
-            ENDIF
+            endif
          else
             IF( CRR(I).EQ.'RR' ) THEN
                ZON = ZON * X(I) * DCOS(K(I)*OM*TIME)
@@ -1292,17 +981,17 @@ contains
                ZON = -ZON * X(I) * DSIN(K(I)*OM*TIME)
             ELSE
                ZON = 0.D0
-            ENDIF
+            endif
          endif
          flow_p_zonal = flow_p_zonal+ZON
       enddo
-   END function
+   end function
 
    !------------------------------------------------------------------------
    !     Uphi = 1/(r*sinphi) d^2/drdph rv - d/dth w
    !
    !     optimized for K = 0.
-   FUNCTION flow_p(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function flow_p(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -1312,7 +1001,7 @@ contains
       IF( NM.NE.NMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NM IN UP.'
          STOP
-      ENDIF
+      endif
 
       THETAR = PI*THETA(NTHETA)/180.D0
       SINTH = DSIN(THETAR)
@@ -1324,7 +1013,7 @@ contains
       IF( whatToPlot.NE.'UP' ) THEN
         WRITE(*,*) 'WRONG whatToPlot IN UP, SHOULD BE UP BUT IS: ',whatToPlot
         STOP
-      ENDIF
+      endif
 
       NDOMIN = NDV+1
       NDOMAX = NDV+NDW
@@ -1334,12 +1023,12 @@ contains
             EPSM = 1.D0
          ELSE
             EPSM = 2.D0
-         ENDIF
+         endif
          IF( K(I).EQ.0 ) THEN
             EPSK = 1.D0
          ELSE
             EPSK = 2.D0
-         ENDIF
+         endif
 
          IF(SINTH.EQ.0.D0) THEN
             UPT = 0.D0
@@ -1353,13 +1042,13 @@ contains
                DSQRT(DLPM*DLMM/((2.D0*DL-1)*(2D0*DL+1D0))) - &
                DL*PLMS(L(I)+1,M(I),NTHETA) * &
                DSQRT((DLMM+1.D0)*(DLPM+1.D0)/((2D0*DL+3D0)*(2D0*DL+1D0))) )
-         ENDIF
+         endif
 
          IF( whatToPlot(I).EQ.'W' ) THEN
             UPT = UPT*R*DCOS( (N(I)-1)*PI*(R-RI) )
          ELSEIF( whatToPlot(I).EQ.'G' ) THEN
             UPT = UPT*DSIN( N(I)*PI*(R-RI) )
-         ENDIF
+         endif
          IF(K(I).EQ.0) THEN
             IF( CRR(I).EQ.'RR' ) THEN
                UPT = UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
@@ -1369,7 +1058,7 @@ contains
                UPT = 0.0D0
             ELSEIF( CRR(I).EQ.'II' ) THEN
                UPT = 0.0D0
-            ENDIF
+            endif
          ELSE
             IF( CRR(I).EQ.'RR' ) THEN
                UPT = UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
@@ -1379,8 +1068,8 @@ contains
                UPT = -UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
                UPT = UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
-            ENDIF
-         ENDIF
+            endif
+         endif
 
          UP = UP+UPT
       enddo
@@ -1395,12 +1084,12 @@ contains
             cycle
          ELSE
             EPSM = 2.D0
-         ENDIF
+         endif
          IF( K(I).EQ.0 ) THEN
             EPSK = 1.D0
          ELSE
             EPSK = 2.D0
-         ENDIF
+         endif
 
          !------- 1/(rsinth) d^2/drdphi (rv) -------------
          IF( SINTH.EQ.0.D0 .OR. M(I).EQ.0 ) THEN
@@ -1417,7 +1106,7 @@ contains
                   UPT = -UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
                ELSE
                   UPT = 0.D0
-               ENDIF
+               endif
             ELSE
                IF( CRR(I).EQ.'RR' ) THEN
                   UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
@@ -1427,13 +1116,13 @@ contains
                   UPT = UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
                ELSEIF( CRR(I).EQ.'II' ) THEN
                   UPT = UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
-               ENDIF
-            ENDIF
-         ENDIF
+               endif
+            endif
+         endif
 
          UP = UP+UPT
       enddo
-   END function
+   end function
 
 
    !------------------------------------------------------------------------
@@ -1443,7 +1132,7 @@ contains
    !            < F_phi > = r sin(theta) dtheta g (m = 0)
    !
    !     optimized for K = 0.
-   FUNCTION DMPJ(X,whatToPlot,R,NTHETA,TIME)
+   function DMPJ(X,whatToPlot,R,NTHETA,TIME)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -1452,11 +1141,11 @@ contains
       IF( NM.NE.NMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NM IN DMPJ.'
          STOP
-      ENDIF
+      endif
       IF( NAM.NE.NAMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NAM IN DMPJ.'
          STOP
-      ENDIF
+      endif
 
       RI = ETA/(1.D0-ETA)
       RO = RI+1.D0
@@ -1470,19 +1159,19 @@ contains
       ELSE
          WRITE(*,*) 'WRONG whatToPlot IN DMPJ, SHOULD BE MP OR MJ BUT IS: ',whatToPlot
          STOP
-      ENDIF
+      endif
       DO I = NDOMIN,NDOMAX
          IF( .NOT.( ( whatToPlot(I).EQ.'H' .AND. whatToPlot.EQ.'MP' ) .OR. &
                    ( whatToPlot(I).EQ.'G' .AND. whatToPlot.EQ.'MJ' )  ) ) THEN
             WRITE(*,*) 'WRONG whatToPlot IN DMPJ, SHOULD BE H OR G BUT IS: ', whatToPlot(I)
             STOP
-         ENDIF
+         endif
          IF( M(I).NE.0 ) cycle
          IF( K(I).EQ.0 ) THEN
             EPSK = 1.D0
          ELSE
             EPSK = 2.D0
-         ENDIF
+         endif
          DMP = EPSK*R * DBLE(L(I)*(L(I)+1)) * ( &
               PLMS(L(I)+1,M(I),NTHETA) / DSQRT( DBLE( (2*L(I)+1)*(2*L(I)+3) ) )  - &
               PLMS(L(I)-1,M(I),NTHETA) / DSQRT( DBLE( (2*L(I)+1)*(2*L(I)-1) ) )   )
@@ -1492,24 +1181,24 @@ contains
                IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
                   WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
                   STOP
-               ENDIF
+               endif
                DMP = DMP*DCOS( A(NR)*R-B(NR) )
             ELSE
                IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
                   WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
                   STOP
-               ENDIF
+               endif
                DMP = DMP * (RO/R)**(L(I)+1) * DCOS( A(NR)*RO-B(NR) )
-            ENDIF
+            endif
          ELSEIF( whatToPlot(I).EQ.'G' ) THEN
             DMP = DMP*DSIN( N(I)*PI*(R-RI) )
-         ENDIF
+         endif
         if(K(I).EQ.0) then
          IF( CRR(I).EQ.'RR' ) THEN
             DMP = DMP * X(I)
          ELSE
             DMP = 0.D0
-         ENDIF
+         endif
         else
          IF( CRR(I).EQ.'RR' ) THEN
             DMP = DMP * X(I) * DCOS(K(I)*OM*TIME)
@@ -1517,18 +1206,18 @@ contains
             DMP = -DMP * X(I) * DSIN(K(I)*OM*TIME)
          ELSE
             DMP = 0.D0
-         ENDIF
+         endif
         endif
          DMPJ = DMPJ+DMP
       enddo
-   END function dmpj
+   end function dmpj
 
    !------------------------------------------------------------------------
    ! Ueber Phi gemittelte Phi-Komponente des elektrischen Stromes:
    !            dtheta laplace h  (m = 0).
    !
    !     optimized for K = 0.
-   FUNCTION DMC(X,R,NTHETA,TIME)
+   function DMC(X,R,NTHETA,TIME)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -1538,11 +1227,11 @@ contains
       IF( NM.NE.NMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NM IN DMC.'
          STOP
-      ENDIF
+      endif
       IF( NAM.NE.NAMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NAM IN DMC.'
          STOP
-      ENDIF
+      endif
       RI = ETA/(1.D0-ETA)
       DMC = 0.D0
       NDOMIN = NDV + NDW + NDT + 1
@@ -1551,19 +1240,19 @@ contains
          IF( whatToPlot(I).NE.'H' ) THEN
             WRITE(*,*) 'WRONG whatToPlot IN DMC, SHOULD BE H BUT IS: ', whatToPlot(I)
             STOP
-         ENDIF
+         endif
          IF( M(I).NE.0 ) cycle
          IF( K(I).EQ.0 ) THEN
             EPSK = 1.D0
          ELSE
             EPSK = 2.D0
-         ENDIF
+         endif
          DM = EPSK*DSQRT(DBLE(L(I)*(L(I)+1))) * PLMS(L(I),1,NTHETA)
          NR = NAB(L(I),N(I))
          IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
             WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
             STOP
-         ENDIF
+         endif
          DM = -DM*( ( A(NR)*A(NR)+DBLE(L(I)*(L(I)+1))/(R*R) )*DCOS(A(NR)*R-B(NR) ) + &
                     2*A(NR)/R * DSIN( A(NR)*R-B(NR) )  )
 
@@ -1572,7 +1261,7 @@ contains
               DM = DM * X(I)
            ELSE
               DM = 0.D0
-           ENDIF
+           endif
         else
            IF( CRR(I).EQ.'RR' ) THEN
               DM = DM * X(I) * DCOS(K(I)*OM*TIME)
@@ -1580,11 +1269,11 @@ contains
               DM = -DM * X(I) * DSIN(K(I)*OM*TIME)
            ELSE
               DM = 0.D0
-           ENDIF
+           endif
         endif
          DMC = DMC-DM
       enddo
-   END function dmc
+   end function dmc
 
    !------------------------------------------------------------------------
    !  THIS PROGRAM FINDS THE A'S AND B'S OF THE POLODIAL MAGNETIC
@@ -1593,7 +1282,7 @@ contains
    !  A(I)*TAN(A(I)*RI-B(I))+L/RI = 0 WITH A PRCISSION OF 1D-13.
    !  THE A'S AND B'S ARE STORED LINEARLY IN THE ARRAYS, NAB(L,N)
    !  DETERMINS THE POSITION IN THE ARRAY.
-   !  NEEDS FUNCTIONS AMIN,NAB .
+   !  NEEDS functionS AMIN,NAB .
    SUBROUTINE ABG(ND,whatToPlot,LA,NA)
       IMPLICIT REAL*8(A-H,O-Y)
       CHARACTER(len=1):: whatToPlot(:)
@@ -1604,11 +1293,11 @@ contains
       IF( NAM.NE.NAMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NAM IN ABG.'
          STOP
-      ENDIF
+      endif
       IF( NLMA.NE.NLMAC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NLMA IN ABG.'
          STOP
-      ENDIF
+      endif
 
       CALL CALCNMAX(ND,whatToPlot,LA,NA)
 
@@ -1622,7 +1311,7 @@ contains
          RELEAB = RELE*1.D-4
       ELSE
          RELEAB = RELE
-      ENDIF
+      endif
       RELEAB = DMAX1(RELEAB,EPS)
 
       IA = 1
@@ -1635,7 +1324,7 @@ contains
          ELSEIF( NMAX.GT.NAM ) THEN
             WRITE(*,*) 'TOO SMALL NAM IN DABG.'
             STOP
-         ENDIF
+         endif
          N = 1
          LAB = L
          IF( RI.EQ.0 ) THEN
@@ -1644,12 +1333,12 @@ contains
                   AXMIN = DAX
                ELSE
                   AXMIN = (I-0.5D0)*DPI+DAX
-               ENDIF
+               endif
                AXMAX = (I+0.5D0)*DPI-DAX
                IF( IA.GT.NAM ) THEN
                   WRITE(*,*) 'TOO SMALL DIMENSION NAM IN ABG.'
                   STOP
-               ENDIF
+               endif
                AGUESS = AXMAX
                LBT = 0
 90             A(IA) = AMINB(AGUESS)
@@ -1661,7 +1350,7 @@ contains
                   WRITE(*,*) 'WRONG ALPHA!!!!'
                   WRITE(*,'(X,'' IA,L,ALPHAMIN,ALPHA,ALPHAMAX: '',2I4,3D16.6)') IA,L,AXMIN,A(IA),AXMAX
                   STOP
-               ENDIF
+               endif
                B(IA) = 0.0D0
                IA = IA+1
                N = N+1
@@ -1675,7 +1364,7 @@ contains
                IF( IA.GT.NAM ) THEN
                   WRITE(*,*) 'TOO SMALL DIMENSION NAM IN ABG.'
                   STOP
-               ENDIF
+               endif
                AGUESS = AXMAX
                LBT = 0
 190            A(IA) = AMIN(AGUESS)
@@ -1687,12 +1376,12 @@ contains
                   WRITE(*,*) 'WRONG ALPHA!!!!'
                   WRITE(*,'(X,'' IA,L,ALPHAMIN,ALPHA,ALPHAMAX: '',2I4,3D16.6)') IA,L,AXMIN,A(IA),AXMAX
                   STOP
-               ENDIF
+               endif
                B(IA) = A(IA)*RI+DATAN(L/A(IA)/RI)
                IA = IA+1
                N = N+1
                IF(N.GT.NMAX) GOTO 1000
-            ENDIF
+            endif
             DO I = 1,2000
                DAX = 1D-3
                AXMIN = (I-0.5D0)*DPI+DAX
@@ -1701,7 +1390,7 @@ contains
                   IF( IA.GT.NAM ) THEN
                      WRITE(*,*) 'TOO SMALL DIMENSION NAM IN ABG.'
                      STOP
-                  ENDIF
+                  endif
                   AGUESS = AXMIN
                   LBT = 0
 290               A(IA) = AMIN(AGUESS)
@@ -1713,17 +1402,17 @@ contains
                      WRITE(*,*) 'WRONG ALPHA!!!!'
                      WRITE(*,'(X,'' IA,L,ALPHAMIN,ALPHA,ALPHAMAX: '',2I4,3D16.6)') IA,L,AXMIN,A(IA),AXMAX
                      STOP
-                  ENDIF
+                  endif
                   B(IA) = A(IA)*RI+DATAN(L/A(IA)/RI)
                   IA = IA+1
                   N = N+1
                   IF(N.GT.NMAX) GOTO 1000
-               ENDIF
+               endif
 150            CONTINUE
                IF( IA.GT.NAM ) THEN
                   WRITE(*,*) 'TOO SMALL DIMENSION NAM IN ABG.'
                   STOP
-               ENDIF
+               endif
                AGUESS = AXMAX
                LBT = 0
 390            A(IA) = AMIN(AGUESS)
@@ -1735,25 +1424,25 @@ contains
                   WRITE(*,*) 'WRONG ALPHA!!!!'
                   WRITE(*,'(X,'' IA,L,ALPHAMIN,ALPHA,ALPHAMAX: '',2I4,3D16.6)') IA,L,AXMIN,A(IA),AXMAX
                   STOP
-               ENDIF
+               endif
                B(IA) = A(IA)*RI+DATAN(L/A(IA)/RI)
                IA = IA+1
                N = N+1
                IF(N.GT.NMAX) exit
             enddo
-         ENDIF
+         endif
 1000  CONTINUE
       DO I = 1,IA-1
          IF( I.GT.1 .AND. ( A(I).GT.A(I-1)-RELE .AND. A(I).LT.A(I-1)+RELE ) ) THEN
             WRITE(*,*) 'TWO ALPHAS EQUAL: ',A(I-1),A(I)
             STOP
-         ENDIF
+         endif
          DO J = 1,100
             B(I) = B(I)-DPI
             IF(B(I).LT.0.D0) THEN
                B(I) = B(I)+DPI
                exit
-            ENDIF
+            endif
          enddo
       enddo
 
@@ -1763,11 +1452,11 @@ contains
       DO I = 1,IA
          WRITE(*,'(2X,I4,2D14.6)') I,A(I),B(I)
       enddo
-   END SUBROUTINE abg
+   end SUBROUTINE abg
 
    !------------------------------------------------------------------------
-   !  FINDS THE MINIMUM FOR THE FUNCTION IN LINE 5 WITH A NEWTON METHOD.
-   FUNCTION AMIN(AX)
+   !  FINDS THE MINIMUM FOR THE function IN LINE 5 WITH A NEWTON METHOD.
+   function AMIN(AX)
       IMPLICIT REAL*8(A-H,O-Y)
       COMMON/ABMIN/RI,RO,RELE,L
       ICOUNT = 0
@@ -1778,25 +1467,25 @@ contains
       IF(FAA.EQ.0) THEN
          AX = AX+RELE
          GOTO 5
-      ENDIF
+      endif
       DA = FA/FAA
       AOX = AX
       AX = AX-DA
       IF(DABS(1-DABS(AOX/AX)).LT.RELE) THEN
          AMIN = AX
          RETURN
-      ENDIF
+      endif
       ICOUNT = ICOUNT+1
       IF(ICOUNT.GT.100) THEN
          WRITE(*,*) 'NO ZERO FOUND IN DABG/AMIN.'
          STOP
-      ENDIF
+      endif
       GOTO 5
-   END function amin
+   end function amin
 
    !------------------------------------------------------------------------
-   !   FINDS THE MINIMUM FOR THE FUNCTION IN LINE 5 WITH A NEWTON METHOD.
-   FUNCTION AMINB(AX)
+   !   FINDS THE MINIMUM FOR THE function IN LINE 5 WITH A NEWTON METHOD.
+   function AMINB(AX)
       IMPLICIT REAL*8(A-H,O-Y)
       COMMON/ABMIN/RI,RO,RELE,L
       do
@@ -1807,7 +1496,7 @@ contains
                AX = AX+RELE
             else
                exit
-            ENDIF
+            endif
          enddo
          DA = FA/FAA
          AOX = AX
@@ -1815,14 +1504,14 @@ contains
          IF(DABS(1-DABS(AOX/AX)).LT.RELE) THEN
             AMINB = AX
             RETURN
-         ENDIF
+         endif
       enddo
-   END function aminb
+   end function aminb
 
    !------------------------------------------------------------------------
    !  DETERMINS THE POSITION OF AN A OR B IN THE ARRAY A(I),B(I)
-   !  DEPENDING ON L AND N.
-   integer FUNCTION NAB(L,N)
+   !  DEPendING ON L AND N.
+   integer function NAB(L,N)
       IMPLICIT REAL*8(A-H,O-Y)
       integer, intent(in):: l,n
       integer:: lmin, lmax, NI, ll
@@ -1830,14 +1519,14 @@ contains
       IF( NLMA.NE.NLMAC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NLMA IN NAB.'
          STOP
-      ENDIF
+      endif
 
       LMIN = LC(1)
       LMAX = LC(NL)
       IF( L.GT.LMAX .OR. L.LT.LMIN ) THEN
          WRITE(*,*) 'WRONG L IN NAB',L,LMIN,LMAX
          STOP
-      ENDIF
+      endif
       NAB = 0
       DO NI = 1,NL
          LL = LC(NI)
@@ -1851,19 +1540,19 @@ contains
             ELSE
                NAB = NAB+N
                RETURN
-            ENDIF
-         ENDIF
+            endif
+         endif
       enddo
 
       IF( N.GT.NMABC ) THEN
          WRITE(*,*) 'N LARGER THE CALCULATED NUMBER OF A,B IN NAB: ',N,NMABC
          STOP
-      ENDIF
-   END function nab
+      endif
+   end function nab
 
    !------------------------------------------------------------------------
    !-- CALCULATES THE MAXIMUM N FOR EACH L.
-   !   THIS IS USED FOR CALCULATING THE RADIAL FUNCTION OF H.
+   !   THIS IS USED FOR CALCULATING THE RADIAL function OF H.
    SUBROUTINE CALCNMAX(NK,whatToPlot,L,N)
       IMPLICIT REAL*8(A-H,O-Z)
       integer:: NK
@@ -1873,7 +1562,7 @@ contains
 
       NLMAC = NLMA
 
-      !-- BESTIMMMUNG VON NMAX FUER JEDES L , NOTWENDIG IN ABG:
+      !-- BESTIMMMUNG VON NMAX FUER JEDES L , NOTWendIG IN ABG:
       LOLD = 10000
       NL = 0
       DO I = 1,NK
@@ -1883,16 +1572,16 @@ contains
                IF( NL.GT.NLMA ) THEN
                   WRITE(*,*) 'TOO SMALL DIMENSION NLMA IN CALCNMAX.'
                   STOP
-               ENDIF
+               endif
                LC(NL) = L(I)
                NMAX(NL) = N(I)
                LOLD = L(I)
             ELSEIF( L(I).EQ.LOLD .AND. N(I).GT.NMAX(NL) ) THEN
                NMAX(NL) = N(I)
-            ENDIF
-         ENDIF
+            endif
+         endif
       enddo
-   END SUBROUTINE CALCNMAX
+   end SUBROUTINE CALCNMAX
 
    !----------------------------------------------------------------
    SUBROUTINE READLA(STARTFILE,NUDSR,TIMER,X)
@@ -1906,7 +1595,7 @@ contains
       IF( NM.NE.NMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NM IN READP.'
          STOP
-      ENDIF
+      endif
 
       !-- IF LRT.EQ.0 WE ARE LOOKING FOR THE RIGHT NUMBER OF DATASET NUDSR,
       !-- IF LRT.EQ.1 WE ARE LOOKING FOR THE RIGHT TIME.
@@ -1929,7 +1618,7 @@ contains
       ELSE
          LT=0
          LTR=0
-      ENDIF
+      endif
 
       !-- READH READS THE HEADER OF THE INPUTFILE AND DETERMINS WETHER
       !   THE DATASET (dataSetNumber,TIME) IS THE RIGHT ONE (LDR=1):
@@ -1953,7 +1642,7 @@ contains
       CALL RDIM(ND,whatToPlot,CRR,L,M,N,K,CFS,LS,MS,NS, &
                        NDV,NDW,NDT,NDH,NDG,NDVS,NDWS,NDTS,NDHS,NDGS,NDS)
       CLOSE(12)
-   END SUBROUTINE READLA
+   end SUBROUTINE READLA
 
    !--------------------------------------------------------------------
    !> Sets the time for each plot i.
@@ -1990,8 +1679,8 @@ contains
             case(8)
                TIME(I) = 4*DT
          end select
-      ENDIF
+      endif
    end subroutine
 
-END PROGRAM LARA
+end PROGRAM LARA
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
