@@ -101,7 +101,7 @@ contains
       double precision:: RaMin, RaMax, gr1,gr2
       double complex:: frequency
       integer:: i, N, HalfN
-      integer:: info
+      integer:: info, counter
 
       N     = size(alphas,1)
       HalfN = N/2
@@ -125,6 +125,7 @@ contains
             exit
          endif
       enddo
+      counter=0
       ! Now that we found an interval find the critical value for Ra.
       call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
       ! Cache this value for future use.
@@ -135,7 +136,21 @@ contains
          RaMin = 0.05d0*CriticalRa
          RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
-         if (info.NE.0) exit
+         if (info.NE.0) then
+            ! We test 3 more points after we failed just in case we
+            ! hit an asymptote.
+            Write(*,*) 'counter = ', counter
+            if (counter==3) then
+               counter = 0
+               exit
+            else
+               counter = counter + 1
+               CriticalRa = (RaMin+RaMax)/2.0
+               cycle
+            endif
+         else
+            counter = 0
+         endif
          Write(*,*) '  alpha = ', alpha(i), CriticalRa
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
@@ -148,7 +163,18 @@ contains
          RaMin = 0.05d0*CriticalRa
          RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
-         if (info.NE.0) exit
+         if (info.NE.0) then
+            Write(*,*) 'counter = ', counter
+            if (counter==3) then
+               exit
+            else
+               counter = counter + 1
+               CriticalRa = (RaMin+RaMax)/2.0
+               cycle
+            endif
+         else
+            counter = 0
+         endif
          Write(*,*) '  alpha = ', alpha(i), CriticalRa
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
