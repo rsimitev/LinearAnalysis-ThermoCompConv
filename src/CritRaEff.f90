@@ -45,20 +45,17 @@ program CriticalRaEff
    select case(LCALC)
       case(0)
          ! Single m
-    call computeCriticalCurveSingleM(alphas,crit)
-    call writeCriticalCurve(crit)
+         call computeCriticalCurveSingleM(alphas,crit)
       case(1)
          ! Global
-    call computeCriticalCurve(alphas,crit)
-    call writeCriticalCurve(crit)
+         call computeCriticalCurve(alphas,crit)
    end select
 
-   close(unitOut)
 contains
 
    !**********************************************************************
    !> Initialises things.
-   SUBROUTINE init(inputfile,outputfile)
+   subroutine init(inputfile,outputfile)
       implicit none
       CHARACTER(len=*) inputfile,outputfile
 
@@ -76,10 +73,7 @@ contains
       call GrowthRateInit(Ra, alpha, Pt, Le, tau, eta, m0, Symmetry, Truncation)
       call setVariableParam('Ra ')
 
-      ! ----OUTPUT:
-      OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
-      call writeOutputHeader(unitOut)
-   END subroutine
+   end subroutine
 
    !**********************************************************************
    subroutine createAlphas(alphas)
@@ -107,7 +101,7 @@ contains
       double precision:: RaMin, RaMax, gr1,gr2
       double complex:: frequency
       integer:: i, N, HalfN
-      integer:: info
+      integer:: info, counter
 
       N     = size(alphas,1)
       HalfN = N/2
@@ -131,6 +125,7 @@ contains
             exit
          endif
       enddo
+      counter=0
       ! Now that we found an interval find the critical value for Ra.
       call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
       ! Cache this value for future use.
@@ -141,7 +136,21 @@ contains
          RaMin = 0.05d0*CriticalRa
          RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
-         if (info.NE.0) exit
+         if (info.NE.0) then
+            ! We test 3 more points after we failed just in case we
+            ! hit an asymptote.
+            Write(*,*) 'counter = ', counter
+            if (counter==3) then
+               counter = 0
+               exit
+            else
+               counter = counter + 1
+               CriticalRa = (RaMin+RaMax)/2.0
+               cycle
+            endif
+         else
+            counter = 0
+         endif
          Write(*,*) '  alpha = ', alpha(i), CriticalRa
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
@@ -154,7 +163,18 @@ contains
          RaMin = 0.05d0*CriticalRa
          RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
-         if (info.NE.0) exit
+         if (info.NE.0) then
+            Write(*,*) 'counter = ', counter
+            if (counter==3) then
+               exit
+            else
+               counter = counter + 1
+               CriticalRa = (RaMin+RaMax)/2.0
+               cycle
+            endif
+         else
+            counter = 0
+         endif
          Write(*,*) '  alpha = ', alpha(i), CriticalRa
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
@@ -186,8 +206,12 @@ contains
       do m=1, m0
          call GrowthRateUpdatePar(m=m)
          Write(*,*) 'Computing critical value for m =', m
-         call computeCriticalCurveM(alpha, crit_new)
-         call writeCriticalCurveSingleM(alpha, crit_new, m)
+         if(wasPreviouslyComputed(m)) then
+            call readCriticalCurveSingleM(crit_new,m)
+         else
+            call computeCriticalCurveM(alpha, crit_new)
+            call writeCriticalCurveSingleM(alpha, crit_new, m)
+         endif
          do i=1,N
             if(crit_new(i,1).lt.crit(i)%Ra) then
                crit(i)%Ra = crit_new(i,1)
@@ -195,6 +219,7 @@ contains
                crit(i)%m  = m
             endif
          enddo
+         call writeCriticalCurve(crit)
       enddo
       deallocate(crit_new)
    end subroutine
@@ -216,7 +241,12 @@ contains
       crit_new(:,2) = 0.0d0
       call GrowthRateUpdatePar(m=m0)
       Write(*,*) 'Computing critical value for m =', m0
-      call computeCriticalCurveM(alpha, crit_new)
+      if(wasPreviouslyComputed(m0)) then
+         call readCriticalCurveSingleM(crit_new,m0)
+      else
+         call computeCriticalCurveM(alpha, crit_new)
+         call writeCriticalCurveSingleM(alpha, crit_new, m0)
+      endif
       do i=1,N
          crit(i)%alpha = alpha(i)
          crit(i)%Ra = crit_new(i,1)
@@ -232,10 +262,14 @@ contains
       implicit none
       type(GlobalCrit), intent(in):: crit(:)
       integer:: N, i
+      ! ----OUTPUT:
+      OPEN(unitOut,FILE=outfile,STATUS='UNKNOWN')
+      call writeOutputHeader(unitOut)
       N = size(crit,1)
       do i=1, N
          Write(unitOut,*) crit(i)%alpha, crit(i)%Ra, crit(i)%m, crit(i)%w  
       enddo
+      close(unitOut)
    end subroutine
 
    !**********************************************************************
@@ -256,5 +290,36 @@ contains
       enddo
       close(unitm)
    end subroutine
+   
+   !**********************************************************************
+   !>
+   subroutine readCriticalCurveSingleM(crit, m)
+      implicit none
+      double precision, intent(out):: crit(:,:)
+      integer, intent(in):: m
+      double precision:: alpha
+      character(len=3):: num
+      integer:: N, i
+      integer, parameter:: unitm=999
+      N = size(crit,1)
+      Write(num,'(I3.3)') m
+      open(unit=unitm,file=trim(outfile)//'.'//trim(num), status='OLD')
+      do i=1, N
+         ! TODO: Deal with the possibility that the files may not have been
+         !       written at the same resolution.
+         read(unitm,*) alpha, crit(i,1), crit(i,2)
+      enddo
+      close(unitm)
+   end subroutine
+   
+   !**********************************************************************
+   !> 
+   logical function wasPreviouslyComputed(m)
+      implicit none
+      integer, intent(in):: m
+      character(len=3):: num
+      Write(num,'(I3.3)') m
+      inquire(file=trim(outfile)//'.'//trim(num), EXIST=wasPreviouslyComputed)
+   end function
 end program
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
