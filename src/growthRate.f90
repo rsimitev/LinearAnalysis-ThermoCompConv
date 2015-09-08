@@ -344,45 +344,45 @@ contains
                !  ******************** I+3: w (toroidal)  ******************
                ! new****************** I+4: gamma (concentration) **********
                DO NJ=1,NJMAX
-                  IF(J+3.GT.NDIM .OR. I+3.GT.NDIM) THEN
+                  IF(J+3*NJMAX.GT.NDIM .OR. I+3*NIMAX.GT.NDIM) THEN
                      write(*,*) 'MAT(): NDIM too small.'
                      Write(*,*) 'i =',i,'j =', j, 'NDIM =', NDIM
                      stop
                   endIF
                   IF( LI.EQ.LJ ) THEN
                      ! these are the terms on the LHS
-                     ZB(I+1,J+1) = DCMPLX(0.D0, -pol_LHS(          NI, NJ, LPI, 1))
-                     ZB(I+2,J+2) = DCMPLX(0.D0, -scalar_LHS( Pt_i, NI, NJ, 1)) ! temperature
-                     ZB(I+3,J+3) = DCMPLX(0.D0, -tor_LHS   (       NI, NJ, LTI, 1))
-                     ZB(I+4,J+4) = DCMPLX(0.D0, -scalar_LHS( Pt_i, NI, NJ, 1)) ! concentration
+                     ZB(I+1*NIMAX,J+1*NJMAX) = DCMPLX(0.D0, -pol_LHS(          NI, NJ, LPI, 1))
+                     ZB(I+2*NIMAX,J+2*NJMAX) = DCMPLX(0.D0, -scalar_LHS( Pt_i, NI, NJ, 1)) ! temperature
+                     ZB(I+3*NIMAX,J+3*NJMAX) = DCMPLX(0.D0, -tor_LHS   (       NI, NJ, LTI, 1))
+                     ZB(I+4*NIMAX,J+4*NJMAX) = DCMPLX(0.D0, -scalar_LHS( Pt_i, NI, NJ, 1)) ! concentration
 
                      ! NS
-                     ZA(I+1,J+1) = DCMPLX(Diffusion_pol(NI,NJ,LPI),         Coriolis_pol2pol(tau_i, mm_i, NI, NJ, LPI, 1))
-                     ZA(I+3,J+3) = DCMPLX(Diffusion_tor(NI,NJ,LTI),         Coriolis_tor2tor(tau_i, mm_i, NI, NJ, 1))
-                     ZA(I+1,J+2) = DCMPLX(Buoyancy_temp(Rt_i, NI, NJ, LPI), 0.D0)
-                     ZA(I+1,J+4) = DCMPLX(Buoyancy_conc(Rc_i, NI, NJ, LPI), 0.D0)
+                     ZA(I+1*NIMAX,J+1*NJMAX) = DCMPLX(Diffusion_pol(NI,NJ,LPI),         Coriolis_pol2pol(tau_i, mm_i, NI, NJ, LPI, 1))
+                     ZA(I+3*NIMAX,J+3*NJMAX) = DCMPLX(Diffusion_tor(NI,NJ,LTI),         Coriolis_tor2tor(tau_i, mm_i, NI, NJ, 1))
+                     ZA(I+1*NIMAX,J+2*NJMAX) = DCMPLX(Buoyancy_temp(Rt_i, NI, NJ, LPI), 0.D0)
+                     ZA(I+1*NIMAX,J+4*NJMAX) = DCMPLX(Buoyancy_conc(Rc_i, NI, NJ, LPI), 0.D0)
                      ! HE
-                     ZA(I+2,J+1) = DCMPLX(Advection_scalar(NI, NJ, LPI),    0.D0)
-                     ZA(I+2,J+2) = DCMPLX(Diffusion_scalar(NI, NJ, LPI),    0.D0)
+                     ZA(I+2*NIMAX,J+1*NJMAX) = DCMPLX(Advection_scalar(NI, NJ, LPI),    0.D0)
+                     ZA(I+2*NIMAX,J+2*NJMAX) = DCMPLX(Diffusion_scalar(NI, NJ, LPI),    0.D0)
                      ! CE
-                     ZA(I+4,J+1) = DCMPLX(Advection_scalar(NI,NJ,LPI),      0.D0)
-                     ZA(I+4,J+4) = DCMPLX(Diffusion_scalar(NI,NJ,LPI)/Le_i, 0.D0)
+                     ZA(I+4*NIMAX,J+1*NJMAX) = DCMPLX(Advection_scalar(NI,NJ,LPI),      0.D0)
+                     ZA(I+4*NIMAX,J+4*NJMAX) = DCMPLX(Diffusion_scalar(NI,NJ,LPI)/Le_i, 0.D0)
                   endIF
                   ! The remaining cross-pol/tor terms of the Coriolis force.
                   IF( LPI.EQ.LTJ+1 ) THEN
-                     ZA(I+1,J+3) = DCMPLX(DIII4A(tau_i, mm_i, NI, NJ, LPI, 1),  0.D0)
+                     ZA(I+1*NIMAX,J+3*NJMAX) = DCMPLX(DIII4A(tau_i, mm_i, NI, NJ, LPI, 1),  0.D0)
                   ELSEIF( LPI.EQ.LTJ-1 ) THEN
-                     ZA(I+1,J+3) = DCMPLX(DIII4B(tau_i, mm_i, NI, NJ, LPI, 1),  0.D0)
+                     ZA(I+1*NIMAX,J+3*NJMAX) = DCMPLX(DIII4B(tau_i, mm_i, NI, NJ, LPI, 1),  0.D0)
                   endIF
                   IF( LTI.EQ.LPJ+1 ) THEN
-                     ZA(I+3,J+1) = DCMPLX(DII4A(tau_i, mm_i, NI, NJ, LTI, 1),   0.D0)
+                     ZA(I+3*NIMAX,J+1*NJMAX) = DCMPLX(DII4A(tau_i, mm_i, NI, NJ, LTI, 1),   0.D0)
                   ELSEIF( LTI.EQ.LPJ-1 ) THEN
-                     ZA(I+3,J+1) = DCMPLX(DII4B(tau_i, mm_i, NI, NJ, LTI, 1),   0.D0)
+                     ZA(I+3*NIMAX,J+1*NJMAX) = DCMPLX(DII4B(tau_i, mm_i, NI, NJ, LTI, 1),   0.D0)
                   endIF
-                  J=J+4
+                  J=J+1
                enddo
             enddo
-             I=I+4
+             I=I+1
          enddo
       enddo
    end subroutine
