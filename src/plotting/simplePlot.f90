@@ -18,7 +18,6 @@ PROGRAM LARA
    integer:: NCPLOT, LR, NQ, NR, n, l
    integer:: drawPlotNum, drawFrame, drawHeader, drawTime
    logical:: countourParIsNumber
-   integer:: dataSetNumber
    CHARACTER*40 INPUTFILE,OUTPUTFILE
    CHARACTER*1 CFS
    CHARACTER*2 CRR
@@ -48,80 +47,10 @@ PROGRAM LARA
    NR = 0
 
    READ(*,*)
-   READ(*,*) INPUTFILE,OUTPUTFILE,dataSetNumber,driftRate
+   READ(*,*) INPUTFILE,OUTPUTFILE
 
    OPEN(14,FILE = OUTPUTFILE,STATUS = 'unknown')
-   write(14,*) 'Inputfile,dataSetNumber ',INPUTFILE,dataSetNumber
-
-   READ(*,*)
-   READ(*,*) timeSeriesControl, drawHeader, drawPlotNum, drawTime, &
-             plotSize, countourParIsNumber, drawFrame
-
-
-   !-- nPlots IS NUMBER OF PLOTS, XP AND YP ARE LATITUDE AND LONGITUDE OF
-   !   THE POLE FOR PROJECTION OF A SPHERE ON A CIRCLE ( quadrant = 'PL','PR','PS' ) .
-   READ(*,*)
-   READ(*,*) nPlots,XP,YP
-
-   nPlots = 1
-
-   DO I = 1,nPlots
-      !----- nSubPlots IS NUMBER OF SUBPLOTS, domain DESTINGUISHES BETWEEN
-      !      QUADRANT (domain = 'QU'), HALFSPHERE (domain = 'HS') AND FULL SPHERE (domain = 'SP').
-      !      TIME IS THE TIME OF THE PLOTTED FIELD FOR TIME DEPendENCE.
-      READ(*,*)
-      READ(*,*) domain(I),TIME(I),nSubPlots(I)
-      nSubPlots(I)=1
-
-      IF( domain(I).EQ.'HS' ) THEN
-         NR = NR+1
-      ELSE
-         NQ = NQ+1
-      endif
-
-      !--- quadrant DESTINGUSHES BETWEEN:
-      !     QUADRANTS:
-      !        quadrant = 'Q1','Q2','Q3','Q4' ,
-      !     HALF SPHERES:
-      !        quadrant = 'HL','HR','HU','HO',
-      !     SPHERE:
-      !        quadrant = 'SP',
-      !     PROJECTION ON A SPHERE
-      !        quadrant = ' PS','PL','PR'
-      !    constantCoordinate DETERMINS WhETHER:
-      !             R = constantCoordinateValue (constantCoordinate = 'R') ,
-      !           PHI = constantCoordinateValue (constantCoordinate = 'P') OR
-      !         THETA = constantCoordinateValue (constantCoordinate = 'T') IS KEPT CONSTANT ,
-      !    whatToPlot DETERMINS THE FIELD TO BE PLOTTED:
-      !      'VS' : STREAMfunctionS OF VELOCITY FIELD IN BUSSE NOTATION,
-      !      'BS' : STREAMfunctionS OF MAGNETIC FIELD IN BUSSE NOTATION,
-      !      'JS' : STREAMfunctionS OF ELECTRIC CURRENT IN BUSSE NOTATION,
-      !      'VR' : RADIAL VELOCITY FIELD,
-      !      'BR' : RADIAL MAGNETIC FIELD,
-      !      'TE' : TEMPERATURE FIELD Theta,
-      !      'ZF' : ZONAL FLOW ( Mean part of phi comp. of velocity),
-      !      'MF' : MERIDIONAL FLOW ( MEAN STREAM function IN PHI = CONST. PLANE ),
-      !      'MT' : MEAN TOROIDAL MAGNETIC FIELD FOR PHI = CONST,
-      !      'BT' : TOROIDAL MAGNETIC FIELD FOR PHI = CONST,
-      !      'MP' : STREAMLINES OF MEAN POLOIDAL MAGNETIC FIELD FOR PHI = CONST,
-      !      'MJ' : STREAMLINES OF MEAN ELECTRIC CURRENT FOR PHI = CONST,
-      !      'MC' : CONTOUR LINES OF MEAN PHI COMPONENT OF ELECTRIC CURRENT FOR PHI = CONST,
-      !      'TT' : Temperature field Theta+Ts,
-      !      'UP' : Phi component of velocity,
-      !      'NU' : local Nusselt number for r = ri.
-      !
-      !    normRadiusMax IS A MULTIPLIER FOR THE LARGEST RADIUS TO BE PLOTTED: RM = normRadiusMax*RO.
-      !    contourPar IS:
-      !       THE STEP FOR THE CONTOURS FOR countourParIsNumber = .false. OR
-      !       THE NUMBER OF CONTPUR LINES FOR Z>0 OR Z<0 countourParIsNumber = .true.
-      ! Next two lines  are repeated for the number of subplots
-      !| SUBPL | PLANE(RPT) | CONST | FIELD |(MAX RAD)/RO|contourPar/STEP|PlotNR|
-      !   'SP'      'T'        90      'VS'     1.E0          9    '000'
-      READ(*,*)
-      READ(*,*) quadrant(I,1), constantCoordinate(I,1), &
-                constantCoordinateValue(I,1), whatToPlot(I,1), &
-                normRadiusMax(I,1),contourPar(I,1)
-   enddo
+   write(14,*) 'Inputfile: ',INPUTFILE
 
    !-- SETTING OF CONSTANTS:
    LTR = 1
@@ -133,8 +62,8 @@ PROGRAM LARA
    !-- READLA READS THE SET OF COEFFITIENTS TO BE PLOTTED ,
    !   IT IS NECESSARY TO CALL IS HERE TO GET PARAMETERS.
    TIMEO = TIME(1)
-   write(*,'(A,A,I3,D9.2)') 'reading data from ',INPUTFILE,dataSetNumber,TIME(1),'...'
-   CALL READLA(INPUTFILE,dataSetNumber,TIME(1),DX)
+   write(*,'(A,A,I3,D9.2)') 'reading data from ',INPUTFILE,TIME(1),'...'
+   CALL READLA(INPUTFILE,TIME(1),DX)
    write(*,*) '...done'
    RA = RAI
    TA = TAI
@@ -262,7 +191,7 @@ contains
 
       DIMENSION DX(*),THETA(NMY),XIDL(NMX,NMY),YIDL(NMX,NMY)
       DIMENSION Z(NMX,NMY),ZDS(4)
-      
+
       write(*,*) 'computing the fields...'
 
       IF( constantCoordinate.EQ.'T' ) THEN
@@ -373,8 +302,8 @@ contains
       close(22)
       close(23)
    end subroutine plo
-   
-   
+
+
    !------------------------------------------------------------------------
    ! Radiales Geschw.feld: U_r = L_2/r v
    !
@@ -398,9 +327,9 @@ contains
          ELSE
             EPSK = 2.D0
          endif
-         
+
          RFT = EPSM*EPSK*L(I)*(L(I)+1) * PLMS(L(I),M(I),NTHETA) / R
-         
+
          IF( whatToPlot(I).EQ.'V' ) THEN
             RFT = RFT*DSIN( N(I)*PI*(R-RI) )
          ELSEIF( whatToPlot(I).EQ.'H' ) THEN
@@ -422,13 +351,13 @@ contains
             endif
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               RFT = RFT * X(I) * DCOS( M(I)*PPHI ) * DCOS(K(I)*OM*TIME)
+               RFT = RFT * X(I) * DCOS( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               RFT = -RFT * X(I) * DSIN( M(I)*PPHI ) * DCOS(K(I)*OM*TIME)
+               RFT = -RFT * X(I) * DSIN( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               RFT = -RFT * X(I) * DCOS( M(I)*PPHI ) * DSIN(K(I)*OM*TIME)
+               RFT = 0
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               RFT = RFT * X(I) * DSIN( M(I)*PPHI ) * DSIN(K(I)*OM*TIME)
+               RFT = 0
             endif
          endif
          flow_r = flow_r + RFT
@@ -438,7 +367,7 @@ contains
    !------------------------------------------------------------------------
    !   Temperaturfeld Theta ( =  Abweichung vom Grundzust.)
    !   optimized for K = 0.
-   function TEMP(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function TEMP(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       CHARACTER*2 CRR,whatToPlot(:)
       integer, intent(in):: NTHETA
@@ -479,21 +408,17 @@ contains
 
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
-               TEM = TEM * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
+               TEM = TEM * X(I) * DCOS( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               TEM = -TEM * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
+               TEM = -TEM * X(I) * DSIN( M(I)*PPHI )
             ELSE
                TEM = 0.D0
             endif
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               TEM = TEM * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+               TEM = TEM * X(I) * DCOS( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               TEM = -TEM * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
-            ELSEIF( CRR(I).EQ.'RI' ) THEN
-               TEM = -TEM * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
-            ELSEIF( CRR(I).EQ.'II' ) THEN
-               TEM = TEM * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+               TEM = -TEM * X(I) * DSIN( M(I)*PPHI )
             endif
          endif
          TEMP = TEMP+TEM
@@ -507,7 +432,7 @@ contains
    !              F_theta = r dphi g
    !
    !     optimized for K = 0.
-   function FT(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function FT(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       double precision, intent(in):: x(:)
       character(len=2), intent(in):: whatToPlot(:)
@@ -579,21 +504,19 @@ contains
 
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
-               FTT = -FTT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
+               FTT = -FTT * X(I) * DSIN( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FTT = -FTT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
+               FTT = -FTT * X(I) * DCOS( M(I)*PPHI )
             ELSE
                FTT = 0.D0
             endif
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               FTT = -FTT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+               FTT = -FTT * X(I) * DSIN( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FTT = -FTT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+               FTT = -FTT * X(I) * DCOS( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               FTT = FTT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               FTT = FTT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
             endif
          endif
          FT = FT-FTT
@@ -607,7 +530,7 @@ contains
    !              F_phi = r sin(theta) dtheta g
    !
    !     optimized for K = 0.
-   function FP(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function FP(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       double precision, intent(in):: x(:)
       integer, intent(in):: NTHETA
@@ -684,21 +607,21 @@ contains
 
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
-               FPT = FPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
+               FPT = FPT * X(I) * DCOS( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FPT = -FPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
+               FPT = -FPT * X(I) * DSIN( M(I)*PPHI )
             ELSE
                FPT = 0.D0
             endif
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               FPT = FPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+               FPT = FPT * X(I) * DCOS( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FPT = -FPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+               FPT = -FPT * X(I) * DSIN( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               FPT = -FPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+               FPT = 0
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               FPT = FPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+               FPT = 0
             endif
          endif
          FP = FP+FPT
@@ -712,7 +635,7 @@ contains
    !                     F_r = - laplace h
    !
    !     optimized for K = 0.
-   function FR(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function FR(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -771,32 +694,32 @@ contains
          endif
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
-               FRT = FRT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
+               FRT = FRT * X(I) * DCOS( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FRT = -FRT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
+               FRT = -FRT * X(I) * DSIN( M(I)*PPHI )
             ELSE
                FRT = 0.D0
             endif
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               FRT = FRT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+               FRT = FRT * X(I) * DCOS( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               FRT = -FRT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+               FRT = -FRT * X(I) * DSIN( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               FRT = -FRT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+               FRT = 0
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               FRT = FRT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+               FRT = 0
             endif
          endif
          FR = FR+FRT
       enddo
    end function fr
 
-   
+
    !------------------------------------------------------------------------
    !     temperature field Theta + Ts
    !     optimized for K = 0.
-   function TT(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function TT(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -837,9 +760,9 @@ contains
 
          IF(K(I).EQ.0) THEN
           IF( CRR(I).EQ.'RR' ) THEN
-            TT = TT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
+            TT = TT * X(I) * DCOS( M(I)*PPHI )
           ELSEIF( CRR(I).EQ.'IR' ) THEN
-            TT = -TT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
+            TT = -TT * X(I) * DSIN( M(I)*PPHI )
           ELSEIF( CRR(I).EQ.'RI' ) THEN
             TT = 0.0D0
           ELSEIF( CRR(I).EQ.'II' ) THEN
@@ -847,13 +770,13 @@ contains
           endif
          ELSE
           IF( CRR(I).EQ.'RR' ) THEN
-            TT = TT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )  * DCOS(K(I)*OM*TIME)
+            TT = TT * X(I) * DCOS( M(I)*PPHI )
           ELSEIF( CRR(I).EQ.'IR' ) THEN
-            TT = -TT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+            TT = -TT * X(I) * DSIN( M(I)*PPHI )
           ELSEIF( CRR(I).EQ.'RI' ) THEN
-            TT = -TT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+            TT = 0
           ELSEIF( CRR(I).EQ.'II' ) THEN
-            TT = TT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+            TT = 0
           endif
          endif
          T = T+TT
@@ -867,7 +790,7 @@ contains
    !------------------------------------------------------------------------
    !   local Nusselt number NU(r = ri)
    !   optimized for K = 0.
-   function localNusselt(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function localNusselt(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -909,21 +832,21 @@ contains
 
          if(K(I).EQ.0) then
             IF( CRR(I).EQ.'RR' ) THEN
-               localNusseltT = localNusseltT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
+               localNusseltT = localNusseltT * X(I) * DCOS( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               localNusseltT = -localNusseltT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
+               localNusseltT = -localNusseltT * X(I) * DSIN( M(I)*PPHI )
             ELSE
                localNusseltT = 0.D0
             endif
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               localNusseltT = localNusseltT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+               localNusseltT = localNusseltT * X(I) * DCOS( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               localNusseltT = -localNusseltT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+               localNusseltT = -localNusseltT * X(I) * DSIN( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               localNusseltT = -localNusseltT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+               localNusseltT = 0
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               localNusseltT = localNusseltT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+               localNusseltT = 0
             endif
          endif
          localNusselt = localNusselt+localNusseltT
@@ -936,7 +859,7 @@ contains
    !          < u_phi > = - dtheta w   (m = 0)
    !
    !     optimized for K = 0.
-   function flow_p_zonal(X,R,NTHETA,TIME)
+   function flow_p_zonal(X,R,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -976,9 +899,9 @@ contains
             endif
          else
             IF( CRR(I).EQ.'RR' ) THEN
-               ZON = ZON * X(I) * DCOS(K(I)*OM*TIME)
+               ZON = ZON * X(I)
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               ZON = -ZON * X(I) * DSIN(K(I)*OM*TIME)
+               ZON = 0
             ELSE
                ZON = 0.D0
             endif
@@ -991,7 +914,7 @@ contains
    !     Uphi = 1/(r*sinphi) d^2/drdph rv - d/dth w
    !
    !     optimized for K = 0.
-   function flow_p(X,whatToPlot,R,PHI,NTHETA,TIME,driftRate)
+   function flow_p(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -1051,9 +974,9 @@ contains
          endif
          IF(K(I).EQ.0) THEN
             IF( CRR(I).EQ.'RR' ) THEN
-               UPT = UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
+               UPT = UPT * X(I) * DCOS( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
+               UPT = -UPT * X(I) * DSIN( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'RI' ) THEN
                UPT = 0.0D0
             ELSEIF( CRR(I).EQ.'II' ) THEN
@@ -1061,13 +984,13 @@ contains
             endif
          ELSE
             IF( CRR(I).EQ.'RR' ) THEN
-               UPT = UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+               UPT = UPT * X(I) * DCOS( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'IR' ) THEN
-               UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+               UPT = -UPT * X(I) * DSIN( M(I)*PPHI )
             ELSEIF( CRR(I).EQ.'RI' ) THEN
-               UPT = -UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+               UPT = 0
             ELSEIF( CRR(I).EQ.'II' ) THEN
-               UPT = UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+               UPT = 0
             endif
          endif
 
@@ -1101,21 +1024,21 @@ contains
 
             IF(K(I).EQ.0) THEN
                IF( CRR(I).EQ.'RR' ) THEN
-                  UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) )
+                  UPT = -UPT * X(I) * DSIN( M(I)*PPHI )
                ELSEIF( CRR(I).EQ.'IR' ) THEN
-                  UPT = -UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) )
+                  UPT = -UPT * X(I) * DCOS( M(I)*PPHI )
                ELSE
                   UPT = 0.D0
                endif
             ELSE
                IF( CRR(I).EQ.'RR' ) THEN
-                  UPT = -UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+                  UPT = -UPT * X(I) * DSIN( M(I)*PPHI )
                ELSEIF( CRR(I).EQ.'IR' ) THEN
-                  UPT = -UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DCOS(K(I)*OM*TIME)
+                  UPT = -UPT * X(I) * DCOS( M(I)*PPHI )
                ELSEIF( CRR(I).EQ.'RI' ) THEN
-                  UPT = UPT * X(I) * DSIN( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+                  UPT = 0
                ELSEIF( CRR(I).EQ.'II' ) THEN
-                  UPT = UPT * X(I) * DCOS( M(I)*(PPHI-driftRate*TIME) ) * DSIN(K(I)*OM*TIME)
+                  UPT = 0
                endif
             endif
          endif
@@ -1132,7 +1055,7 @@ contains
    !            < F_phi > = r sin(theta) dtheta g (m = 0)
    !
    !     optimized for K = 0.
-   function DMPJ(X,whatToPlot,R,NTHETA,TIME)
+   function DMPJ(X,whatToPlot,R,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -1201,9 +1124,9 @@ contains
          endif
         else
          IF( CRR(I).EQ.'RR' ) THEN
-            DMP = DMP * X(I) * DCOS(K(I)*OM*TIME)
+            DMP = DMP * X(I)
          ELSEIF( CRR(I).EQ.'RI' ) THEN
-            DMP = -DMP * X(I) * DSIN(K(I)*OM*TIME)
+            DMP = 0
          ELSE
             DMP = 0.D0
          endif
@@ -1217,7 +1140,7 @@ contains
    !            dtheta laplace h  (m = 0).
    !
    !     optimized for K = 0.
-   function DMC(X,R,NTHETA,TIME)
+   function DMC(X,R,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -1264,9 +1187,9 @@ contains
            endif
         else
            IF( CRR(I).EQ.'RR' ) THEN
-              DM = DM * X(I) * DCOS(K(I)*OM*TIME)
+              DM = DM * X(I)
            ELSEIF( CRR(I).EQ.'RI' ) THEN
-              DM = -DM * X(I) * DSIN(K(I)*OM*TIME)
+              DM = 0
            ELSE
               DM = 0.D0
            endif
@@ -1584,7 +1507,7 @@ contains
    end SUBROUTINE CALCNMAX
 
    !----------------------------------------------------------------
-   SUBROUTINE READLA(STARTFILE,NUDSR,TIMER,X)
+   SUBROUTINE READLA(STARTFILE,NUDSR,X)
       IMPLICIT REAL*8(A-H,O-Z)
       integer:: NUDSR
       CHARACTER*1:: whatToPlot(:),CFS
@@ -1621,8 +1544,7 @@ contains
       endif
 
       !-- READH READS THE HEADER OF THE INPUTFILE AND DETERMINS WETHER
-      !   THE DATASET (dataSetNumber,TIME) IS THE RIGHT ONE (LDR=1):
-      CALL READH(12,LTR,NUDSR,TIMER,dataSetNumber,TIME,LDR)
+      CALL READH(12,LTR,NUDSR,LDR)
 
       !-- LOOKING FOR THE RIGHT DATASET:
       DO I=1,1000
@@ -1643,44 +1565,6 @@ contains
                        NDV,NDW,NDT,NDH,NDG,NDVS,NDWS,NDTS,NDHS,NDGS,NDS)
       CLOSE(12)
    end SUBROUTINE READLA
-
-   !--------------------------------------------------------------------
-   !> Sets the time for each plot i.
-   subroutine setPlotTime(i)
-      implicit none
-      integer, intent(in):: i
-      IF( nPlots.EQ.6 ) THEN
-         select case(I)
-            case(2)
-               TIME(I) = 1*DT
-            case(3)
-               TIME(I) = 5*DT
-            case(4)
-               TIME(I) = 2*DT
-            case(5)
-               TIME(I) = 4*DT
-            case(6)
-               TIME(I) = 3*DT
-         end select
-      ELSEIF( nPlots.EQ.8 ) THEN
-         select case(I)
-            case(2)
-               TIME(I) = 1*DT
-            case(3)
-               TIME(I) = 2*DT
-            case(4)
-               TIME(I) = 7*DT
-            case(5)
-               TIME(I) = 3*DT
-            case(6)
-               TIME(I) = 6*DT
-            case(7)
-               TIME(I) = 5*DT
-            case(8)
-               TIME(I) = 4*DT
-         end select
-      endif
-   end subroutine
 
 end PROGRAM LARA
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
