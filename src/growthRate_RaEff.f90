@@ -7,6 +7,7 @@ module GrowthRateRaEffMod
    double precision:: Le_i, Pt_i, tau_i, Ra_i, alpha_i
    double precision:: ri, ro, eta_i
    character(len=3):: variable='Rt'
+   double complex, allocatable:: ZWORK(:)
    integer:: Symmetry_i, mm_i, NEigenmodes, lmin, ld, Truncation_i
    public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes
    public:: setEigenProblemSize, getEigenProblemSize, GrowthRateInit, setVariableParam
@@ -236,19 +237,29 @@ contains
       double complex, intent(out), optional::ZEVAL(NEigenmodes,NEigenmodes)
       double complex:: ZA(NEigenmodes,NEigenmodes),ZB(NEigenmodes,NEigenmodes)
       double complex:: ZEWA(NEigenmodes),ZEWB(NEigenmodes),ZEVALL(NEigenmodes,NEigenmodes)
-      double complex:: ZEVEC(NEigenmodes), ZSAVE, ZWORK(3*NEigenmodes)
+      double complex:: ZEVEC(NEigenmodes), ZSAVE
+      integer:: lzwork
       double precision:: RWORK(8*NEigenmodes)
       integer:: i, j, k, info
       
       ! - MAT SETS THE complex(8) MATRICES ZA AND ZB SETTING OF MATRIX:
       CALL MAT(tau_i, Ra_i, alpha_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB, NEigenmodes)
 
+      lzwork=3*NEigenmodes+1
+      if (allocated(zwork)) then
+         if (size(zwork,1).ne.lzwork) then
+            deallocate(zwork)
+            allocate(zwork(lzwork))
+         endif
+      else
+         allocate(zwork(lzwork))
+      endif
 !       SUBROUTINE zGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
 !     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
       IF(.not.present(zeval)) THEN ! Compute eigen values and vectors.
-        call zggev('N', 'N',NEigenmodes,ZA,NEigenmodes,ZB,NEigenmodes, ZEWA, ZEWB, ZEVALL, NEigenmodes, ZEVALL, NEigenmodes, ZWORK, 3*NEigenmodes, rwork, info)
+        call zggev('N', 'N',NEigenmodes,ZA,NEigenmodes,ZB,NEigenmodes, ZEWA, ZEWB, ZEVALL, NEigenmodes, ZEVALL, NEigenmodes, ZWORK, lzwork, rwork, info)
       ELSE ! Only compute eigenvalues
-        call zggev('N', 'V',NEigenmodes,ZA,NEigenmodes,ZB,NEigenmodes, ZEWA, ZEWB, ZEVALL, NEigenmodes, ZEVALL, NEigenmodes, ZWORK, 3*NEigenmodes, rwork, info)
+        call zggev('N', 'V',NEigenmodes,ZA,NEigenmodes,ZB,NEigenmodes, ZEWA, ZEWB, ZEVALL, NEigenmodes, ZEVALL, NEigenmodes, ZWORK, lzwork, rwork, info)
         zeval = zevall
       endIF
 

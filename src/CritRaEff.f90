@@ -95,6 +95,8 @@ contains
    !! for all other parameters fixed.
    subroutine computeCriticalCurveM(alpha, crit)
       implicit none
+      character(8)  :: date
+      character(10) :: time
       double precision, intent(in):: alpha(:)
       double precision, intent(out):: crit(:,:)
       double precision:: CriticalRa, CriticalRaAlpha0
@@ -151,7 +153,8 @@ contains
          else
             counter = 0
          endif
-         Write(*,*) '  alpha = ', alpha(i), CriticalRa
+         call date_and_time(DATE=date,TIME=time)
+         Write(*,*) '[',date,'-',time,']', ' alpha = ', alpha(i), CriticalRa
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
       enddo
@@ -175,7 +178,8 @@ contains
          else
             counter = 0
          endif
-         Write(*,*) '  alpha = ', alpha(i), CriticalRa
+         call date_and_time(DATE=date,TIME=time)
+         Write(*,*) '[',date,'-',time,']', ' alpha = ', alpha(i), CriticalRa
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
       enddo

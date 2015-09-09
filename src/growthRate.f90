@@ -6,12 +6,17 @@ module GrowthRateMod
    !> Internally used parameters
    double precision:: Rt_i, Rc_i, Le_i, Pt_i, tau_i, Ra_i, alpha_i
    double precision:: ri, ro, eta_i
+   double complex, allocatable:: ZWORK(:)
    character(len=3):: variable='Rt'
+   integer, parameter:: SYMMETRIC=2
+   integer, parameter:: ANTISYMMETRIC=1
+   integer, parameter:: NOSYMMETRY=0
    integer:: Symmetry_i, mm_i, NEigenmodes, lmin, ld, Truncation_i
    public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes
    public:: setEigenProblemSize, getEigenProblemSize, GrowthRateInit, setVariableParam
    public:: testMAT, setLminAndLD, GrowthRateUpdatePar
    public:: setParameterValue,saveParameterValue
+   
 contains
 
    !***********************************************************************
@@ -92,15 +97,15 @@ contains
       implicit none
       integer, intent(in):: Sym, mm
       integer, intent(out):: LMIN, LD
-      IF(Sym.EQ.0) THEN
+      IF(Sym.EQ.NOSYMMETRY) THEN
          ! - UNDEFINED SYMMETRIE:
          LMIN = mm
          LD   = 1
-      ELSEIF(Sym.EQ.1) THEN
+      ELSEIF(Sym.EQ.ANTISYMMETRIC) THEN
          ! - EQUATORIAL ANTISYMMETRIE (L+M ODD):
          LMIN = mm+1
          LD   = 2
-      ELSEIF(Sym.EQ.2) THEN
+      ELSEIF(Sym.EQ.SYMMETRIC) THEN
          ! - EQUATORIAL SYMMETRIE (L+M EVEN);
          LMIN = mm
          LD   = 2
@@ -254,19 +259,29 @@ contains
       double complex, intent(out), optional::ZEVAL(NEigenmodes,NEigenmodes)
       double complex:: ZA(NEigenmodes,NEigenmodes),ZB(NEigenmodes,NEigenmodes)
       double complex:: ZEWA(NEigenmodes),ZEWB(NEigenmodes),ZEVALL(NEigenmodes,NEigenmodes)
-      double complex:: ZEVEC(NEigenmodes), ZSAVE, ZWORK(3*NEigenmodes)
+      double complex:: ZEVEC(NEigenmodes), ZSAVE
+      integer:: lzwork
       double precision:: RWORK(8*NEigenmodes)
       integer:: i, j, k, info
 
+      lzwork=3*NEigenmodes+1
       ! - MAT SETS THE complex(8) MATRICES ZA AND ZB SETTING OF MATRIX:
       CALL MAT(tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB, NEigenmodes)
 
+      if (allocated(zwork)) then
+         if (size(zwork,1).ne.lzwork) then
+            deallocate(zwork)
+            allocate(zwork(lzwork))
+         endif
+      else
+         allocate(zwork(lzwork))
+      endif
 !       SUBROUTINE zGGEV( JOBVL, JOBVR, N, A, LDA, B, LDB, ALPHA, BETA,
 !     $                  VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO )
       IF(.not.present(zeval)) THEN ! Compute eigen values and vectors.
-        call zggev('N', 'N',NEigenmodes,ZA,NEigenmodes,ZB,NEigenmodes, ZEWA, ZEWB, ZEVALL, NEigenmodes, ZEVALL, NEigenmodes, ZWORK, 3*NEigenmodes, rwork, info)
+        call zggev('N', 'N',NEigenmodes,ZA,NEigenmodes,ZB,NEigenmodes, ZEWA, ZEWB, ZEVALL, NEigenmodes, ZEVALL, NEigenmodes, ZWORK, lzwork, rwork, info)
       ELSE ! Only compute eigenvalues
-        call zggev('N', 'V',NEigenmodes,ZA,NEigenmodes,ZB,NEigenmodes, ZEWA, ZEWB, ZEVALL, NEigenmodes, ZEVALL, NEigenmodes, ZWORK, 3*NEigenmodes, rwork, info)
+        call zggev('N', 'V',NEigenmodes,ZA,NEigenmodes,ZB,NEigenmodes, ZEWA, ZEWB, ZEVALL, NEigenmodes, ZEVALL, NEigenmodes, ZWORK, lzwork, rwork, info)
         zeval = zevall
       endIF
 
@@ -300,89 +315,93 @@ contains
       integer, intent(in):: ndim, mm_i, Symmetry_i
       double complex, intent(out):: ZA(ndim,ndim),ZB(ndim,ndim)
       double precision, intent(in):: tau_i, Rt_i, Rc_i, Pt_i, Le_i
-      integer:: lmax
+      integer:: lmax, eqdim
       integer:: ni, i, nimax, li, lpi, lti
       integer:: nj, j, njmax, lj, lpj, ltj
 
 
       ZA(:,:)=DCMPLX(0D0,0D0)
       ZB(:,:)=DCMPLX(0D0,0D0)
+      eqdim=ndim/4
 
       I=0
-      LMAX=2*truncation_i+mm_i-1
+      LMAX=2*truncation_i+mm_i-1 ! Highest l happens for n=1
+      ! LMIN is equal to m if we are equatorially simmetric and m+1 otherwise.
+      ! LD is the step in L 
       !Write(*,*) 'MAT():', mm_i, LMIN, LMAX, LD
       !Write(*,*) 'MAT():', Symmetry_i, truncation_i, NDIM
-      DO LI=LMIN,LMAX,LD
+      DO LI=LMIN,LMAX,LD ! Li is the current meridional wave number
          LPI=LI
          ! Determine L for toroidal (w) field:
-         IF( Symmetry_i.EQ.2 ) THEN
+         IF( Symmetry_i.EQ.SYMMETRIC ) THEN
             LTI=LI+1
-         ELSEIF( Symmetry_i.EQ.1 ) THEN
+         ELSEIF( Symmetry_i.EQ.ANTISYMMETRIC ) THEN
             LTI=LI-1
-         ELSEIF( Symmetry_i.EQ.0 ) THEN
+         ELSEIF( Symmetry_i.EQ.NOSYMMETRY ) THEN
             LTI=LI
          endIF
+         !Truncation in n
          NIMAX=INT( DBLE(2*truncation_i+1-LI+mm_i)/2 )
 
          DO NI=1,NIMAX
             J=0
             DO LJ=LMIN,LMAX,LD
                LPJ=LJ
-               IF( Symmetry_i.EQ.2 ) THEN
+               IF( Symmetry_i.EQ.SYMMETRIC ) THEN
                   LTJ=LJ+1
-               ELSEIF( Symmetry_i.EQ.1 ) THEN
+               ELSEIF( Symmetry_i.EQ.ANTISYMMETRIC ) THEN
                   LTJ=LJ-1
-               ELSEIF( Symmetry_i.EQ.0 ) THEN
+               ELSEIF( Symmetry_i.EQ.NOSYMMETRY ) THEN
                   LTJ=LJ
                endIF
+               !Truncation in n
                NJMAX=INT( DBLE(2*truncation_i+1-LJ+mm_i)/2 )
 
                !  ******************** I: Equation (Line) ******************
                !  ******************** J: Variable (Column) ****************
-               !  ******************** I+1: v (poloidal)  ******************
-               !  ******************** I+2: theta         ******************
-               !  ******************** I+3: w (toroidal)  ******************
-               ! new****************** I+4: gamma (concentration) **********
+               !  ******************** I+0*NIMAX+1: v (poloidal)  ******************
+               !  ******************** I+1*NIMAX+1: w (toroidal)  ******************
+               !  ******************** I+2*NIMAX+1: theta         ******************
+               ! new****************** I+3*NIMAX+1: gamma (concentration) **********
                DO NJ=1,NJMAX
-                  IF(J+3.GT.NDIM .OR. I+3.GT.NDIM) THEN
+                  IF(J+3*NJMAX.GT.NDIM .OR. I+3*NIMAX.GT.NDIM) THEN
                      write(*,*) 'MAT(): NDIM too small.'
                      Write(*,*) 'i =',i,'j =', j, 'NDIM =', NDIM
                      stop
                   endIF
                   IF( LI.EQ.LJ ) THEN
                      ! these are the terms on the LHS
-                     ZB(I+1,J+1) = DCMPLX(0.D0, -pol_LHS(          NI, NJ, LPI, 1))
-                     ZB(I+2,J+2) = DCMPLX(0.D0, -scalar_LHS( Pt_i, NI, NJ, 1)) ! temperature
-                     ZB(I+3,J+3) = DCMPLX(0.D0, -tor_LHS   (       NI, NJ, LTI, 1))
-                     ZB(I+4,J+4) = DCMPLX(0.D0, -scalar_LHS( Pt_i, NI, NJ, 1)) ! concentration
-
+                     ZB(I+0*eqdim+1,J+0*eqdim+1) = DCMPLX(0.D0, -pol_LHS(          NI, NJ, LPI, 1))
+                     ZB(I+1*eqdim+1,J+1*eqdim+1) = DCMPLX(0.D0, -tor_LHS   (       NI, NJ, LTI, 1))
+                     ZB(I+2*eqdim+1,J+2*eqdim+1) = DCMPLX(0.D0, -scalar_LHS( Pt_i, NI, NJ, 1)) ! temperature
+                     ZB(I+3*eqdim+1,J+3*eqdim+1) = DCMPLX(0.D0, -scalar_LHS( Pt_i, NI, NJ, 1)) ! concentration
                      ! NS
-                     ZA(I+1,J+1) = DCMPLX(Diffusion_pol(NI,NJ,LPI),         Coriolis_pol2pol(tau_i, mm_i, NI, NJ, LPI, 1))
-                     ZA(I+3,J+3) = DCMPLX(Diffusion_tor(NI,NJ,LTI),         Coriolis_tor2tor(tau_i, mm_i, NI, NJ, 1))
-                     ZA(I+1,J+2) = DCMPLX(Buoyancy_temp(Rt_i, NI, NJ, LPI), 0.D0)
-                     ZA(I+1,J+4) = DCMPLX(Buoyancy_conc(Rc_i, NI, NJ, LPI), 0.D0)
+                     ZA(I+0*eqdim+1,J+0*eqdim+1) = DCMPLX(Diffusion_pol(NI,NJ,LPI),         Coriolis_pol2pol(tau_i, mm_i, NI, NJ, LPI, 1))
+                     ZA(I+1*eqdim+1,J+1*eqdim+1) = DCMPLX(Diffusion_tor(NI,NJ,LTI),         Coriolis_tor2tor(tau_i, mm_i, NI, NJ, 1))
+                     ZA(I+0*eqdim+1,J+2*eqdim+1) = DCMPLX(Buoyancy_temp(Rt_i, NI, NJ, LPI), 0.D0)
+                     ZA(I+0*eqdim+1,J+3*eqdim+1) = DCMPLX(Buoyancy_conc(Rc_i, NI, NJ, LPI), 0.D0)
                      ! HE
-                     ZA(I+2,J+1) = DCMPLX(Advection_scalar(NI, NJ, LPI),    0.D0)
-                     ZA(I+2,J+2) = DCMPLX(Diffusion_scalar(NI, NJ, LPI),    0.D0)
+                     ZA(I+2*eqdim+1,J+0*eqdim+1) = DCMPLX(Advection_scalar(NI, NJ, LPI),    0.D0)
+                     ZA(I+2*eqdim+1,J+2*eqdim+1) = DCMPLX(Diffusion_scalar(NI, NJ, LPI),    0.D0)
                      ! CE
-                     ZA(I+4,J+1) = DCMPLX(Advection_scalar(NI,NJ,LPI),      0.D0)
-                     ZA(I+4,J+4) = DCMPLX(Diffusion_scalar(NI,NJ,LPI)/Le_i, 0.D0)
+                     ZA(I+3*eqdim+1,J+0*eqdim+1) = DCMPLX(Advection_scalar(NI,NJ,LPI),      0.D0)
+                     ZA(I+3*eqdim+1,J+3*eqdim+1) = DCMPLX(Diffusion_scalar(NI,NJ,LPI)/Le_i, 0.D0)
                   endIF
                   ! The remaining cross-pol/tor terms of the Coriolis force.
                   IF( LPI.EQ.LTJ+1 ) THEN
-                     ZA(I+1,J+3) = DCMPLX(DIII4A(tau_i, mm_i, NI, NJ, LPI, 1),  0.D0)
+                     ZA(I+0*eqdim+1,J+1*eqdim+1) = DCMPLX(DIII4A(tau_i, mm_i, NI, NJ, LPI, 1),  0.D0)
                   ELSEIF( LPI.EQ.LTJ-1 ) THEN
-                     ZA(I+1,J+3) = DCMPLX(DIII4B(tau_i, mm_i, NI, NJ, LPI, 1),  0.D0)
+                     ZA(I+0*eqdim+1,J+1*eqdim+1) = DCMPLX(DIII4B(tau_i, mm_i, NI, NJ, LPI, 1),  0.D0)
                   endIF
                   IF( LTI.EQ.LPJ+1 ) THEN
-                     ZA(I+3,J+1) = DCMPLX(DII4A(tau_i, mm_i, NI, NJ, LTI, 1),   0.D0)
+                     ZA(I+1*eqdim+1,J+0*eqdim+1) = DCMPLX(DII4A(tau_i, mm_i, NI, NJ, LTI, 1),   0.D0)
                   ELSEIF( LTI.EQ.LPJ-1 ) THEN
-                     ZA(I+3,J+1) = DCMPLX(DII4B(tau_i, mm_i, NI, NJ, LTI, 1),   0.D0)
+                     ZA(I+1*eqdim+1,J+0*eqdim+1) = DCMPLX(DII4B(tau_i, mm_i, NI, NJ, LTI, 1),   0.D0)
                   endIF
-                  J=J+4
+                  J=J+1
                enddo
             enddo
-             I=I+4
+             I=I+1
          enddo
       enddo
    end subroutine
@@ -438,11 +457,11 @@ contains
             J=0
             DO LJ=LMIN,LMAX,LD
                LPJ=LJ
-               IF( Symmetry_i.EQ.2 ) THEN
+               IF( Symmetry_i.EQ.SYMMETRIC ) THEN
                   LTJ=LJ+1
-               ELSEIF( Symmetry_i.EQ.1 ) THEN
+               ELSEIF( Symmetry_i.EQ.ANTISYMMETRIC ) THEN
                   LTJ=LJ-1
-               ELSEIF( Symmetry_i.EQ.0 ) THEN
+               ELSEIF( Symmetry_i.EQ.NOSYMMETRY ) THEN
                   LTJ=LJ
                endIF
                NJMAX=INT( DBLE(2*truncation_i+1-LJ+mm_i)/2 )
@@ -892,10 +911,7 @@ contains
       ENDIF
       R = RINT
    END FUNCTION R
-   !-----------------------------------------------------------------------
-   !     END OF ri
-   !-----------------------------------------------------------------------
-
+   
    !-----------------------------------------------------------------------
    !> Returns 1 if N is even or -1 if N is odd
    pure integer function even_odd (N)
