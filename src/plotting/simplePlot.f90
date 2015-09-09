@@ -1061,41 +1061,37 @@ contains
    END subroutine readh
 
    !--------------------------------------------------------------------------
-   subroutine READD(unit_in,NKR,XR,CFR,CRRR,LR,MR,NR,KR)
+   subroutine READD(unit_in,NKR,FieldValue,FieldCode,RealOrImag,LR,MR,NR,KR)
       IMPLICIT none
-      CHARACTER(len=1):: CFR(:)
-      CHARACTER(len=2):: CRRR(:)
+      CHARACTER(len=1):: FieldCode(:)
+      CHARACTER(len=2):: RealOrImag(:)
       integer:: err
 
-      DIMENSION XR(*),LR(*),MR(*),NR(*),KR(*)
+      DIMENSION FieldValue(*),LR(*),MR(*),NR(*),KR(*)
 
       NKR=0
 
       do
-         READ(unit_in,'(1X,A1,3I3,2D16.8)',status=err) CFI,LI,MI,NI,DRR,DIR
+         READ(unit_in,'(1X,A1,3I3,2D16.8)',status=err) QuantI,LI,MI,NI,RealPart,ImagPart
          if (err.ne.0) exit
          NKR=NKR+1
-         CFR(NKR)=CFI
-         CRRR(NKR)='RR'
-         LR(NKR)=LI
-         MR(NKR)=MI
-         NR(NKR)=NI
-         XR(NKR)=DRR
+         FieldCode(NKR)  = QuantI
+         RealOrImag(NKR) = 'RR'
+         LR(NKR)         = LI
+         MR(NKR)         = MI
+         NR(NKR)         = NI
+         FieldValue(NKR)=RealPart
          IF( MI.NE.0 ) THEN
             NKR=NKR+1
-            CFR(NKR)=CFI
-            CRRR(NKR)='IR'
+            FieldCode(NKR)=QuantI
+            RealOrImag(NKR)='IR'
             LR(NKR)=LI
             MR(NKR)=MI
             NR(NKR)=NI
-            XR(NKR)=DIR
+            FieldValue(NKR)=ImagPart
          ENDIF
        enddo
    END subroutine
-
-! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
-
-
 
 end PROGRAM LARA
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
