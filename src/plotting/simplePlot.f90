@@ -4,36 +4,26 @@
 !-- Input:   stdin  (short version of LARA.EXE for DISSPLA)
 !--
 !-- Output:
-!--          3 files: idl.z, idl.x, idl.y
 !--
 !------------------------------------------------------------------------
 PROGRAM LARA
    use parameters
    implicit none
    double precision, parameter:: PI = 3.14159265358979D0
-   integer, PARAMETER:: NM = 5500, NAM = 400, nPlotsMAX = 9, nSubPlotsMAX = 4, NPAM = nPlotsMAX*nSubPlotsMAX
+   integer, PARAMETER:: NM = 5500, NAM = 400
    integer, PARAMETER:: NLMA = 100
    integer, PARAMETER:: NMX = 65, NMY = 128
    integer:: NMC
    integer:: NCPLOT, LR, NQ, NR, n, l
-   integer:: drawPlotNum, drawFrame, drawHeader, drawTime
    logical:: countourParIsNumber
-   CHARACTER*40 INPUTFILE,OUTPUTFILE
-   CHARACTER*1 CFS
-   CHARACTER*2 CRR
+   CHARACTER*40:: INPUTFILE,OUTPUTFILE
+   CHARACTER*1:: CFS
+   CHARACTER*2:: CRR
    INTEGER:: i, j
    double precision:: THETA(NMC)
    double precision:: dt
 
-   double precision:: DX(NM), constantCoordinateValue(nPlotsMAX,nSubPlotsMAX),normRadiusMax(nPlotsMAX,nSubPlotsMAX)
-   double precision:: TIME(nPlotsMAX), contourPar(nPlotsMAX,nSubPlotsMAX)
-   integer:: nSubPlots(nPlotsMAX)
-   character(len=1):: constantCoordinate(nPlotsMAX,nSubPlotsMAX), thisPlotconstantCoordinate(NPAM)
-   character(len=2):: whatToPlot(nPlotsMAX,nSubPlotsMAX), thisPlotWhatToPlot(NPAM)
-   character(len=2):: domain(nPlotsMAX), quadrant(nPlotsMAX,nSubPlotsMAX), thisPlotQuadrant(NPAM), XCP(NPAM)
-   double precision:: zdo
-   DIMENSION ZDP(NPAM),TIMEP(NPAM)
-   DIMENSION XRICM(NPAM),XRMCM(NPAM),XRM(NPAM)
+   double precision:: DX(NM)
 
    NCPLOT = 0
    ZDO = 0.E0
@@ -51,19 +41,8 @@ PROGRAM LARA
 
    OPEN(14,FILE = OUTPUTFILE,STATUS = 'unknown')
    write(14,*) 'Inputfile: ',INPUTFILE
-
-   !-- SETTING OF CONSTANTS:
-   LTR = 1
-   NMC = NM
-   NMSC = NM
-   NAMC = NAM
-   NLMAC = NLMA
-
-   !-- READLA READS THE SET OF COEFFITIENTS TO BE PLOTTED ,
-   !   IT IS NECESSARY TO CALL IS HERE TO GET PARAMETERS.
-   TIMEO = TIME(1)
-   write(*,'(A,A,I3,D9.2)') 'reading data from ',INPUTFILE,TIME(1),'...'
-   CALL READLA(INPUTFILE,TIME(1),DX)
+   write(*,'(A,A,I3,D9.2)') 'reading data from ',INPUTFILE,'...'
+   CALL READLA(INPUTFILE,DX)
    write(*,*) '...done'
    RA = RAI
    TA = TAI
@@ -85,97 +64,6 @@ PROGRAM LARA
    !-- CALCULATION OF INNER AND OUTER RADIUS:
    RI = ETA/(1.D0-ETA)
    RO = 1.D0+RI
-   XRI = DBLE(RI)
-   XRO = DBLE(RO)
-
-   !-- ABG CALCULATES THE ALPHAS AND BETAS IN THE RADIAL function
-   !   OF THE POLOIDAL MAGNETIC FIELD:
-   IF( LCALC.EQ.2 .OR. LCALC.EQ.4 .OR. LCALC.EQ.6 ) CALL ABG(ND,whatToPlot,L,N)
-
-   XLRAND = 3.0D0
-   XRRAND = 3.0D0
-   NROWR = NR
-   NROWQ = NQ/2
-   IF( MOD(NQ,2).NE.0 ) NROWQ = NROWQ+1
-   NROWR = NR
-   NROWQ = NQ/2
-   IF( MOD(NQ,2).NE.0 ) NROWQ = NROWQ+1
-   NROW = NROWR+NROWQ
-
-   XBR = 2*YHR
-
-   YHPG = NROWR*YHR+NROWQ*YHQ+(NROW-1)*YINTER
-   IF( NQ.GT.0 ) THEN
-      XBPG = 2*XLQ+NCOL*XBQ+(NCOL-1)*XINTER
-   ELSE
-      XBPG = 2*XLR+XBR
-   endif
-   XAREA = XLRAND+XBPG+XRRAND
-   YAREA = plotNumSpaceY+YHPG
-
-   !-- NZEI ZAEHLT ZEILEN , NSPA SPALTEN UND NP ZAHL DER PLOTS.
-   !   NQT ZAEHLT DIE ZAHL DER QUADRATE.
-   NP = 0
-   NQT = 0
-
-   !-- DIE DATEN FUER DIE EINZELNEN PLOTS WERDEN FESTGELEGT UND LINEAR
-   !   ABGESPEICHERT: URSPRUNG IN CM = (XORIG,YORIG) ,
-   !   PLOTGEBIET IN CM = (XAR,YAR) , RADIEN IN CM = (XRICM,XROCM,XRMCM).
-   DO I = 1,nPlots
-      IF( I.EQ.1 ) THEN
-         NSPA = 1
-         NZEI = 1
-         IF( domain(I).EQ.'HS' ) THEN
-            YHPLOT = YHR
-            XBPLOT = XBR
-            XLPLOT = XLR
-         ELSE
-            YHPLOT = YHQ
-            XBPLOT = XBQ
-            XLPLOT = XLQ
-         endif
-      ELSEIF( domain(I).EQ.'HS' .OR. domain(I-1).EQ.'HS' ) THEN
-         NSPA = 1
-         NZEI = NZEI+1
-         YHPLOT = YHR
-         XBPLOT = XBR
-         XLPLOT = XLR
-      ELSE
-         IF( NSPA.EQ.NCOL ) THEN
-            NSPA = 1
-            NZEI = NZEI+1
-         ELSE
-            NSPA = NSPA+1
-         endif
-         YHPLOT = YHQ
-         XBPLOT = XBQ
-         XLPLOT = XLQ
-      endif
-      XORIG = XLRAND+XLPLOT+(NSPA-1)*(XBPLOT+XINTER)
-      YORIG = plotNumSpaceY+YHPG-NZEI*YHPLOT-(NZEI-1)*YINTER
-
-      IF( domain(I).EQ.'QU' .OR. domain(I).EQ.'SP' .AND. NCOL.GT.1 ) THEN
-         NQT = NQT+1
-         IF( NSPA.EQ.1 .AND. NQT.EQ.NQ ) XLQ = XLQ+(XBQ+XINTER)/2
-      endif
-      DO J = 1,nSubPlots(I)
-         NP = NP+1
-         thisPlotQuadrant(NP)           = quadrant(I,J)
-         thisPlotWhatToPlot(NP)         = whatToPlot(I,J)
-         thisPlotconstantCoordinate(NP) = constantCoordinate(I,J)
-         IF( constantCoordinate(I,J).EQ.'R' ) THEN
-            XCP(NP) = XRI+constantCoordinateValue(I,J)
-         ELSE
-            XCP(NP) = constantCoordinateValue(I,J)
-         endif
-         ZDP(NP)   = contourPar(I,J)
-         TIMEP(NP) = TIME(I)
-      enddo
-   enddo
-
-   YTEXT = plotNumSpaceY-1.0E0
-
-   !-- PLO FUEHRT DIE EINZELNEN SUBPLOTS AUS:
 
    CALL READLA(INPUTFILE,DX)
    CALL PLO(DX)
@@ -186,131 +74,49 @@ contains
 
    !------------------------------------------------------------------------
    !     calculates the field Z and makes one subplot.
-   SUBROUTINE PLO()
-      character*20 filez,filex,filey
-
-      DIMENSION DX(*),THETA(NMY),XIDL(NMX,NMY),YIDL(NMX,NMY)
-      DIMENSION Z(NMX,NMY),ZDS(4)
+   SUBROUTINE PLO(dx)
+      integer, parameter:: nr=41, nt=360, np=720
+      double precision, intent(in):: DX(:)
+      double precision:: THETA(Nt), r, phi, dtheta
 
       write(*,*) 'computing the fields...'
 
-      IF( constantCoordinate.EQ.'T' ) THEN
-         NMTHETA = 1
-         THETA(NMTHETA) = DBLE(constantCoordinateValue)
-      ELSEIF( constantCoordinate.EQ.'P' ) THEN
-         PHI = DBLE(constantCoordinateValue)
-      ELSEIF( constantCoordinate.EQ.'R' ) THEN
-         R = DBLE(constantCoordinateValue)
-      endif
-      XD = (XMAX-XMIN)/(NMX-1)
-      YD = (YMAX-YMIN)/(NMY-1)
-      IF( constantCoordinate.NE.'T' ) THEN
-         NMTHETA = NMY
-         DO I = 1, NMTHETA
-            THETA(I) = DBLE(YMIN+(I-1)*YD)
-         enddo
-      endif
-
-      !-- BESTIMMUNG DER PLM(THETA) , ABSPEICHERUNG:
-      CALL STOREPLM(THETA,NMTHETA)
-
-      ZMIN = 1.E10
-      ZMAX = -1.E10
-      DO I = 1,NMX
-         X = XMIN+(I-1)*XD
-         DO J = 1,NMY
-            Y = YMIN+(J-1)*YD
-            IF( constantCoordinate.EQ.'T' ) THEN
-               R = DBLE(X)
-               PHI = DBLE(Y)
-               NTHETA = 1
-            ELSEIF( constantCoordinate.EQ.'P' ) THEN
-               R = DBLE(X)
-               NTHETA = J
-            ELSEIF( constantCoordinate.EQ.'R' ) THEN
-               PHI = DBLE(X)
-               NTHETA = J
-            endif
-            !-------------------------------------------------------------------
-            ! IDL- generate x and y coordinates.
-            !-------------------------------------------------------------------
-            if( constantCoordinate.eq.'T' ) then
-               XIDL(I,J) = R*COS(pi*PHI/180.d0)
-               YIDL(I,J) = R*SIN(pi*PHI/180.d0)
-               on_a_sphere = 0
-            elseif( constantCoordinate.eq.'P' ) then
-               XIDL(I,J) = R*COS(pi*(THETA(J)-90.d0)/180.d0)
-               YIDL(I,J) = R*SIN(pi*(THETA(J)-90.d0)/180.d0)
-               on_a_sphere = 0
-            elseif( constantCoordinate.eq.'R' ) then
-               on_a_sphere = 1
-            else
-               on_a_sphere = 0
-               write(*,*) 'wrong constant variable: ',cc
-               stop
-            endif
-            !-------- R,PHI UND THETA SIND DIE KUGELKOORDINATEN:
-            Z(I,J) = flow_r(DX,R,PHI,THETA)
-            IF( Z(I,J).GT.ZMAX ) ZMAX = Z(I,J)
-            IF( Z(I,J).LT.ZMIN ) ZMIN = Z(I,J)
-         enddo
+      ! Avoid the poles
+      dtheta  = 180.d0/(nt+1)
+      DO I = 1, Nt
+         THETA(I) = (I-0.5d0)*dtheta
       enddo
 
-      range = MAX(ABS(ZMIN),ABS(ZMAX))
-      ZNULL = 1.E-11*range
-      ZNULLM = 1.E-11
-      ZANULL = 1.E-13
-      ZSCALE = 1.E0
+      !-- BESTIMMUNG DER PLM(THETA) , ABSPEICHERUNG:
+      CALL STOREPLM(THETA, Nt)
 
-      !-------------------------------------------------------------------------
-      ! IDL
-      !-------------------------------------------------------------------------
-      write(*,*) 'writing files idl.z, idl.x, idl.y ...'
-
-      filez = 'idl.z'
-      filex = 'idl.x'
-      filey = 'idl.y'
-
-      open(21,file = filez,STATUS =  'UNKNOWN')
-      open(22,file = filex,STATUS =  'UNKNOWN')
-      open(23,file = filey,STATUS =  'UNKNOWN')
-
-      if (on_a_sphere.eq.1) then
-         DO I = 1,NMX
-            X = XMIN+(I-1)*XD
-            write(22,*) DBLE(X) + 180.
-         enddo
-         DO J = 1,NMY
-            write(23,*) THETA(J)-90.
-         enddo
-         do i = 1,nmx
-            do j = 1,nmy
-               write(21,*) z(i,j)
+      open(20,file ='glo-render.dat',STATUS =  'UNKNOWN')
+      do j=1, nt
+         do k=0, np
+            phi = k*(360.0/np)
+            do i=0, nr
+               r = ri + dble(i)/dble(nr)
+               Z = flow_r(DX, r, PHI, j)
+               
+               Write(20,*) '#,nmr,x,nmp,x,nmt'
+               Write(20,*) '#',nmr,'x',nmp,'x',nmt
+               Write(20,*) '#========================'
+               Write(20,*) r*sin((theta(j)-90.)*pi/180.0)*cos(phi*pi/180.0), &
+                           r*sin((theta(j)-90.)*pi/180.0)*sin(phi*pi/180.0), &
+                           r*cos((theta(j)-90.)*pi/180.0), &
+                           z
             enddo
          enddo
-      ELSE
-         do i = 1,nmx
-            do j = 1,nmy
-               write(21,*) z(i,j)
-               write(22,*) xidl(i,j)
-               write(23,*) yidl(i,j)
-            enddo
-         enddo
-      endif
-
-      close(21)
-      close(22)
-      close(23)
+      enddo
+      close(20)
    end subroutine plo
 
 
    !------------------------------------------------------------------------
-   ! Radiales Geschw.feld: U_r = L_2/r v
-   !
-   !     optimized for K = 0.
-   function flow_r(X,R,PHI,THETA)
+   !> Radiales flow: U_r = L_2/r v
+   double precision function flow_r(X,R,PHI,iTHETA)
       IMPLICIT none
-      double precision, intent(in):: x(:), R(:), theta(:), phi(:)
+      double precision, intent(in):: x(:), R, iTheta, phi
 
       PPHI = PHI*PI/180.D0
       RI = ETA/(1.D0-ETA)
@@ -322,44 +128,19 @@ contains
          ELSE
             EPSM = 2.D0
          endif
-         IF( K(I).EQ.0 ) THEN
-            EPSK = 1.D0
+
+         RFT = EPSM*L(I)*(L(I)+1)*PLMS(L(I),M(I),iTheta)*DSIN( N(I)*PI*(R-RI) ) / R
+
+         RFT = RFT
+
+         IF( CRR(I).EQ.'RR' ) THEN
+            RFT = RFT * X(I) * DCOS( M(I)*PPHI )
+         ELSEIF( CRR(I).EQ.'IR' ) THEN
+            RFT = -RFT * X(I) * DSIN( M(I)*PPHI )
          ELSE
-            EPSK = 2.D0
+            RFT = 0.D0
          endif
 
-         RFT = EPSM*EPSK*L(I)*(L(I)+1) * PLMS(L(I),M(I),NTHETA) / R
-
-         IF( whatToPlot(I).EQ.'V' ) THEN
-            RFT = RFT*DSIN( N(I)*PI*(R-RI) )
-         ELSEIF( whatToPlot(I).EQ.'H' ) THEN
-            NR = NAB(L(I),N(I))
-            IF( A(NR).EQ.0.D0 .OR. B(NR).EQ.0.D0 ) THEN
-               WRITE(*,*) 'ALPHA AND BETA NOT CALCULATED.'
-               STOP
-            endif
-            RFT = RFT*DCOS( A(NR)*R-B(NR) )
-         endif
-
-         if(K(I).EQ.0) then
-            IF( CRR(I).EQ.'RR' ) THEN
-               RFT = RFT * X(I) * DCOS( M(I)*PPHI )
-            ELSEIF( CRR(I).EQ.'IR' ) THEN
-               RFT = -RFT * X(I) * DSIN( M(I)*PPHI )
-            ELSE
-               RFT = 0.D0
-            endif
-         else
-            IF( CRR(I).EQ.'RR' ) THEN
-               RFT = RFT * X(I) * DCOS( M(I)*PPHI )
-            ELSEIF( CRR(I).EQ.'IR' ) THEN
-               RFT = -RFT * X(I) * DSIN( M(I)*PPHI )
-            ELSEIF( CRR(I).EQ.'RI' ) THEN
-               RFT = 0
-            ELSEIF( CRR(I).EQ.'II' ) THEN
-               RFT = 0
-            endif
-         endif
          flow_r = flow_r + RFT
       enddo
    end function
@@ -367,7 +148,7 @@ contains
    !------------------------------------------------------------------------
    !   Temperaturfeld Theta ( =  Abweichung vom Grundzust.)
    !   optimized for K = 0.
-   function TEMP(X,whatToPlot,R,PHI,NTHETA)
+   double precision function TEMP(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       CHARACTER*2 CRR,whatToPlot(:)
       integer, intent(in):: NTHETA
@@ -432,7 +213,7 @@ contains
    !              F_theta = r dphi g
    !
    !     optimized for K = 0.
-   function FT(X,whatToPlot,R,PHI,NTHETA)
+   double precision function FT(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       double precision, intent(in):: x(:)
       character(len=2), intent(in):: whatToPlot(:)
@@ -530,7 +311,7 @@ contains
    !              F_phi = r sin(theta) dtheta g
    !
    !     optimized for K = 0.
-   function FP(X,whatToPlot,R,PHI,NTHETA)
+   double precision function FP(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       double precision, intent(in):: x(:)
       integer, intent(in):: NTHETA
@@ -635,7 +416,7 @@ contains
    !                     F_r = - laplace h
    !
    !     optimized for K = 0.
-   function FR(X,whatToPlot,R,PHI,NTHETA)
+   double precision function FR(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -715,11 +496,10 @@ contains
       enddo
    end function fr
 
-
    !------------------------------------------------------------------------
    !     temperature field Theta + Ts
    !     optimized for K = 0.
-   function TT(X,whatToPlot,R,PHI,NTHETA)
+   double precision function TT(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -790,7 +570,7 @@ contains
    !------------------------------------------------------------------------
    !   local Nusselt number NU(r = ri)
    !   optimized for K = 0.
-   function localNusselt(X,whatToPlot,R,PHI,NTHETA)
+   double precision function localNusselt(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -859,7 +639,7 @@ contains
    !          < u_phi > = - dtheta w   (m = 0)
    !
    !     optimized for K = 0.
-   function flow_p_zonal(X,R,NTHETA)
+   double precision function flow_p_zonal(X,R,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -914,7 +694,7 @@ contains
    !     Uphi = 1/(r*sinphi) d^2/drdph rv - d/dth w
    !
    !     optimized for K = 0.
-   function flow_p(X,whatToPlot,R,PHI,NTHETA)
+   double precision function flow_p(X,whatToPlot,R,PHI,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -1047,7 +827,6 @@ contains
       enddo
    end function
 
-
    !------------------------------------------------------------------------
    !  phi-gemittelte Stomlinien des Poloidalfeldes fuer phi = konstant:
    !            < F_phi > = r sin(theta) dtheta h (m = 0)
@@ -1055,7 +834,7 @@ contains
    !            < F_phi > = r sin(theta) dtheta g (m = 0)
    !
    !     optimized for K = 0.
-   function DMPJ(X,whatToPlot,R,NTHETA)
+   double precision function DMPJ(X,whatToPlot,R,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -1140,7 +919,7 @@ contains
    !            dtheta laplace h  (m = 0).
    !
    !     optimized for K = 0.
-   function DMC(X,R,NTHETA)
+   double precision function DMC(X,R,NTHETA)
       IMPLICIT REAL*8(A-H,O-Z)
       integer, intent(in):: NTHETA
       double precision, intent(in):: x(:)
@@ -1199,281 +978,6 @@ contains
    end function dmc
 
    !------------------------------------------------------------------------
-   !  THIS PROGRAM FINDS THE A'S AND B'S OF THE POLODIAL MAGNETIC
-   !  FIELD TO FULLFILL THE BOUNDARY CONDITIONS:
-   !  A(I)*TAN(A(I)*RO-B(I))-(L+1)/RO = 0  AND
-   !  A(I)*TAN(A(I)*RI-B(I))+L/RI = 0 WITH A PRCISSION OF 1D-13.
-   !  THE A'S AND B'S ARE STORED LINEARLY IN THE ARRAYS, NAB(L,N)
-   !  DETERMINS THE POSITION IN THE ARRAY.
-   !  NEEDS functionS AMIN,NAB .
-   SUBROUTINE ABG(ND,whatToPlot,LA,NA)
-      IMPLICIT REAL*8(A-H,O-Y)
-      CHARACTER(len=1):: whatToPlot(:)
-      integer:: ND
-      double precision:: LA(:),NA(:)
-      double precision:: ri, ro
-
-      IF( NAM.NE.NAMC ) THEN
-         WRITE(*,*) 'WRONG DIMENSION NAM IN ABG.'
-         STOP
-      endif
-      IF( NLMA.NE.NLMAC ) THEN
-         WRITE(*,*) 'WRONG DIMENSION NLMA IN ABG.'
-         STOP
-      endif
-
-      CALL CALCNMAX(ND,whatToPlot,LA,NA)
-
-      RI = ETA/(1.D0-ETA)
-      RO = RI+1.D0
-      RIAB = RI
-      ROAB = RO
-      DAX = 1.D-3
-
-      IF( DAX.LT.RELE*1.D3 ) THEN
-         RELEAB = RELE*1.D-4
-      ELSE
-         RELEAB = RELE
-      endif
-      RELEAB = DMAX1(RELEAB,EPS)
-
-      IA = 1
-      DO 1000 NI = 1,NL
-         L = IABS(LC(NI))
-         NMAX = NMAXC(NI)
-
-         IF( NMAX.LE.0 ) THEN
-            cycle
-         ELSEIF( NMAX.GT.NAM ) THEN
-            WRITE(*,*) 'TOO SMALL NAM IN DABG.'
-            STOP
-         endif
-         N = 1
-         LAB = L
-         IF( RI.EQ.0 ) THEN
-            DO I = 0,2000
-               IF( I.EQ.0 ) THEN
-                  AXMIN = DAX
-               ELSE
-                  AXMIN = (I-0.5D0)*DPI+DAX
-               endif
-               AXMAX = (I+0.5D0)*DPI-DAX
-               IF( IA.GT.NAM ) THEN
-                  WRITE(*,*) 'TOO SMALL DIMENSION NAM IN ABG.'
-                  STOP
-               endif
-               AGUESS = AXMAX
-               LBT = 0
-90             A(IA) = AMINB(AGUESS)
-               IF( LBT.EQ.0 .AND. ( A(IA).LT.AXMIN .OR. A(IA).GT.AXMAX ) ) THEN
-                  LBT = 1
-                  AGUESS = AXMIN
-                  GOTO 90
-               ELSEIF( LBT.EQ.1 .AND. ( A(IA).LT.AXMIN .OR. A(IA).GT.AXMAX ) ) THEN
-                  WRITE(*,*) 'WRONG ALPHA!!!!'
-                  WRITE(*,'(X,'' IA,L,ALPHAMIN,ALPHA,ALPHAMAX: '',2I4,3D16.6)') IA,L,AXMIN,A(IA),AXMAX
-                  STOP
-               endif
-               B(IA) = 0.0D0
-               IA = IA+1
-               N = N+1
-               IF(N.GT.NMAX) GOTO 1000
-            enddo
-         ELSE
-            CD = DSQRT(L*(L+1)/RI/RO)
-            AXMIN = DAX
-            AXMAX = 0.5D0*DPI-DAX
-            IF(AXMAX.GT.CD) THEN
-               IF( IA.GT.NAM ) THEN
-                  WRITE(*,*) 'TOO SMALL DIMENSION NAM IN ABG.'
-                  STOP
-               endif
-               AGUESS = AXMAX
-               LBT = 0
-190            A(IA) = AMIN(AGUESS)
-               IF( LBT.EQ.0 .AND. ( A(IA).LT.AXMIN .OR. A(IA).GT.AXMAX ) ) THEN
-                  LBT = 1
-                  AGUESS = AXMIN
-                  GOTO 190
-               ELSEIF( LBT.EQ.1 .AND.  ( A(IA).LT.AXMIN .OR. A(IA).GT.AXMAX ) ) THEN
-                  WRITE(*,*) 'WRONG ALPHA!!!!'
-                  WRITE(*,'(X,'' IA,L,ALPHAMIN,ALPHA,ALPHAMAX: '',2I4,3D16.6)') IA,L,AXMIN,A(IA),AXMAX
-                  STOP
-               endif
-               B(IA) = A(IA)*RI+DATAN(L/A(IA)/RI)
-               IA = IA+1
-               N = N+1
-               IF(N.GT.NMAX) GOTO 1000
-            endif
-            DO I = 1,2000
-               DAX = 1D-3
-               AXMIN = (I-0.5D0)*DPI+DAX
-               AXMAX = (I+0.5D0)*DPI-DAX
-               IF(AXMIN.LT.CD .AND. AXMAX.GT.CD ) THEN
-                  IF( IA.GT.NAM ) THEN
-                     WRITE(*,*) 'TOO SMALL DIMENSION NAM IN ABG.'
-                     STOP
-                  endif
-                  AGUESS = AXMIN
-                  LBT = 0
-290               A(IA) = AMIN(AGUESS)
-                  IF( LBT.EQ.0 .AND. ( A(IA).LT.AXMIN .OR. A(IA).GT.AXMAX ) ) THEN
-                     LBT = 1
-                     AGUESS = AXMAX
-                     GOTO 290
-                  ELSEIF( LBT.EQ.1 .AND. ( A(IA).LT.AXMIN .OR. A(IA).GT.AXMAX ) ) THEN
-                     WRITE(*,*) 'WRONG ALPHA!!!!'
-                     WRITE(*,'(X,'' IA,L,ALPHAMIN,ALPHA,ALPHAMAX: '',2I4,3D16.6)') IA,L,AXMIN,A(IA),AXMAX
-                     STOP
-                  endif
-                  B(IA) = A(IA)*RI+DATAN(L/A(IA)/RI)
-                  IA = IA+1
-                  N = N+1
-                  IF(N.GT.NMAX) GOTO 1000
-               endif
-150            CONTINUE
-               IF( IA.GT.NAM ) THEN
-                  WRITE(*,*) 'TOO SMALL DIMENSION NAM IN ABG.'
-                  STOP
-               endif
-               AGUESS = AXMAX
-               LBT = 0
-390            A(IA) = AMIN(AGUESS)
-               IF( LBT.EQ.0 .AND. ( A(IA).LT.AXMIN .OR. A(IA).GT.AXMAX ) ) THEN
-                  LBT = 1
-                  AGUESS = AXMIN
-                  GOTO 390
-               ELSEIF( LBT.EQ.1 .AND. ( A(IA).LT.AXMIN .OR. A(IA).GT.AXMAX ) ) THEN
-                  WRITE(*,*) 'WRONG ALPHA!!!!'
-                  WRITE(*,'(X,'' IA,L,ALPHAMIN,ALPHA,ALPHAMAX: '',2I4,3D16.6)') IA,L,AXMIN,A(IA),AXMAX
-                  STOP
-               endif
-               B(IA) = A(IA)*RI+DATAN(L/A(IA)/RI)
-               IA = IA+1
-               N = N+1
-               IF(N.GT.NMAX) exit
-            enddo
-         endif
-1000  CONTINUE
-      DO I = 1,IA-1
-         IF( I.GT.1 .AND. ( A(I).GT.A(I-1)-RELE .AND. A(I).LT.A(I-1)+RELE ) ) THEN
-            WRITE(*,*) 'TWO ALPHAS EQUAL: ',A(I-1),A(I)
-            STOP
-         endif
-         DO J = 1,100
-            B(I) = B(I)-DPI
-            IF(B(I).LT.0.D0) THEN
-               B(I) = B(I)+DPI
-               exit
-            endif
-         enddo
-      enddo
-
-      IA = IA-1
-      WRITE(*,*) IA,' ALPHA AND BETA CALCULATED.'
-      NMABC = IA
-      DO I = 1,IA
-         WRITE(*,'(2X,I4,2D14.6)') I,A(I),B(I)
-      enddo
-   end SUBROUTINE abg
-
-   !------------------------------------------------------------------------
-   !  FINDS THE MINIMUM FOR THE function IN LINE 5 WITH A NEWTON METHOD.
-   function AMIN(AX)
-      IMPLICIT REAL*8(A-H,O-Y)
-      COMMON/ABMIN/RI,RO,RELE,L
-      ICOUNT = 0
-
-5     FA = DTAN(AX)-(L*RO+(L+1)*RI)*AX/(RI*RO*AX**2-L*(L+1))
-      FAA = 1D0/DCOS(AX)**2-( (L*RO+(L+1)*RI)*(RI*RO*AX**2-L*(L+1)) - &
-            AX*(L*RO+(L+1)*RI)*2*RI*RO*AX )/(RI*RO*AX**2-L*(L+1))**2
-      IF(FAA.EQ.0) THEN
-         AX = AX+RELE
-         GOTO 5
-      endif
-      DA = FA/FAA
-      AOX = AX
-      AX = AX-DA
-      IF(DABS(1-DABS(AOX/AX)).LT.RELE) THEN
-         AMIN = AX
-         RETURN
-      endif
-      ICOUNT = ICOUNT+1
-      IF(ICOUNT.GT.100) THEN
-         WRITE(*,*) 'NO ZERO FOUND IN DABG/AMIN.'
-         STOP
-      endif
-      GOTO 5
-   end function amin
-
-   !------------------------------------------------------------------------
-   !   FINDS THE MINIMUM FOR THE function IN LINE 5 WITH A NEWTON METHOD.
-   function AMINB(AX)
-      IMPLICIT REAL*8(A-H,O-Y)
-      COMMON/ABMIN/RI,RO,RELE,L
-      do
-         do
-            FA = DTAN(AX*RO)-(L+1)/AX/RO
-            FAA = RO/DCOS(AX*RO)**2+(L+1)/AX**2/RO
-            IF(FAA.EQ.0) THEN
-               AX = AX+RELE
-            else
-               exit
-            endif
-         enddo
-         DA = FA/FAA
-         AOX = AX
-         AX = AX-DA
-         IF(DABS(1-DABS(AOX/AX)).LT.RELE) THEN
-            AMINB = AX
-            RETURN
-         endif
-      enddo
-   end function aminb
-
-   !------------------------------------------------------------------------
-   !  DETERMINS THE POSITION OF AN A OR B IN THE ARRAY A(I),B(I)
-   !  DEPendING ON L AND N.
-   integer function NAB(L,N)
-      IMPLICIT REAL*8(A-H,O-Y)
-      integer, intent(in):: l,n
-      integer:: lmin, lmax, NI, ll
-
-      IF( NLMA.NE.NLMAC ) THEN
-         WRITE(*,*) 'WRONG DIMENSION NLMA IN NAB.'
-         STOP
-      endif
-
-      LMIN = LC(1)
-      LMAX = LC(NL)
-      IF( L.GT.LMAX .OR. L.LT.LMIN ) THEN
-         WRITE(*,*) 'WRONG L IN NAB',L,LMIN,LMAX
-         STOP
-      endif
-      NAB = 0
-      DO NI = 1,NL
-         LL = LC(NI)
-         NMAX = NMAXC(NI)
-         IF( LL.LT.L ) THEN
-            IF( NMAX.GT.0 ) NAB = NAB+NMAX
-         ELSEIF( LL.EQ.L ) THEN
-            IF( NMAX.LT.N ) THEN
-               WRITE(*,*) 'WRONG N IN NAB',N,NMAX
-               STOP
-            ELSE
-               NAB = NAB+N
-               RETURN
-            endif
-         endif
-      enddo
-
-      IF( N.GT.NMABC ) THEN
-         WRITE(*,*) 'N LARGER THE CALCULATED NUMBER OF A,B IN NAB: ',N,NMABC
-         STOP
-      endif
-   end function nab
-
-   !------------------------------------------------------------------------
    !-- CALCULATES THE MAXIMUM N FOR EACH L.
    !   THIS IS USED FOR CALCULATING THE RADIAL function OF H.
    SUBROUTINE CALCNMAX(NK,whatToPlot,L,N)
@@ -1506,50 +1010,33 @@ contains
       enddo
    end SUBROUTINE CALCNMAX
 
-   !----------------------------------------------------------------
-   SUBROUTINE READLA(STARTFILE,NUDSR,X)
+      !----------------------------------------------------------------
+   SUBROUTINE READLA(STARTFILE,X)
       IMPLICIT REAL*8(A-H,O-Z)
-      integer:: NUDSR
-      CHARACTER*1:: whatToPlot(:),CFS
-      CHARACTER*2:: CRR
+      CHARACTER*1 CF,CFS
+      CHARACTER*2 CRR
       CHARACTER*40 STARTFILE
-      double precision, intent(in):: x(:)
+      character(len=20):: title
+      double precision, intent(out):: x(:)
 
       IF( NM.NE.NMC ) THEN
          WRITE(*,*) 'WRONG DIMENSION NM IN READP.'
          STOP
-      endif
+      ENDIF
 
-      !-- IF LRT.EQ.0 WE ARE LOOKING FOR THE RIGHT NUMBER OF DATASET NUDSR,
-      !-- IF LRT.EQ.1 WE ARE LOOKING FOR THE RIGHT TIME.
       OPEN(12,FILE=STARTFILE,STATUS='old')
+      READ(12,*) title
 
-      !-- COUNTER AND LOGICALS SET TO ZERO:
-      NKZR=0
-
-      !-- LST IS FORMAT PARAMETER ( L=1 FOR HIRSCHING FORMAT ) ,
-      !   LCALCI TELLS HOW THE INPUTFILE HAS BEEN CALCULATED:
-      READ(12,*) LST,LCALC
-
-      !-- FUER LCALC.EQ.5 ODER LCALC.EQ.6 LIEGT ZEITINTEGRATION VOR ,
-      !   D.H. VERSCHIEDENEN ZEITEN MUESSEN IM INPUTFILE DURCH
-      !   READLA GESUCHT WERDEN. (LT=1), LTR=1 ZEIGT AN , DASS
-      !   ZEITINTEGRATION VORLIEGT UND DIE ZEIT GELESEN WERDEN MUSS:
-      IF( LCALC.EQ.5 .OR. LCALC.EQ.6 ) THEN
-         LT=1
-         LTR=1
-      ELSE
-         LT=0
-         LTR=0
-      endif
+      LT=0
 
       !-- READH READS THE HEADER OF THE INPUTFILE AND DETERMINS WETHER
-      CALL READH(12,LTR,NUDSR,LDR)
+      !   THE DATASET (dataSetNumber,TIME) IS THE RIGHT ONE (LDR=1):
+      CALL READH(12)
 
       !-- LOOKING FOR THE RIGHT DATASET:
       DO I=1,1000
          !----- READD READS FULL SET OF COEFFITIENTS:
-         CALL READD(12,LDR,ND,X,whatToPlot,CRR,L,M,N,K, EVPM,EVPF,EVTM,DNU,EVTF,EMPM,EMPF,EMTM,EMTF)
+         CALL READD(12,ND,X,CF,CRR,L,M,N,K)
          IF( LDR.EQ.1 ) exit
       enddo
 
@@ -1560,11 +1047,55 @@ contains
       TA=TA**2
 
       LSX=1
-      CALL SORTK(ND,LSX,X,whatToPlot,CRR,L,M,N,K,NUC,NUOM)
-      CALL RDIM(ND,whatToPlot,CRR,L,M,N,K,CFS,LS,MS,NS, &
+      CALL SORTK(ND,LSX,X,CF,CRR,L,M,N,K,NUC,NUOM)
+      CALL RDIM(ND,CF,CRR,L,M,N,K,CFS,LS,MS,NS, &
                        NDV,NDW,NDT,NDH,NDG,NDVS,NDWS,NDTS,NDHS,NDGS,NDS)
       CLOSE(12)
-   end SUBROUTINE READLA
+   END SUBROUTINE READLA
+
+   !--------------------------------------------------------------------------
+   subroutine READH(unit_in)
+      IMPLICIT none
+      READ(unit_in,*) M0, Truncation
+      READ(unit_in,*) TA, Rt, Rc, Pt, Pc, eta
+   END subroutine readh
+
+   !--------------------------------------------------------------------------
+   subroutine READD(unit_in,NKR,XR,CFR,CRRR,LR,MR,NR,KR)
+      IMPLICIT none
+      CHARACTER(len=1):: CFR(:)
+      CHARACTER(len=2):: CRRR(:)
+      integer:: err
+
+      DIMENSION XR(*),LR(*),MR(*),NR(*),KR(*)
+
+      NKR=0
+
+      do
+         READ(unit_in,'(1X,A1,3I3,2D16.8)',status=err) CFI,LI,MI,NI,DRR,DIR
+         if (err.ne.0) exit
+         NKR=NKR+1
+         CFR(NKR)=CFI
+         CRRR(NKR)='RR'
+         LR(NKR)=LI
+         MR(NKR)=MI
+         NR(NKR)=NI
+         XR(NKR)=DRR
+         IF( MI.NE.0 ) THEN
+            NKR=NKR+1
+            CFR(NKR)=CFI
+            CRRR(NKR)='IR'
+            LR(NKR)=LI
+            MR(NKR)=MI
+            NR(NKR)=NI
+            XR(NKR)=DIR
+         ENDIF
+       enddo
+   END subroutine
+
+! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
+
+
 
 end PROGRAM LARA
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab
