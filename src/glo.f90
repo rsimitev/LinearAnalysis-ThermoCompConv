@@ -315,7 +315,7 @@ contains
       double Complex:: frequency
       INTEGER:: M0I(nm0),LLI(nm0)
       INTEGER, save:: NTRYCOUNT=0
-      integer:: first_m0, first_lmin, i, ii
+      integer:: first_m0, i, ii
       integer:: info, idx
 
       info=0
@@ -385,8 +385,8 @@ contains
       implicit none
       double precision:: GroR, Omega, Ta
       complex(8), allocatable:: ZEVEC(:), zew(:), ZEVAL(:,:)
-      integer:: info, i, ni, li, lti, lpi, Nmodes
-      integer:: nuom, MF, LMAX, NIMAX
+      integer:: i, ni, li, lti, lpi, Nmodes, ld
+      integer:: LMAX, NIMAX, LMIN
 
       Ta = TAU*TAU
       ! find the zero grothrate:
@@ -400,20 +400,12 @@ contains
       GROR  = DIMAG(zew(1))
       Omega = -dble(zew(1))
       zevec(:) = zeval(:,1)
+      call setLminAndLD(Symmetry, m0, LMIN, LD)
 
-      IF(info.NE.0) THEN
-         WRITE(unitOut,*) 'NO CRITICAL RAYLEIGH NUMBER FOUND.'
-         STOP NO_RA_FOUND
-      endif
       ! print eigenvector
-      ! Fileformat for outputfile:
-      ! outputFormat=0 formatted Wicht
-      ! outputFormat=1 formatted Hirsching
-      ! outputFormat=3 unformatted
-      outputFormat=0
       WRITE(unitOut,*) '# Linear onset coefficients'
       WRITE(unitOut,'(3I5,2D16.8,'' M0, TRUNC, LD, GR, DRIFT'')')  M0, Truncation, LD, GROR, Omega
-      WRITE(unitOut, '(2D14.6,D9.2,D13.6,D9.2,'' Ta, Rt, Rc, Pt, Pc, eta'')') Ta, Rt, Rc, Pt, Pc, ETA
+      WRITE(unitOut, '(2D14.6,D9.2,D13.6,D9.2,'' Ta, Rt, Rc, Pt, Pc, eta'')') Ta, Rt, Rc, Pt, Le/Pt, ETA
 
       LMAX=2*Truncation+M0-1
       ! poloidal flow:
@@ -659,7 +651,7 @@ contains
          if (dRtRel .le. 1.0d-7) exit
          ! Reset the limits for the m's.
          LowerLimit = m0+7
-         if(LowerLimit==0.or.m0==0) LowerLimit=20
+         if(nint(LowerLimit)==0.or.m0==0) LowerLimit=20
          ! Update the Rc steps
          dRc_old = dRc
          if(counter.lt.2) then

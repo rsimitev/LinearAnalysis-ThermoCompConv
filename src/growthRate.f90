@@ -12,9 +12,11 @@ module GrowthRateMod
    integer, parameter:: ANTISYMMETRIC=1
    integer, parameter:: NOSYMMETRY=0
    integer:: Symmetry_i, mm_i, NEigenmodes, lmin, ld, Truncation_i
+   public:: GrowthRateInit, GrowthRateInitAlpha
+   public:: GrowthRateUpdatePar, GrowthRateUpdateParAlpha
    public:: MaxGrowthRate, MaxGrowthRateCmplx, computeGrowthRateModes
-   public:: setEigenProblemSize, getEigenProblemSize, GrowthRateInit, setVariableParam
-   public:: testMAT, setLminAndLD, GrowthRateUpdatePar
+   public:: setEigenProblemSize, getEigenProblemSize,  setVariableParam
+   public:: testMAT, setLminAndLD
    public:: setParameterValue,saveParameterValue
    
 contains
@@ -54,19 +56,46 @@ contains
 
    !***********************************************************************
    !> Updates the specified parameters.
-   !> @par Ra is the effective Rayleigh number
-   !> @par alpha is the Rayleigh angle
-   subroutine GrowthRateUpdatePar(Ra, alpha, Rt, Rc, Pt, Le, tau, eta, m, Symmetry, truncation)
+   subroutine GrowthRateUpdatePar(Rt, Rc, Pt, Le, tau, eta, m, Symmetry, truncation)
       implicit none
-      double precision, optional, intent(in)::Rt, Rc, Pt, Le, tau, eta, Ra, alpha
+      double precision, optional, intent(in)::Rt, Rc, Pt, Le, tau, eta
       integer,optional, intent(in):: m, Symmetry, truncation
       if(present(Rt))  Rt_i  = Rt
       if(present(Rc))  Rc_i  = Rc
       if(present(Pt))  Pt_i  = Pt
       if(present(Le))  Le_i  = Le
       if(present(tau)) tau_i = tau
-      if(present(Ra))  Ra_i  = Ra
-      if(present(alpha))  alpha_i  = alpha
+      if(present(eta)) then
+         eta_i = eta
+         ri = eta_i/(1.0d0-eta_i)
+         ro = 1.0D0 + ri
+      endif
+      if(present(m))          mm_i         = m
+      if(present(Symmetry))   Symmetry_i   = Symmetry
+      if(present(truncation)) truncation_i = truncation
+      if(present(m) .or. present(Symmetry) .or.  present(truncation)) then
+         call setLminAndLD(Symmetry_i, mm_i, LMIN, LD)
+         call setEigenProblemSize(LMIN,LD,truncation_i,mm_i)
+      endif
+   end subroutine
+   
+   !***********************************************************************
+   !> Updates the specified parameters.
+   !> @par Ra is the effective Rayleigh number
+   !> @par alpha is the Rayleigh angle
+   subroutine GrowthRateUpdateParAlpha(Ra, alpha, Pt, Le, tau, eta, m, Symmetry, truncation)
+      implicit none
+      double precision, optional, intent(in):: Ra, alpha, Pt, Le, tau, eta
+      integer,optional, intent(in):: m, Symmetry, truncation
+      if(present(Pt))  Pt_i  = Pt
+      if(present(Le))  Le_i  = Le
+      if(present(tau)) tau_i = tau
+      if(present(Ra).or.present(alpha)) then
+         if(present(Ra)) Ra_i = Ra
+         if(present(alpha))  alpha_i  = alpha
+         Rt_i = Ra_i*cos(alpha_i)
+         Rc_i = Ra_i*sin(alpha_i)
+      endif
       if(present(eta)) then
          eta_i = eta
          ri = eta_i/(1.0d0-eta_i)
@@ -135,7 +164,6 @@ contains
       getEigenProblemSize = NEigenModes
    end function
 
-
    !***********************************************************************
    !> Sets which parameter is going to be varied.
    !! Possible values for par are Ra, aa, Rt, Rc, Pt, Le, tau, eta and m.\n
@@ -160,8 +188,12 @@ contains
       select case(trim(variable))
          case ('Ra')
             Ra_i = val
+            Rt_i = Ra_i*cos(alpha_i)
+            Rc_i = Ra_i*sin(alpha_i)
          case ('aa')
             alpha_i = val
+            Rt_i = Ra_i*cos(alpha_i)
+            Rc_i = Ra_i*sin(alpha_i)
          case ('Rt')
             Rt_i = val
          case ('Rc')
@@ -188,6 +220,10 @@ contains
       implicit none
       double precision, intent(out):: val
       select case(trim(variable))
+         case ('Ra')
+            val = Ra_i
+         case ('aa')
+            val = alpha_i
          case ('Rt')
             val = Rt_i
          case ('Rc')
@@ -401,7 +437,7 @@ contains
                   J=J+1
                enddo
             enddo
-             I=I+1
+            I=I+1
          enddo
       enddo
    end subroutine
@@ -473,17 +509,17 @@ contains
                !  ******************** I+3: w (toroidal)  ******************
                ! new****************** I+4: gamma (concentration) **********
                DO NJ=1,NJMAX
-                  do k1=1, 4
-                     do k2=1, 4
+                  do k1=0, 3*NEigenModes/4, NEigenModes/4
+                     do k2=0, 3*NEigenModes/4, NEigenModes/4
                         Read(444,*) ZA_ref
-                        Write(*,*) 'ZA(',i+k1,',',j+k2,')=',ZA(i+k1,j+k2),'.vs.',ZA_ref
-                        if(abs(ZA(i+k1,j+k2)-ZA_ref)/abs(ZA_ref).gt.1.0e-10) then
+                        Write(*,*) 'ZA(',i+k1+1,',',j+k2+1,')=',ZA(i+k1+1,j+k2+1),'.vs.',ZA_ref
+                        if(abs(ZA(i+k1+1,j+k2+1)-ZA_ref)/abs(ZA_ref).gt.1.0e-10) then
                            error=1
                            return
                         endif
                         Read(445,*) ZB_ref
-                        Write(*,*) 'ZB(',i+k1,',',j+k2,')=',ZB(i+k1,j+k2),'.vs.',ZB_ref
-                        if(abs(ZB(i+k1,j+k2)-ZB_ref)/abs(ZB_ref).gt.1.0e-10) then
+                        Write(*,*) 'ZB(',i+k1+1,',',j+k2+1,')=',ZB(i+k1+1,j+k2+1),'.vs.',ZB_ref
+                        if(abs(ZB(i+k1+1,j+k2+1)-ZB_ref)/abs(ZB_ref).gt.1.0e-10) then
                            error=2
                            return
                         endif

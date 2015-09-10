@@ -5,7 +5,7 @@
 #include "version.h"
 program CriticalRaEff
    use parameters
-   use GrowthRateRaEffMod
+   use GrowthRateMod
    use CritRaEff_io
    implicit none
    type GlobalCrit
@@ -38,7 +38,7 @@ program CriticalRaEff
    call getarg(2,outfile)
    print*,  trim(infile),' - ',trim(outfile)
 
-   call init(trim(infile),trim(outfile))
+   call init(trim(infile))
    Print*, 'Out of init()'
 
    call createAlphas(alphas)
@@ -55,9 +55,9 @@ contains
 
    !**********************************************************************
    !> Initialises things.
-   subroutine init(inputfile,outputfile)
+   subroutine init(inputfile)
       implicit none
-      CHARACTER(len=*) inputfile,outputfile
+      CHARACTER(len=*), intent(in)::  inputfile
 
       ! ----Default values:
       call setDefaults()
@@ -70,7 +70,7 @@ contains
         M0 = 1
       ENDIF
 
-      call GrowthRateInit(Ra, alpha, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+      call GrowthRateInitAlpha(Ra, alpha, Pt, Le, tau, eta, m0, Symmetry, Truncation)
       call setVariableParam('Ra ')
 
    end subroutine
@@ -101,7 +101,6 @@ contains
       double precision, intent(out):: crit(:,:)
       double precision:: CriticalRa, CriticalRaAlpha0
       double precision:: RaMin, RaMax, gr1,gr2
-      double complex:: frequency
       integer:: i, N, HalfN
       integer:: info, counter
 
@@ -114,7 +113,7 @@ contains
 
       RaMin = 0
       RaMax = 10*Ra
-      call GrowthRateUpdatePar(alpha=0.0d0)
+      call GrowthRateUpdateParAlpha(alpha=0.0d0)
       ! At this point a critical Ra is certain to exist so,
       ! increase the interval, until we find it.
       do
@@ -134,7 +133,7 @@ contains
       CriticalRaAlpha0 = CriticalRa
       ! Compute the positive half of the alphas
       do i=HalfN, N
-         call GrowthRateUpdatePar(Ra=CriticalRa, alpha=alpha(i))
+         call GrowthRateUpdateParAlpha(Ra=CriticalRa, alpha=alpha(i))
          RaMin = 0.05d0*CriticalRa
          RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
@@ -162,7 +161,7 @@ contains
       CriticalRa = CriticalRaAlpha0
       ! and the negative half
       do i=HalfN-1, 1, -1
-         call GrowthRateUpdatePar(Ra=CriticalRa, alpha=alpha(i))
+         call GrowthRateUpdateParAlpha(Ra=CriticalRa, alpha=alpha(i))
          RaMin = 0.05d0*CriticalRa
          RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
@@ -208,7 +207,7 @@ contains
       enddo
 
       do m=1, m0
-         call GrowthRateUpdatePar(m=m)
+         call GrowthRateUpdateParAlpha(m=m)
          Write(*,*) 'Computing critical value for m =', m
          if(wasPreviouslyComputed(m)) then
             call readCriticalCurveSingleM(crit_new,m)
@@ -243,7 +242,7 @@ contains
       info  = 0
       crit_new(:,1) = huge(1.0d0)
       crit_new(:,2) = 0.0d0
-      call GrowthRateUpdatePar(m=m0)
+      call GrowthRateUpdateParAlpha(m=m0)
       Write(*,*) 'Computing critical value for m =', m0
       if(wasPreviouslyComputed(m0)) then
          call readCriticalCurveSingleM(crit_new,m0)
