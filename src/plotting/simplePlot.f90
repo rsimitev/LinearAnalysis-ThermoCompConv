@@ -6,25 +6,16 @@
 !-- Output:
 !--
 !------------------------------------------------------------------------
-PROGRAM LARA
+PROGRAM simplePlot
    use parameters
+   use growthRateMod
+   use plms_mod
    implicit none
    double precision, parameter:: PI = 3.14159265358979D0
-   integer, parameter:: nr=41, nt=360, np=720
-   integer, PARAMETER:: NM = 5500, NAM = 400
-   integer, PARAMETER:: NLMA = 100
-   integer, PARAMETER:: NMX = 65, NMY = 128
-   integer:: NMC
-   integer:: LR, NQ, NR, n, l
-   CHARACTER*40:: INPUTFILE,OUTPUTFILE
-   CHARACTER*1:: CFS
-   CHARACTER*2:: CRR
-   INTEGER:: i, j
-   double precision:: THETA(NMC)
-   double precision:: dt
+   integer, parameter:: nr=33, nt=180, np=360
+   CHARACTER*40:: INFILE,OUTFILE
 
-   double precision:: DX(NM)
-   type eigenElement
+   type:: eigenElement
       integer:: n
       integer:: l
       integer:: m
@@ -32,268 +23,149 @@ PROGRAM LARA
       double precision:: realPart
       double precision:: imagPart
    end type
-   
+   type(eigenElement), target, allocatable:: eigenVector(:)
+!---------------------------------------------------------
+!  arg #1 - filename or usage ?
+   call getarg(1,infile)
+   if (infile.eq.' ') then
+      print*, 'Usage : '
+      print*, 'lara <in file> <out file>'
+      stop
+   endif
+   if (infile.eq.'-h') then
+      print*, 'Usage : '
+      print*, 'lara <in file> <out file>'
+      stop
+   endif
 
-   ZDO = 0.E0
+   call getarg(2,outfile)
+   print*,  trim(infile),' - ',trim(outfile)
 
-   RELE = 1.D-9
-   EPS = 1.D-13
-
-   !-- INPUT:
-   LR = 0
-   NQ = 0
-   NR = 0
-
-   READ(*,*)
-   READ(*,*) INPUTFILE,OUTPUTFILE
-
-   OPEN(14,FILE = OUTPUTFILE,STATUS = 'unknown')
-   write(14,*) 'Inputfile: ',INPUTFILE
-   write(*,'(A,A,I3,D9.2)') 'reading data from ',INPUTFILE,'...'
-   CALL READLA(INPUTFILE,DX)
+   write(*,*) 'reading data from ',INFILE,'...'
+   CALL READLA(INFILE)
    write(*,*) '...done'
-   RA = RAI
-   TA = TAI
-   PR = PRI
-   PM = PMI
-   ETA = ETAI
-   C = CI
-   OM = OMI
-   MF = 0
-   M0 = M0I
-   NTH = NTHI
-   LTH = LTHI
-   KTV = KTVI
-   KTH = KTHI
-   LD = LDI
-   LEV = LEVI
-   LRB = LRBI
-
-   !-- CALCULATION OF INNER AND OUTER RADIUS:
-   RI = ETA/(1.D0-ETA)
-   RO = 1.D0+RI
-
-   CALL READLA(INPUTFILE,DX)
-   CALL PLO(DX)
-
-   CLOSE(14)
+   
+   CALL Plot()
 
 contains
 
    !------------------------------------------------------------------------
    !     calculates the field Z and makes one subplot.
-   SUBROUTINE PLO(dx)
-      
-      double precision, intent(in):: DX(:)
+   SUBROUTINE Plot()
+      implicit none
       double precision:: THETA(Nt), r, phi, dtheta
+      double precision:: ri, z
+      integer:: i, j, k
+      !-- CALCULATION OF INNER AND OUTER RADIUS:
+      RI = ETA/(1.D0-ETA)
 
       write(*,*) 'computing the fields...'
-
       ! Avoid the poles
       dtheta  = 180.d0/(nt+1)
       DO I = 1, Nt
          THETA(I) = (I-0.5d0)*dtheta
       enddo
+      
+      ! Find the highest l or m that we need to compute
+      ! Reuse k for that so we don't have to create a new variable
+      k=0
+      DO i=1, size(eigenVector)
+         if (eigenVector(i)%m.gt.k) k = eigenVector(i)%m
+         if (eigenVector(i)%l.gt.k) k = eigenVector(i)%l
+      enddo
 
       !-- BESTIMMUNG DER PLM(THETA) , ABSPEICHERUNG:
-      CALL STOREPLM(THETA, Nt_s)
+      
+      CALL STOREPLM( THETA, Nt, k )
 
       open(20,file ='glo-render.dat',STATUS =  'UNKNOWN')
-      do j=1, nt
+      Write(20,*) '#,nt,x,np,x,nr'
+      Write(20,*) '#',nt,'x',np+1,'x',nr+1
+      Write(20,*) '#========================'
+      do i=0, nr
+         r = ri + dble(i)/dble(nr)
          do k=0, np
             phi = k*(360.0/np)
-            do i=0, nr
-               r = ri + dble(i)/dble(nr)
-               Z = flow_r(DX, r, PHI, j)
-               
-               Write(20,*) '#,nmr,x,nmp,x,nmt'
-               Write(20,*) '#',nmr,'x',nmp,'x',nmt
-               Write(20,*) '#========================'
-               Write(20,*) r*sin((theta(j)-90.)*pi/180.0)*cos(phi*pi/180.0), &
-                           r*sin((theta(j)-90.)*pi/180.0)*sin(phi*pi/180.0), &
-                           r*cos((theta(j)-90.)*pi/180.0), &
+            do j=1, nt
+               Z = flow_r(eigenVector, r, PHI, j)
+               Write(20,*) r*sin((theta(j))*pi/180.0)*cos(phi*pi/180.0), &
+                           r*sin((theta(j))*pi/180.0)*sin(phi*pi/180.0), &
+                           r*cos((theta(j))*pi/180.0), &
                            z
             enddo
          enddo
       enddo
       close(20)
-   end subroutine plo
-
+   end subroutine plot
 
    !------------------------------------------------------------------------
-   !> Radiales flow: U_r = L_2/r v
-   double precision function flow_r(X,R,PHI,iTHETA)
+   !> Radial flow: U_r = L_2/r v
+   double precision function flow_r(eigenVector,R,PHI,iTHETA)
       IMPLICIT none
-      double precision, intent(in):: x(:), R, iTheta, phi
+      type(eigenElement)::eigenVector(:)
+      double precision, intent(in):: R, phi
+      double precision:: ri, rft, epsm, pphi
+      integer, intent(in):: iTheta
+      integer:: i
+      integer:: l, m, n
 
       PPHI = PHI*PI/180.D0
+      !-- CALCULATION OF INNER AND OUTER RADIUS:
       RI = ETA/(1.D0-ETA)
-      RF = 0.D0
 
-      DO I = NDOMIN,NDOMAX
-         IF( M(I).EQ.0 ) THEN
+      flow_r = 0.0d0
+      DO i=1, size(eigenVector)
+         if (eigenVector(i)%fieldCode.ne.'V') cycle
+         IF( eigenVector(i)%M.EQ.0 ) THEN
             EPSM = 1.D0
          ELSE
             EPSM = 2.D0
          endif
 
-         RFT = EPSM*L(I)*(L(I)+1)*PLMS(L(I),M(I),iTheta)*DSIN( N(I)*PI*(R-RI) ) / R
+         l = eigenVector(i)%l
+         m = eigenVector(i)%m
+         n = eigenVector(i)%n
+         RFT = EPSM*l*(l+1)*PLMS(L,M,iTheta)*DSIN( N*PI*(R-RI) ) / R
 
-         RFT = RFT
-
-         IF( CRR(I).EQ.'RR' ) THEN
-            RFT = RFT * X(I) * DCOS( M(I)*PPHI )
-         ELSEIF( CRR(I).EQ.'IR' ) THEN
-            RFT = -RFT * X(I) * DSIN( M(I)*PPHI )
-         ELSE
-            RFT = 0.D0
-         endif
+         RFT = RFT * eigenVector(I)%realPart * DCOS( M*PPHI )
+         RFT = RFT - RFT * eigenVector(I)%ImagPart * DSIN( M*PPHI )
 
          flow_r = flow_r + RFT
       enddo
    end function
 
    !------------------------------------------------------------------------
-   !   Temperaturfeld Theta ( =  Abweichung vom Grundzust.)
-   !   optimized for K = 0.
-   double precision function TEMP(X,whatToPlot,R,PHI,NTHETA)
-      IMPLICIT REAL*8(A-H,O-Z)
-      CHARACTER*2 CRR,whatToPlot(:)
-      integer, intent(in):: NTHETA
-      double precision, intent(in):: x(:)
+   SUBROUTINE READLA(STARTFILE)
+      IMPLICIT none
+      CHARACTER(len=*)::STARTFILE
+      character(len=128):: title
+      integer, parameter:: unit_in=12
+      integer:: LMIN, LD, nElements, i
 
-      IF( NM.NE.NMC ) THEN
-         WRITE(*,*) 'WRONG DIMENSION NM IN TEMP.'
-         STOP
-      endif
-
-      TEMP = 0.D0
-      PPHI = PHI*PI/180.D0
-      RI = ETA/(1.D0-ETA)
-      IF( whatToPlot.EQ.'TE' ) THEN
-         NDOMIN = 1+NDV+NDW
-         NDOMAX = NDV+NDW+NDT
-      ELSE
-         WRITE(*,*) 'WRONG whatToPlot IN TEMP, SHOULD BE TE BUT IS: ',whatToPlot
-         STOP
-      endif
-
-      DO I = NDOMIN, NDOMAX
-         IF( whatToPlot(I).NE.'T' ) THEN
-            WRITE(*,*) 'WRONG whatToPlot IN TEMP, SHOULD BE T BUT IS: ', whatToPlot(I)
-            STOP
-         endif
-         IF( M(I).EQ.0 ) THEN
-            EPSM = 1.D0
-         ELSE
-            EPSM = 2.D0
-         endif
-         IF( K(I).EQ.0 ) THEN
-            EPSK = 1.D0
-         ELSE
-            EPSK = 2.D0
-         endif
-         TEM = EPSM*EPSK*PLMS(L(I),M(I),NTHETA)*DSIN( N(I)*PI*(R-RI) )
-
-         if(K(I).EQ.0) then
-            IF( CRR(I).EQ.'RR' ) THEN
-               TEM = TEM * X(I) * DCOS( M(I)*PPHI )
-            ELSEIF( CRR(I).EQ.'IR' ) THEN
-               TEM = -TEM * X(I) * DSIN( M(I)*PPHI )
-            ELSE
-               TEM = 0.D0
-            endif
-         else
-            IF( CRR(I).EQ.'RR' ) THEN
-               TEM = TEM * X(I) * DCOS( M(I)*PPHI )
-            ELSEIF( CRR(I).EQ.'IR' ) THEN
-               TEM = -TEM * X(I) * DSIN( M(I)*PPHI )
-            endif
-         endif
-         TEMP = TEMP+TEM
+      OPEN(unit_in,FILE=STARTFILE,STATUS='old')
+      title='#'
+      do while (title(1:1)=='#')
+         READ(unit_in,*) title
+         title = adjustl(title)
       enddo
-   end function temp
+      backspace(unit_in)
+      READ(unit_in,*) M0, Truncation, symmetry
+      READ(unit_in,*) tau, Rt, Rc, Pt, Le, eta
 
-   !----------------------------------------------------------------
-   SUBROUTINE READLA(STARTFILE,X)
-      IMPLICIT REAL*8(A-H,O-Z)
-      CHARACTER*1 CF,CFS
-      CHARACTER*2 CRR
-      CHARACTER*40 STARTFILE
-      character(len=20):: title
-      double precision, intent(out):: x(:)
-
-      IF( NM.NE.NMC ) THEN
-         WRITE(*,*) 'WRONG DIMENSION NM IN READP.'
-         STOP
-      ENDIF
-
-      OPEN(12,FILE=STARTFILE,STATUS='old')
-      READ(12,*) title
-
-      LT=0
-
-      !-- READH READS THE HEADER OF THE INPUTFILE AND DETERMINS WETHER
-      !   THE DATASET (dataSetNumber,TIME) IS THE RIGHT ONE (LDR=1):
-      CALL READH(12)
-
-      !-- LOOKING FOR THE RIGHT DATASET:
-      DO I=1,1000
-         !----- READD READS FULL SET OF COEFFITIENTS:
-         CALL READD(12,ND,X,CF,CRR,L,M,N,K)
-         IF( LDR.EQ.1 ) exit
+      call setLminAndLD(Symmetry, m0, LMIN, LD) 
+      call setEigenProblemSize(LMIN,LD,truncation,M0)
+      nElements = getEigenProblemSize()
+      allocate (eigenVector(nElements))
+      do i=1, nElements
+         read(unit_in,*) eigenVector(i)%fieldCode, &
+                         eigenVector(i)%l, &
+                         eigenVector(i)%m, &
+                         eigenVector(i)%n, &
+                         eigenVector(i)%RealPart, &
+                         eigenVector(i)%ImagPart
       enddo
-
-      if(ND.GT.NM) then
-        write(*,*) 'To small dimension NM in READLA'
-        stop
-      endif
-      TA=TA**2
-
-      LSX=1
-      CALL SORTK(ND,LSX,X,CF,CRR,L,M,N,K,NUC,NUOM)
-      CALL RDIM(ND,CF,CRR,L,M,N,K,CFS,LS,MS,NS, &
-                       NDV,NDW,NDT,NDH,NDG,NDVS,NDWS,NDTS,NDHS,NDGS,NDS)
-      CLOSE(12)
+      close(unit_in)
    END SUBROUTINE READLA
 
-   !--------------------------------------------------------------------------
-   subroutine READH(unit_in)
-      IMPLICIT none
-      READ(unit_in,*) M0, Truncation
-      READ(unit_in,*) TA, Rt, Rc, Pt, Pc, eta
-   END subroutine readh
-
-   !--------------------------------------------------------------------------
-   subroutine READD(unit_in,NKR,FieldValue,FieldCode,RealOrImag,LR,MR,NR,KR)
-      IMPLICIT none
-      CHARACTER(len=1):: FieldCode(:)
-      CHARACTER(len=2):: RealOrImag(:)
-      integer:: err
-
-      DIMENSION FieldValue(*),LR(*),MR(*),NR(*),KR(*)
-
-      NKR=0
-
-      do
-         READ(unit_in,'(1X,A1,3I3,2D16.8)',status=err) QuantI,LI,MI,NI,RealPart,ImagPart
-         if (err.ne.0) exit
-         NKR=NKR+1
-         FieldCode(NKR)  = QuantI
-         LR(NKR)         = LI
-         MR(NKR)         = MI
-         NR(NKR)         = NI
-         FieldValue(NKR)=RealPart
-         IF( MI.NE.0 ) THEN
-            NKR=NKR+1
-            FieldCode(NKR)=QuantI
-            LR(NKR)=LI
-            MR(NKR)=MI
-            NR(NKR)=NI
-            FieldValue(NKR)=ImagPart
-         ENDIF
-       enddo
-   END subroutine
-
-end PROGRAM LARA
+end PROGRAM simplePlot
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab

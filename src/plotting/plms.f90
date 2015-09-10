@@ -1,11 +1,13 @@
 module plms_mod
 
    private
-   double precision, allocatable:: plmst(:,:) ! nmt,nmlm
-   double precision:: nmtc,nmlc,nmts,nmls,nml
+   double precision, parameter:: pi   = 3.141592653589793d0
+   double precision, allocatable:: plmst(:,:)
+   integer:: Nlm_i, maxl_i
    public:: plms, storeplm
 
 contains
+
    !**********************************************************************
    !*     provides the value of PLM at angle theta = theta(NTHETA)
    !*     plms() reads it from COMMON/PLMC/PLMST(NMT,NMLM), where it was
@@ -13,14 +15,11 @@ contains
    !**********************************************************************
    double precision FUNCTION PLMS(L,M,iTHETA)
       IMPLICIT none
-      IMPLICIT INTEGER*4(I-N)
-      PARAMETER(NMT=512,NMLM=4000)
+      integer, intent(in):: l, m, itheta
+      integer:: lm
 
-      COMMON/PLMC/PLMST(NMT,NMLM),NMTC,NMLMC,NMTS,NMLMS,NML
-
-      IF( L.GT.NML ) THEN
+      IF( L .GT. maxl_i ) THEN
          WRITE(*,*) 'SORRY, PLM FOR THIS L HAS NOT BEEN STORED.',L
-         WRITE(*,*) 'PLEASE INCREASE NML IN SUBROUTINE STOREPLM.'
          STOP
       ENDIF
 
@@ -29,10 +28,10 @@ contains
          RETURN
       ENDIF
 
-      LM = M*(NML+1) - (M*(M-1))/2
+      LM = M*(maxl_i+1) - (M*(M-1))/2
       !-- add offset for the right L:
       LM = LM+L-M+1
-      IF( LM.GT.NMLMS ) THEN
+      IF( LM.GT.Nlm_i ) THEN
          WRITE(*,*) 'SORRY, PLM HAS NOT BEEN STORED FOR L,M = ',L,M
          STOP
       ENDIF
@@ -46,36 +45,31 @@ contains
    !-- THETA HAS TO BE GIVEN IN DEGREES.
    !   The plm's here are fully normalised!
    !   There is no sign change.
-   subroutine storeplm(theta,nmtheta)
+   subroutine storeplm(theta, ntheta, maxml)
       implicit none
-      dimension theta(*)
-      PARAMETER(NMT=512,NMLM=4000)
+      integer, intent(in):: ntheta, maxml
+      double precision, intent(in):: theta(ntheta)
+      double precision:: thetar, sinth, sinthm, costh, fac
+      double precision:: plm, plm1, plm2
+      integer:: lm, i, m, l, j
 
-      common/plmc/plmst(nmt,nmlm),nmtc,nmlc,nmts,nmls,nml
-
-      pi   = 3.141592653589793d0
-      nmtc = nmt
-      nmlc = nmlm
-      ! max. value of M and L:
-      nml=80
-
-      if(nmtheta.GT.nmt) then
-        write(*,*) 'STOREPLM: nmtheta.GT.nmt!'
-        stop
-      endif
+      maxl_i = maxml
+      Nlm_i  = (maxl_i+2)*(maxl_i+1)/2
+      if(allocated(plmst)) deallocate(plmst)
+      allocate(plmst(ntheta,Nlm_i))
 
       !i is the index of the theta point
-      do i=1, nmtheta
+      do i=1, ntheta
          ! theta in radians
          thetar = pi*theta(i)/180.d0
          sinth  = dsin(thetar)
          costh  = dcos(thetar)
          ! sin(th)**m, m=0:
          sinthm = 1.d0
-         lm = 0
 
+         lm = 0
          ! indices run on l => m faster and then on m=0...nml
-         do m=0, nml
+         do m=0, maxl_i
             fac=1.d0
             do j=3,2*m+1,2
                fac=fac*dble(j)/dble(j-1)
@@ -91,30 +85,19 @@ contains
 
             !-- plm for l=m: P_l^l =
             lm = lm + 1
-            if( lm.gt.nmlm ) then
-               write(*,*) 'Too small dimension nmlm in storelpm.',nmlm
-               stop
-            endif
             plmst(i,lm) = plm
             plm1 = 0.d0
 
             !-- plm for l>m: P_l^m =
-            do l=m+1, nml
+            do l=m+1, maxl_i
                plm2 = plm1
                plm1 = plm
                plm  = costh * dsqrt( dble( (2*l-1)*(2*l+1) ) / dble( (l-m)*(l+m) )  ) * plm1 - dsqrt( dble( (2*l+1)*(l+m-1)*(l-m-1) ) / dble( (2*l-3)*(l-m)*(l+m) ) ) * plm2
                lm=lm+1
-               if( lm.gt.nmlm ) then
-                  write(*,*) 'Too small dimension nmlm in storelpm.', nmlm
-                  stop
-               endif
                plmst(i,lm)=plm
             enddo
          enddo
       enddo
-
-      nmts = nmtheta
-      nmls = lm
 
       return
    end subroutine

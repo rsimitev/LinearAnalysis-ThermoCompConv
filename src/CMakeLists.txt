@@ -23,6 +23,7 @@ install(TARGETS CritRaEff RUNTIME DESTINATION bin)
 
 if(BUILD_UTILS)
    add_subdirectory(modeTracker)
+   add_subdirectory(plotting)
 endif(BUILD_UTILS)
 if(BUILD_TESTS)
    add_subdirectory(test)

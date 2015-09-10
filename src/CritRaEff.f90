@@ -24,12 +24,7 @@ program CriticalRaEff
 !---------------------------------------------------------
 !  arg #1 - filename or usage ?
    call getarg(1,infile)
-   if (infile.eq.' ') then
-      print*, 'Usage : '
-      print*, 'CriticalRaEff <in file> <out file>'
-      stop
-   endif
-   if (infile.eq.'-h') then
+   if (infile.eq.' ' .or. infile.eq.'-h') then
       print*, 'Usage : '
       print*, 'CriticalRaEff <in file> <out file>'
       stop

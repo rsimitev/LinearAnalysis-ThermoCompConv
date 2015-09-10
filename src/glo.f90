@@ -383,29 +383,32 @@ contains
    !! fixed.
    subroutine fixedParCriticalEigenVector()
       implicit none
-      double precision:: GroR, Omega, Ta
+      double precision:: GroR, Omega
       complex(8), allocatable:: ZEVEC(:), zew(:), ZEVAL(:,:)
       integer:: i, ni, li, lti, lpi, Nmodes, ld
-      integer:: LMAX, NIMAX, LMIN
+      integer:: LMAX, NIMAX, LMIN, eqdim
 
-      Ta = TAU*TAU
       ! find the zero grothrate:
+      LowerLimit = m0
       call fixedParCriticalParAndM0_v2()
+      close(unitOut)
+      OPEN(unitOut,FILE=outfile,STATUS='UNKNOWN')
+      call setLminAndLD(Symmetry, m0, LMIN, LD)
       Nmodes = getEigenProblemSize()
+      eqdim=nModes/4
       ! Allocate space for the eigen modes and vectors
       allocate( ZEVEC(Nmodes), zew(Nmodes), ZEVAL(Nmodes,Nmodes))
       ! Recoompute critical state modes and eigenvectors
       call computeGrowthRateModes(sort=.TRUE., zew=zew, zeval=zeval)
       ! Most unstable mode will be the first
-      GROR  = DIMAG(zew(1))
-      Omega = -dble(zew(1))
+      GROR  = -DIMAG(zew(1))
+      Omega = dble(zew(1))
       zevec(:) = zeval(:,1)
-      call setLminAndLD(Symmetry, m0, LMIN, LD)
 
       ! print eigenvector
       WRITE(unitOut,*) '# Linear onset coefficients'
-      WRITE(unitOut,'(3I5,2D16.8,'' M0, TRUNC, LD, GR, DRIFT'')')  M0, Truncation, LD, GROR, Omega
-      WRITE(unitOut, '(2D14.6,D9.2,D13.6,D9.2,'' Ta, Rt, Rc, Pt, Pc, eta'')') Ta, Rt, Rc, Pt, Le/Pt, ETA
+      WRITE(unitOut,'(3I5,2D16.8," M0, TRUNC, Symmetry, GR, DRIFT")')  M0, Truncation, Symmetry, GROR, Omega
+      WRITE(unitOut, '(6D14.6," Ta, Rt, Rc, Pt, Pc, eta")') tau, Rt, Rc, Pt, Le/Pt, ETA
 
       LMAX=2*Truncation+M0-1
       ! poloidal flow:
@@ -414,8 +417,8 @@ contains
          LPI = LI
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
          DO NI=1,NIMAX
-            WRITE(unitOut,'(1X,A1,3I3,2D16.8)') 'V', LPI, M0, NI, DREAL(ZEVEC(I+1)), DIMAG(ZEVEC(I+1))
-            I=I+4
+            WRITE(unitOut,'(1X,A1,3I3,2D16.8)') 'V', LPI, M0, NI, DREAL(ZEVEC(I+0*eqdim+1)), DIMAG(ZEVEC(I+0*eqdim+1))
+            I=I+1
          enddo
       enddo
       ! toroidal  flow:
@@ -430,8 +433,8 @@ contains
          ENDIF
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
          DO NI=1,NIMAX
-            WRITE(unitOut,'(1X,A1,3I3,2D16.8)') 'W', LTI, M0, NI, DREAL(ZEVEC(I+3)), DIMAG(ZEVEC(I+3))
-            I=I+4
+            WRITE(unitOut,'(1X,A1,3I3,2D16.8)') 'W', LTI, M0, NI, DREAL(ZEVEC(I+1*eqdim+1)), DIMAG(ZEVEC(I+1*eqdim+1))
+            I=I+1
          enddo
       enddo
       ! temperature
@@ -439,8 +442,8 @@ contains
       DO LI=LMIN,LMAX,LD
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
          DO NI=1,NIMAX
-            WRITE(unitOut,'(1X,A1,3I3,2D16.8)') 'T', LI, M0, NI, DBLE(ZEVEC(I+2)), DIMAG(ZEVEC(I+2))
-            I=I+4
+            WRITE(unitOut,'(1X,A1,3I3,2D16.8)') 'T', LI, M0, NI, DBLE(ZEVEC(I+2*eqdim+1)), DIMAG(ZEVEC(I+2*eqdim+1))
+            I=I+1
          enddo
       enddo
       ! composition
@@ -448,8 +451,8 @@ contains
       DO LI=LMIN,LMAX,LD
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
          DO NI=1,NIMAX
-            WRITE(unitOut,'(1X,A1,3I3,2D16.8)') 'G', LI, M0, NI, DREAL(ZEVEC(I+4)), DIMAG(ZEVEC(I+4))
-            I=I+4
+            WRITE(unitOut,'(1X,A1,3I3,2D16.8)') 'G', LI, M0, NI, DREAL(ZEVEC(I+3*eqdim+1)), DIMAG(ZEVEC(I+3*eqdim+1))
+            I=I+1
          enddo
       enddo
    end subroutine
