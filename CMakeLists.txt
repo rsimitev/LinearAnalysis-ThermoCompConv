@@ -54,6 +54,7 @@ endif(BUILD_TESTS)
 
 add_subdirectory(src)
 add_subdirectory(scripts)
+add_subdirectory(DX)
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)
