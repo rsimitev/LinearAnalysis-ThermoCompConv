@@ -291,23 +291,81 @@ contains
    
    !**********************************************************************
    !>
-   subroutine readCriticalCurveSingleM(crit, m)
+   subroutine readCriticalCurveSingleM(alpha, crit, m)
       implicit none
       double precision, intent(out):: crit(:,:)
+      double precision, intent(in):: alpha(:)
+      double precision, allocatable:: aa2(:), crit2(:,:), trans(:,:)
       integer, intent(in):: m
-      double precision:: alpha
+      double precision:: aa, GR,OM
       character(len=3):: num
-      integer:: N, i
+      integer:: N, N2, i
       integer, parameter:: unitm=999
       N = size(crit,1)
       Write(num,'(I3.3)') m
       open(unit=unitm,file=trim(outfile)//'.'//trim(num), status='OLD')
-      do i=1, N
-         ! TODO: Deal with the possibility that the files may not have been
-         !       written at the same resolution.
-         read(unitm,*) alpha, crit(i,1), crit(i,2)
+      ! read the first entry and check that the dalpha is the same
+      read(unitm,*) aa, GR, OM
+      if (aa.ne.alpha(1)) then
+         N2 = 2*dpi/(-aa)
+      else
+         N2 = N
+      endif
+      ! Allocate buffer arrays with the appropriate size.
+      allocate(aa2(N2))
+      allocate(crit2(N2,2))
+      ! Store the first entry.
+      aa2(1) = aa
+      crit2(1,1) = GR
+      crit2(1,2) = OM
+      ! Read the rest
+      do i=2, N2
+         read(unitm,*) aa2(i), crit2(i,1), crit2(i,2)
       enddo
       close(unitm)
+      ! Interpolate or just copy if sizes are the same.
+      if (N2.eq.N) then
+         crit(:,1) = crit2(:,1)
+         crit(:,2) = crit2(:,2)
+      else
+         allocate(trans(N,N2))
+         call createTrans(alpha,aa2,trans)
+         crit(:,1) = matmul(trans(:,:),crit2(:,1))
+         crit(:,2) = matmul(trans(:,:),crit2(:,2))
+      endif
+      deallocate(aa2,crit2, trans)
+   end subroutine
+   
+   !**********************************************************************
+   !> Creates the transformation matrix that converts from 
+   !! one resolution to the other
+   subroutine createTrans(aa,aa2,trans)
+      implicit none
+      double precision:: aa(:), aa2(:), trans(:,:)
+      integer:: N, N2, i, j
+      N  = size(aa,1)
+      N2 = size(aa2,1)
+      trans = 0.0d0
+      if (aa(1).lt.aa2(1)) then
+         trans(1,1) = 1.0d0
+      else
+         trans(1,1)   =  (aa(1) - aa2(1+1))/(aa2(1)-aa2(1+1))
+         trans(1,1+1) = -(aa(1) - aa2(1)  )/(aa2(1)-aa2(1+1))
+      endif
+      do i=2, N-1
+         do j=1, N2-1
+            if( (aa(i).gt.aa2(j)) .and. (aa(i).lt.aa2(j+1)) ) then
+               trans(i,j)   =  (aa(i) - aa2(j+1))/(aa2(j)-aa2(j+1))
+               trans(i,j+1) = -(aa(i) - aa2(j)  )/(aa2(j)-aa2(j+1))
+            endif
+         enddo
+      enddo
+      if (aa(N).gt.aa2(N2)) then
+         trans(1,1) = 1.0d0
+      else
+         trans(N,N2-1) =  (aa(N) - aa2(N2)   )/(aa2(N2-1)-aa2(N2))
+         trans(N,N2  ) = -(aa(N) - aa2(N2-1) )/(aa2(N2-1)-aa2(N2))
+      endif
    end subroutine
    
    !**********************************************************************
