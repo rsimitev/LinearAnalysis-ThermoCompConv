@@ -346,12 +346,14 @@ contains
       N  = size(aa,1)
       N2 = size(aa2,1)
       trans = 0.0d0
+      ! Take care of the initial point
       if (aa(1).lt.aa2(1)) then
          trans(1,1) = 1.0d0
       else
          trans(1,1)   =  (aa(1) - aa2(1+1))/(aa2(1)-aa2(1+1))
          trans(1,1+1) = -(aa(1) - aa2(1)  )/(aa2(1)-aa2(1+1))
       endif
+      ! Use a linear interpolation where necessary.
       do i=2, N-1
          do j=1, N2-1
             if( (aa(i).gt.aa2(j)) .and. (aa(i).lt.aa2(j+1)) ) then
@@ -360,6 +362,7 @@ contains
             endif
          enddo
       enddo
+      ! take cae of the last point
       if (aa(N).gt.aa2(N2)) then
          trans(1,1) = 1.0d0
       else
