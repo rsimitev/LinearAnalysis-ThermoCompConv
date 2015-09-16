@@ -42,7 +42,7 @@ contains
                call read_val(line, Rc)
                RcSet=.true.
             case('aa')
-               call read_val(line, aa)
+               call read_val(line, alpha)
                aaSet=.true.
             case('Ra')
                call read_val(line, Ra)
@@ -75,8 +75,8 @@ contains
       ! Validation
       if (aaSet.and.RaSet)then
          if((.not.RtSet).or.(.not.RcSet)) then
-            Rt = Ra*cos(aa)
-            Rc = Ra*sin(aa)
+            Rt = Ra*cos(alpha)
+            Rc = Ra*sin(alpha)
          endif
       endif
    end subroutine
