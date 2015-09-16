@@ -13,6 +13,11 @@ contains
       CHARACTER(len=60) varname
       CHARACTER(len=256) line
       integer:: err
+      logical:: aaSet, RaSet, RtSet, RcSet
+      aaSet=.false.
+      RaSet=.false.
+      RtSet=.false.
+      RcSet=.false.
       OPEN(15,FILE=inputfile,STATUS='OLD', iostat=err)
       if(err.ne.0) then
          WRITE(*,*) 'Error opening input file!'
@@ -32,8 +37,16 @@ contains
                call read_val(line, Truncation)
             case('Rt')
                call read_val(line, Rt)
+               RtSet=.true.
             case('Rc')
                call read_val(line, Rc)
+               RcSet=.true.
+            case('aa')
+               call read_val(line, aa)
+               aaSet=.true.
+            case('Ra')
+               call read_val(line, Ra)
+               RaSet=.true.
             case('Pt')
                call read_val(line, Pt)
             case('Le')
@@ -59,6 +72,13 @@ contains
          end select
       enddo
       close(15)
+      ! Validation
+      if (aaSet.and.RaSet)then
+         if((.not.RtSet).or.(.not.RcSet)) then
+            Rt = Ra*cos(aa)
+            Rc = Ra*sin(aa)
+         endif
+      endif
    end subroutine
    !**********************************************************************
    subroutine writeOutputHeader(unitOut)
