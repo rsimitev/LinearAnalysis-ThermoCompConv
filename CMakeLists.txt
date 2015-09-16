@@ -47,6 +47,10 @@ option(BUILD_UTILS "Build the utilities associated with the code." OFF)
 option(BUILD_TESTS "Build a series of driver programs that test several subroutines of the code." OFF)
 option(BUILD_DOCS  "Build online documentation and user's manual." OFF)
 
+# Definitions for DX renderer install.
+set (DXMACROS $ENV{HOME}/.dx.d/macros CACHE PATH "Choose the DX macro instalation path." )
+set (DXPROGS  $ENV{HOME}/.dx.d/programs CACHE PATH "Choose the DX networks instalation path." )
+
 # Optionally enable testing
 if(BUILD_TESTS)
    enable_testing()
