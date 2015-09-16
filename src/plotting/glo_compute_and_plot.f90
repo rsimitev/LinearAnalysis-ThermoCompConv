@@ -309,9 +309,6 @@ contains
          enddo
       enddo
       
-      do i=1, nElements
-         Print*, eigenVector(i)
-      enddo
    END SUBROUTINE computeModes
 
 end PROGRAM simplePlot
