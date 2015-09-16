@@ -1,8 +1,8 @@
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/..)
-set (simplePlot_SRCS
+set (glo_plot_SRCS
      plms.f90
-     simplePlot.f90
+     glo_plot.f90
    )
-add_executable(simplePlot ${simplePlot_SRCS})
-target_link_libraries(simplePlot linearProblem)
-install(TARGETS simplePlot RUNTIME DESTINATION bin)
+add_executable(glo_plot ${glo_plot_SRCS})
+target_link_libraries(glo_plot linearProblem)
+install(TARGETS glo_plot RUNTIME DESTINATION bin)
