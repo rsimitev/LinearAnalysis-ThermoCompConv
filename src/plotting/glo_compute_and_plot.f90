@@ -79,8 +79,8 @@ contains
    SUBROUTINE Plot_2D()
       implicit none
       double precision:: THETA, r, phi
-      double precision:: ri, z
-      integer:: i, j, k
+      double precision:: ri
+      integer:: i, k
       !-- CALCULATION OF INNER AND OUTER RADIUS:
       RI = ETA/(1.D0-ETA)
 
