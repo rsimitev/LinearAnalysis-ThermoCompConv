@@ -30,7 +30,7 @@ PROGRAM simplePlot
    call getarg(1,infile)
    if (trim(infile).eq.'' .or. trim(infile).eq.'-h') then
       print*, 'Usage : '
-      print*, 'simplePlot <in file> <domain>'
+      print*, 'glo_plot <in file> <domain>'
       print*, '  <domain> can be one of 2D or 3D.'
       stop
    endif
