@@ -9,6 +9,7 @@ install(TARGETS glo_plot RUNTIME DESTINATION bin)
 
 set (glo_compute_and_plot_SRCS
      plms.f90
+      ../io.f90
      glo_compute_and_plot.f90
    )
 add_executable(glo_compute_and_plot ${glo_compute_and_plot_SRCS})
