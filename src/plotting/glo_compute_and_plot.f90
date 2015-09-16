@@ -46,6 +46,8 @@ PROGRAM simplePlot
          CALL Plot_2D()
       case('3D')
          CALL Plot_3D()
+      case default
+         stop
    end select
    Write(*,*) 'Done!'
 
@@ -55,7 +57,7 @@ contains
    !> Initialises things.
    SUBROUTINE init(inputfile)
       implicit none
-      CHARACTER(len=*) inputfile,outputfile
+      CHARACTER(len=*), intent(in):: inputfile
 
       ! ----Default values:
       call setDefaults()
@@ -89,7 +91,7 @@ contains
       ! Find the highest l or m that we need to compute
       ! Reuse k for that so we don't have to create a new variable
       k=0
-      DO i=1, size(eigenVector)
+      DO i=1, size(eigenVector,1)
          if (eigenVector(i)%m.gt.k) k = eigenVector(i)%m
          if (eigenVector(i)%l.gt.k) k = eigenVector(i)%l
       enddo
@@ -217,7 +219,7 @@ contains
       IMPLICIT none
       integer:: nElements
       complex(8), allocatable:: ZEVEC(:), zew(:), ZEVAL(:,:)
-      integer:: i, ni, li, lti, lpi, ld
+      integer:: i, ni, li, lti, lpi, ld, ii
       integer:: LMAX, NIMAX, LMIN, eqdim
 
 
@@ -230,11 +232,12 @@ contains
       call computeGrowthRateModes(sort=.TRUE., zew=zew, zeval=zeval)
       ! Most unstable mode will be the first
       zevec(:) = zeval(:,1)
-      deallocate(zew, zeval)
+
+      eqdim=nElements/4
 
       LMAX=2*Truncation+M0-1
       ! poloidal flow:
-      I=0
+      I=1
       do LI=LMIN,LMAX,LD
          LPI = LI
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
@@ -243,13 +246,14 @@ contains
             eigenVector(i)%l         = LPI
             eigenVector(i)%m         = M0
             eigenVector(i)%n         = NI
-            eigenVector(i)%RealPart  = DREAL(ZEVEC(I+0*eqdim+1))
-            eigenVector(i)%ImagPart  = DIMAG(ZEVEC(I+0*eqdim+1))
+            eigenVector(i)%RealPart  = DREAL(ZEVEC(I+0*eqdim))
+            eigenVector(i)%ImagPart  = DIMAG(ZEVEC(I+0*eqdim))
             I=I+1
          enddo
       enddo
 
-      I=0
+      i=1
+      ii=eqdim+1
       DO LI=LMIN,LMAX,LD
          IF( Symmetry.EQ.2 ) THEN
          LTI=LI+1
@@ -260,44 +264,54 @@ contains
          ENDIF
          NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
          DO NI=1,NIMAX
-            eigenVector(i)%fieldCode = 'W'
-            eigenVector(i)%l         = LTI
-            eigenVector(i)%m         = M0
-            eigenVector(i)%n         = NI
-            eigenVector(i)%RealPart  = DREAL(ZEVEC(I+1*eqdim+1))
-            eigenVector(i)%ImagPart  = DIMAG(ZEVEC(I+1*eqdim+1))
+            eigenVector(ii)%fieldCode = 'W'
+            eigenVector(ii)%l         = LTI
+            eigenVector(ii)%m         = M0
+            eigenVector(ii)%n         = NI
+            eigenVector(ii)%RealPart  = DREAL(ZEVEC(I+1*eqdim))
+            eigenVector(ii)%ImagPart  = DIMAG(ZEVEC(I+1*eqdim))
             I=I+1
-         enddo
-      enddo
-      ! temperature
-      I=0
-      DO LI=LMIN,LMAX,LD
-         NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
-         DO NI=1,NIMAX
-            eigenVector(i)%fieldCode = 'T'
-            eigenVector(i)%l         = LI
-            eigenVector(i)%m         = M0
-            eigenVector(i)%n         = NI
-            eigenVector(i)%RealPart  = DREAL(ZEVEC(I+2*eqdim+1))
-            eigenVector(i)%ImagPart  = DIMAG(ZEVEC(I+2*eqdim+1))
-            I=I+1
-         enddo
-      enddo
-      ! composition
-      I=0
-      DO LI=LMIN,LMAX,LD
-         NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
-         DO NI=1,NIMAX
-            eigenVector(i)%fieldCode = 'G'
-            eigenVector(i)%l         = LI
-            eigenVector(i)%m         = M0
-            eigenVector(i)%n         = NI
-            eigenVector(i)%RealPart  = DREAL(ZEVEC(I+3*eqdim+1))
-            eigenVector(i)%ImagPart  = DIMAG(ZEVEC(I+3*eqdim+1))
-            I=I+1
+            Ii=Ii+1
          enddo
       enddo
 
+      ! temperature
+      i=1
+      ii=2*eqdim+1
+      DO LI=LMIN,LMAX,LD
+         NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
+         DO NI=1,NIMAX
+            eigenVector(ii)%fieldCode = 'T'
+            eigenVector(ii)%l         = LI
+            eigenVector(ii)%m         = M0
+            eigenVector(ii)%n         = NI
+            eigenVector(ii)%RealPart  = DREAL(ZEVEC(I+2*eqdim))
+            eigenVector(ii)%ImagPart  = DIMAG(ZEVEC(I+2*eqdim))
+            I=I+1
+            Ii=Ii+1
+         enddo
+      enddo
+
+      ! composition
+      i=1
+      ii=3*eqdim+1
+      DO LI=LMIN,LMAX,LD
+         NIMAX=INT( DBLE(2*Truncation+1-LI+M0)/2 )
+         DO NI=1,NIMAX
+            eigenVector(ii)%fieldCode = 'G'
+            eigenVector(ii)%l         = LI
+            eigenVector(ii)%m         = M0
+            eigenVector(ii)%n         = NI
+            eigenVector(ii)%RealPart  = DREAL(ZEVEC(I+3*eqdim))
+            eigenVector(ii)%ImagPart  = DIMAG(ZEVEC(I+3*eqdim))
+            I=I+1
+            Ii=iI+1
+         enddo
+      enddo
+      
+      do i=1, nElements
+         Print*, eigenVector(i)
+      enddo
    END SUBROUTINE computeModes
 
 end PROGRAM simplePlot
