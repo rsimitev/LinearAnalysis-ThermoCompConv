@@ -338,7 +338,8 @@ contains
    
    !**********************************************************************
    !> Creates the transformation matrix that converts from 
-   !! one resolution to the other
+   !! one resolution to the other. At the moment a simple linear 
+   !! interpolation between nearest neighbours is used.
    subroutine createTrans(aa,aa2,trans)
       implicit none
       double precision:: aa(:), aa2(:), trans(:,:)
