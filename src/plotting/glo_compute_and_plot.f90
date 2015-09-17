@@ -13,7 +13,7 @@ PROGRAM simplePlot
    use io
    implicit none
    double precision, parameter:: PI = 3.14159265358979D0
-   integer, parameter:: nr=33, nt=180, np=360
+   integer:: nr=31, nt=180, np=361
    CHARACTER(len=60):: INFILE
    character(len=2):: domain
 
@@ -69,6 +69,12 @@ contains
         write(*,*) 'The code does not work for M0<1. ', M0, ' --> 1'
         M0 = 1
       ENDIF
+      if(4*m0.gt.Np) then
+         Np = 4*m0+1
+         Nt = 2*m0
+         Write(*,*) "Warning: This file is going to be huge!"
+      endif
+      Nr = max(Nr,floor(Nt*acos(eta)/pi)+1)
 
       call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
       call setVariableParam(VariablePar)
