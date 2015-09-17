@@ -1,9 +1,4 @@
 !************************************************************************
-!-- PROGRAM TO read data from Galerkinprogram of J.W. and convert it for IDL.
-!--
-!-- Input:   stdin  (short version of LARA.EXE for DISSPLA)
-!--
-!-- Output:
 !--
 !------------------------------------------------------------------------
 PROGRAM simplePlot
