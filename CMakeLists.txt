@@ -5,7 +5,7 @@ project(GLO)
 enable_language (Fortran)
 set (GLO_VERSION_MAJOR 2)
 set (GLO_VERSION_MINOR 2)
-set (GLO_VERSION_PATCH 0) 
+set (GLO_VERSION_PATCH 1) 
 set (GLO_VERSION
    "${GLO_VERSION_MAJOR}.${GLO_VERSION_MINOR}.${GLO_VERSION_PATCH}" )
 
