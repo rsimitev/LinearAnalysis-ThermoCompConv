@@ -13,6 +13,11 @@ contains
       CHARACTER(len=60) varname
       CHARACTER(len=256) line
       integer:: err
+      logical:: aaSet, RaSet, RtSet, RcSet
+      aaSet=.false.
+      RaSet=.false.
+      RtSet=.false.
+      RcSet=.false.
       OPEN(15,FILE=inputfile,STATUS='OLD', iostat=err)
       if(err.ne.0) then
          WRITE(*,*) 'Error opening input file!'
@@ -32,8 +37,16 @@ contains
                call read_val(line, Truncation)
             case('Rt')
                call read_val(line, Rt)
+               RtSet=.true.
             case('Rc')
                call read_val(line, Rc)
+               RcSet=.true.
+            case('aa')
+               call read_val(line, alpha)
+               aaSet=.true.
+            case('Ra')
+               call read_val(line, Ra)
+               RaSet=.true.
             case('Pt')
                call read_val(line, Pt)
             case('Le')
@@ -59,6 +72,13 @@ contains
          end select
       enddo
       close(15)
+      ! Validation
+      if (aaSet.and.RaSet)then
+         if((.not.RtSet).or.(.not.RcSet)) then
+            Rt = Ra*cos(alpha)
+            Rc = Ra*sin(alpha)
+         endif
+      endif
    end subroutine
    !**********************************************************************
    subroutine writeOutputHeader(unitOut)
@@ -67,19 +87,19 @@ contains
       integer, intent(in):: unitOut
       WRITE(unitOut,*)  '### Output of Program glo  Ver.', VERSION,':   ###'
       WRITE(unitOut,*)  '### Lin. Onset of Conv. via Galerkinmethod ###'
-      WRITE(unitOut,'(A11,E12.5,A2)') '# P     ', Pt,     '#'
-      WRITE(unitOut,'(A11,E12.5,A2)') '# Lewis ', Le,     '#'
-      WRITE(unitOut,'(A11,E12.5,A2)') '# TAU   ', TAU,    '#'
-      WRITE(unitOut,'(A11,E12.5,A2)') '# R     ', Rt,     '#'
-      WRITE(unitOut,'(A11,E12.5,A2)') '# RC    ', Rc,     '#'
-      WRITE(unitOut,'(A11,E12.5,A2)') '# ETA   ', ETA,    '#'
-      WRITE(unitOut,'(A11,G12.5,A2)') '# m     ', M0,     '#'
-      WRITE(unitOut,'(A11,I12,A2)')   '# Symmetry     ', Symmetry,   '#'
-      WRITE(unitOut,'(A11,E12.5,A2)') '# LowerLimit   ', LowerLimit, '#'
-      WRITE(unitOut,'(A11,E12.5,A2)') '# UpperLimit   ', UpperLimit, '#'
-      WRITE(unitOut,'(A11,E12.5,A2)') '# StepSize     ', StepSize,   '#'
-      WRITE(unitOut,'(A11,I12,A2)')   '# Truncation   ', Truncation, '#'
-      WRITE(unitOut,'(A11,A3,A2)')    '# Variable par ',VariablePar , '         #'
+      WRITE(unitOut,'(A15,E12.5,A2)') '# P     ', Pt,     '#'
+      WRITE(unitOut,'(A15,E12.5,A2)') '# Lewis ', Le,     '#'
+      WRITE(unitOut,'(A15,E12.5,A2)') '# TAU   ', TAU,    '#'
+      WRITE(unitOut,'(A15,E12.5,A2)') '# R     ', Rt,     '#'
+      WRITE(unitOut,'(A15,E12.5,A2)') '# RC    ', Rc,     '#'
+      WRITE(unitOut,'(A15,E12.5,A2)') '# ETA   ', ETA,    '#'
+      WRITE(unitOut,'(A15,G12.5,A2)') '# m     ', M0,     '#'
+      WRITE(unitOut,'(A15,I12,A2)')   '# Symmetry     ', Symmetry,   '#'
+      WRITE(unitOut,'(A15,E12.5,A2)') '# LowerLimit   ', LowerLimit, '#'
+      WRITE(unitOut,'(A15,E12.5,A2)') '# UpperLimit   ', UpperLimit, '#'
+      WRITE(unitOut,'(A15,E12.5,A2)') '# StepSize     ', StepSize,   '#'
+      WRITE(unitOut,'(A15,I12,A2)')   '# Truncation   ', Truncation, '#'
+      WRITE(unitOut,'(A15,A3,A2)')    '# Variable par ',VariablePar , '         #'
       WRITE(unitOut,*)  '# see definition of LCALC for output. LCALC:', LCALC,'   #'
       WRITE(unitOut,*)  '#                                      #'
    end subroutine

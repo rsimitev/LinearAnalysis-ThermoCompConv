@@ -5,7 +5,7 @@ project(GLO)
 enable_language (Fortran)
 set (GLO_VERSION_MAJOR 2)
 set (GLO_VERSION_MINOR 2)
-set (GLO_VERSION_PATCH 0) 
+set (GLO_VERSION_PATCH 1) 
 set (GLO_VERSION
    "${GLO_VERSION_MAJOR}.${GLO_VERSION_MINOR}.${GLO_VERSION_PATCH}" )
 
@@ -46,6 +46,10 @@ find_package(BLAS REQUIRED)
 option(BUILD_UTILS "Build the utilities associated with the code." OFF)
 option(BUILD_TESTS "Build a series of driver programs that test several subroutines of the code." OFF)
 option(BUILD_DOCS  "Build online documentation and user's manual." OFF)
+
+# Definitions for DX renderer install.
+set (DXMACROS $ENV{HOME}/.dx.d/macros CACHE PATH "Choose the DX macro instalation path." )
+set (DXPROGS  $ENV{HOME}/.dx.d/programs CACHE PATH "Choose the DX networks instalation path." )
 
 # Optionally enable testing
 if(BUILD_TESTS)

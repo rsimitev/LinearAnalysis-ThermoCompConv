@@ -55,8 +55,8 @@ contains
       use parameters
       IMPLICIT none
       integer, intent(in):: unitOut
-      WRITE(unitOut,*)  '### Output of Program glo  Ver.', VERSION,':   ###'
-      WRITE(unitOut,*)  '### Lin. Onset of Conv. via Galerkinmethod ###'
+      WRITE(unitOut,*)  '### Output of Program glo Ver.', VERSION,':   ###'
+      WRITE(unitOut,*)  '### Lin. Onset of Conv. via Galerkin method ###'
       WRITE(unitOut,'(A11,E12.5,A2)') '# P            ', Pt,         '#'
       WRITE(unitOut,'(A11,E12.5,A2)') '# Lewis        ', Le,         '#'
       WRITE(unitOut,'(A11,E12.5,A2)') '# TAU          ', tau,        '#'
