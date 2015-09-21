@@ -36,6 +36,7 @@ PROGRAM simplePlot
    
    call getarg(2,domain)
    call getarg(3,quantity)
+   if (quantity=='') quantity='UR'
    call init(trim(infile))
    call computeModes()
 
