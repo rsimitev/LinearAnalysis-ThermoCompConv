@@ -10,7 +10,7 @@ PROGRAM simplePlot
    double precision, parameter:: PI = 3.14159265358979D0
    integer:: nr=31, nt=180, np=361
    CHARACTER(len=60):: INFILE
-   character(len=2):: domain
+   character(len=2):: domain, quantity
 
    type:: eigenElement
       integer:: n
@@ -26,12 +26,16 @@ PROGRAM simplePlot
    call getarg(1,infile)
    if (trim(infile).eq.'' .or. trim(infile).eq.'-h') then
       print*, 'Usage : '
-      print*, 'glo_plot <in file> <domain>'
+      print*, 'glo_plot <in file> <domain> <quantity>'
       print*, '  <domain> can be one of 2D or 3D.'
+      print*, '  <quantity> can be one of:'
+      print*, '      UR for the radial flow or'
+      print*, '      SL for the equatorial stream lines 1/r dv/dphi.'
       stop
    endif
    
    call getarg(2,domain)
+   call getarg(3,quantity)
    call init(trim(infile))
    call computeModes()
 
@@ -76,11 +80,28 @@ contains
    END subroutine
 
    !------------------------------------------------------------------------
+   function pointValueOfSelectedQuantity(eigenVector, r, PHI, itheta) result(z)
+      implicit none
+      type(eigenElement), intent(in):: eigenVector(:)
+      double precision, intent(in):: r, phi
+      integer, intent(in):: itheta
+      double precision:: z
+      select case(quantity)
+         case('ur','UR')
+            z = flow_r(eigenVector, r, PHI, itheta)
+         case('sl','SL')
+            z = stream_function(eigenVector, r, PHI, itheta)
+         case default
+            z = flow_r(eigenVector, r, PHI, itheta)
+      end select
+   end function
+   
+   !------------------------------------------------------------------------
    !     calculates the field Z and makes one subplot.
    SUBROUTINE Plot_2D()
       implicit none
       double precision:: THETA, r, phi
-      double precision:: ri
+      double precision:: ri,z
       integer:: i, k
       !-- CALCULATION OF INNER AND OUTER RADIUS:
       RI = ETA/(1.D0-ETA)
@@ -115,20 +136,21 @@ contains
          r = ri + dble(i)/dble(nr)
          do k=0, np
             phi = k*(360.0/np)
+            z = pointValueOfSelectedQuantity(eigenVector, r, PHI, 1)
             Write(20,*) r*cos(phi*pi/180.0), &
                         r*sin(phi*pi/180.0), &
-                        flow_r(eigenVector, r, PHI, 1)
+                        z
          enddo
       enddo
       close(20)
    end subroutine Plot_2D
-
+   
    !------------------------------------------------------------------------
    !     calculates the field Z and makes one subplot.
    SUBROUTINE Plot_3D()
       implicit none
       double precision:: THETA(Nt), r, phi, dtheta
-      double precision:: ri
+      double precision:: ri, z
       integer:: i, j, k
       !-- CALCULATION OF INNER AND OUTER RADIUS:
       RI = ETA/(1.D0-ETA)
@@ -167,10 +189,11 @@ contains
          do k=0, np
             phi = k*(360.0/np)
             do j=1, nt
+               z = pointValueOfSelectedQuantity(eigenVector, r, PHI, j)
                Write(20,*) r*sin((theta(j))*pi/180.0)*cos(phi*pi/180.0), &
                            r*sin((theta(j))*pi/180.0)*sin(phi*pi/180.0), &
                            r*cos((theta(j))*pi/180.0), &
-                           flow_r(eigenVector, r, PHI, j)
+                           z
             enddo
          enddo
       enddo
@@ -194,12 +217,12 @@ contains
       RI = ETA/(1.D0-ETA)
 
       flow_r = 0.0d0
-      DO i=1, size(eigenVector)
+      do i=1, size(eigenVector)
          if (eigenVector(i)%fieldCode.ne.'V') cycle
          ! Prefactor for Legendre Associated Polynomials
-         IF( eigenVector(i)%M.EQ.0 ) THEN
+         if( eigenVector(i)%M.eq.0 ) then
             EPSM = 1.D0
-         ELSE
+         else
             EPSM = 2.D0
          endif
 
@@ -216,6 +239,45 @@ contains
    end function
 
    !------------------------------------------------------------------------
+   !> The stream function on the equatorial plane S=r*dv/dphi
+   double precision function stream_function(eigenVector,R,PHI,iTHETA)
+      IMPLICIT none
+      type(eigenElement)::eigenVector(:)
+      double precision, intent(in):: R, phi
+      double precision:: ri, epsm, pphi
+      double precision:: FTT, FTTR, FTTI
+      integer, intent(in):: iTheta
+      integer:: i
+      integer:: l, m, n
+
+      PPHI = PHI*PI/180.D0
+      !-- CALCULATION OF INNER AND OUTER RADIUS:
+      RI = ETA/(1.D0-ETA)
+
+      stream_function=0.D0
+      do i=1, size(eigenVector)
+         if (eigenVector(i)%fieldCode.ne.'V') cycle
+         ! Prefactor for Legendre Associated Polynomials
+         if( eigenVector(i)%M.EQ.0 ) then
+            EPSM = 1.D0
+         else
+            EPSM = 2.D0
+         endif
+
+         l = eigenVector(i)%l
+         m = eigenVector(i)%m
+         n = eigenVector(i)%n
+         FTT = EPSM*M*PLMS(L,M,iTHETA)*R*DSIN( N*PI*(R-RI) )
+
+         FTTR = -FTT * eigenVector(I)%realPart * DSIN( M*PPHI )
+         FTTI = -FTT * eigenVector(I)%imagPart * DCOS( M*PPHI )
+
+         stream_function = stream_function - FTTR - FTTI
+      enddo
+   end function
+
+   !------------------------------------------------------------------------
+   !>
    SUBROUTINE computeModes()
       IMPLICIT none
       integer:: nElements
