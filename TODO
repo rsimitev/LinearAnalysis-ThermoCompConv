@@ -1,3 +1,6 @@
+* Finish glo2drs.
+* Make a library converting from glo to drs representation.
+* Move rendering routines to their own module.
 * Bring the scripts up to scratch.
 * Write more unit tests.
 * Rename minimizer -> root_finder because that is what it is.
