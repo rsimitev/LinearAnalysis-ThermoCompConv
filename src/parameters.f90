@@ -23,7 +23,7 @@ contains
       Pt   = 1.D-1
       Le   = 1.D00
       ETA  = 0.4D0
-      Truncation   = 3
+      Truncation = 3
       M0   = 6
       ABSE = 1.0d-6
       RELE = 1.0d-6

@@ -414,7 +414,8 @@ contains
          call minimizer(MaxGrowthRate, ParMin, ParMax, RELE ,ABSE, NSMAX, CriticalPar, error)
          if (error.eq.0) exit
       enddo
-      call setParameterValue(CriticalPar)
+      call setParameterValue(CriticalPar) 
+      Write(*,*) 'Critical ',trim(VariablePar)//'_c = ', CriticalPar
    end subroutine
 
 end PROGRAM simplePlot
