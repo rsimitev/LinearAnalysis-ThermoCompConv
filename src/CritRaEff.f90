@@ -265,7 +265,11 @@ contains
       call writeOutputHeader(unitOut)
       N = size(crit,1)
       do i=1, N
-         Write(unitOut,*) crit(i)%alpha, crit(i)%Ra, crit(i)%m, crit(i)%w  
+         if (crit(i)%Ra.ge.huge(1.0d0)) then
+            Write(unitOut,*) crit(i)%alpha, ' NaN ', ' NaN ' , ' NaN'
+         else
+            Write(unitOut,*) crit(i)%alpha, crit(i)%Ra, crit(i)%m, crit(i)%w  
+         endif
       enddo
       close(unitOut)
    end subroutine
