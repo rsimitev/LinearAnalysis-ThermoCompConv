@@ -29,6 +29,7 @@
 program linearOnset
    use parameters
    use growthRateMod
+   use glo_constants
    use io
    implicit none
    character*60 infile,outfile
@@ -112,7 +113,7 @@ program linearOnset
          call writeOutputHeader(unitOut)
          call fixedParCriticalParAndM0_v2()
       case(8) ! Loops through the m's to find the critical Rt=Rc and m_c.
-         VariablePar = 'Rt'
+         VariablePar = 'Ra'
          call setVariableParam(VariablePar)
          LowerLimit = m0
          call writeOutputHeader(unitOut)
@@ -236,7 +237,7 @@ contains
 
       info=0
       select case (trim(VariablePar))
-         case('Rt','Rc')
+         case('Rt','Rc','Ra')
             CriticalPar = 1.0d100
          case default
             CriticalPar = -1.0d100
@@ -635,58 +636,12 @@ contains
    !! compositional Rayleigh number for fixed other parameters.
    subroutine CriticalRtSameAsRc()
       implicit none
-      double precision:: dRtRel, Rt_old, Rc_old, dRc, dRc_old
-      double precision, parameter:: adv = 1.0d0/3.0d0 !< The advance fraction.
-      integer:: counter
-      !Rt=(tau*Pt)**(4.0d0/3.0d0)
-      !Rc=(tau*Pt)**(4.0d0/3.0d0)
-      Rt_old = Rt
-      Rc_old = Rc
-      dRc=tau**(3.0d0/4.0d0)
-      Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc
-      do counter = 1, 1000
-         ! Compute the Critical Rt
-         call fixedParCriticalParAndM0_v2()
-         call saveParameterValue(Rt)
-         ! Compute the relative difference to Rc
-         dRtRel = abs((Rt-Rc)/Rt)
-         ! If we reached the required tolerance, bail out
-         if (dRtRel .le. 1.0d-7) exit
-         ! Reset the limits for the m's.
-         LowerLimit = m0+7
-         if(nint(LowerLimit)==0.or.m0==0) LowerLimit=20
-         ! Update the Rc steps
-         dRc_old = dRc
-         if(counter.lt.2) then
-            dRc = ( Rt - Rc )*adv
-         else
-            ! We want the next iteration to have a an Rc that bridged \a adv of the
-            ! gap based on its previous evolution. But only if it was a sane
-            ! iteration, otherwise go back.
-            if( Rt*Rt_old.gt.0 ) then
-               dRc = adv*(Rc-Rt)/((Rt-Rt_old)/dRc_old-adv)
-            elseif(Rt.lt.0) then
-               dRc = -0.9*dRc_old
-            else
-               dRc = (Rt - Rc)*adv
-            endif
-            if (dRc.gt.(Rt - Rc)*adv) dRc = (Rt - Rc)*adv
-         endif
-         ! Update the Rc
-         Rc = Rc + dRc
-         ! Cache this steps's Rc and Rt
-         Rt_old = Rt
-         Rc_old = Rc
-         call GrowthRateUpdatePar(Rc=Rc)
-         Write(*,*) '*** Rt = ', Rt, ', Rc = ', Rc, ', dRc = ', dRc
-      enddo
-      if (dRtRel .le. 1.0d-7) then
-         WRITE(*,*) ">>",Rt, Rc, m0
-         WRITE(unitOut,'(A,2D16.8,I4)') ">>", Rt, Rc, m0
-      else
-         WRITE(*,*) ">>  NaN   NaN   NaN"
-         WRITE(unitOut,*)  ">>  NaN   NaN   NaN"
-      endif
+      ! Compute the Critical Ra for alpha=pi/4
+      call GrowthRateUpdateParAlpha(alpha=dpi/4.0)
+      call fixedParCriticalParAndM0_v2()
+      call saveParameterValue(Ra)
+      WRITE(*,*) ">>", Rt, Rc, m0
+      WRITE(unitOut,'(A,2D16.8,I4)') ">>", Rt, Rc, m0
    end subroutine
 end program
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab

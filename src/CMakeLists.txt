@@ -5,6 +5,7 @@ set (linearProblem_SRCS
      parser.f90
      minimizer.f90
      parameters.f90
+     glo_constants.f90
    )
     
 add_library(linearProblem ${linearProblem_SRCS}) 

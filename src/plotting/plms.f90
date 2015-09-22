@@ -1,7 +1,6 @@
 module plms_mod
-
+   use glo_constants
    private
-   double precision, parameter:: pi   = 3.141592653589793d0
    double precision, allocatable:: plmst(:,:)
    integer:: Nlm_i, maxl_i
    public:: plms, storeplm
@@ -61,7 +60,7 @@ contains
       !i is the index of the theta point
       do i=1, ntheta
          ! theta in radians
-         thetar = pi*theta(i)/180.d0
+         thetar = dpi*theta(i)/180.d0
          sinth  = dsin(thetar)
          costh  = dcos(thetar)
          ! sin(th)**m, m=0:

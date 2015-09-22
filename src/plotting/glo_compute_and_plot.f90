@@ -6,9 +6,9 @@ PROGRAM simplePlot
    use growthRateMod
    use plms_mod
    use io
+   use glo_constants
    implicit none
-   double precision, parameter:: PI = 3.14159265358979D0
-   integer:: nr=31, nt=180, np=361
+   integer:: nr=31, nt=180, np=361, error
    CHARACTER(len=60):: INFILE
    character(len=2):: domain, quantity
 
@@ -38,7 +38,8 @@ PROGRAM simplePlot
    call getarg(3,quantity)
    if (quantity=='') quantity='UR'
    call init(trim(infile))
-   call computeModes()
+   call computeModes(error)
+   if (error.ne.0) stop 10
 
    Write(*,*) 'Plotting...'
    select case (domain)
@@ -74,10 +75,15 @@ contains
          Nt = 2*m0
          Write(*,*) "Warning: This file is going to be huge!"
       endif
-      Nr = max(Nr,floor(Nt*acos(eta)/pi)+1)
+      Nr = max(Nr,floor(Nt*acos(eta)/dpi)+1)
 
-      call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
       call setVariableParam(VariablePar)
+      if (VariablePar=='Ra'.or.VariablePar=='aa') then
+         Write(*,*) Ra, alpha, Pt, Le, tau, eta, m0, Symmetry, Truncation
+         call GrowthRateInitAlpha(Ra, alpha, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+      else
+         call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+      endif
    END subroutine
 
    !------------------------------------------------------------------------
@@ -138,8 +144,8 @@ contains
          do k=0, np
             phi = k*(360.0/np)
             z = pointValueOfSelectedQuantity(eigenVector, r, PHI, 1)
-            Write(20,*) r*cos(phi*pi/180.0), &
-                        r*sin(phi*pi/180.0), &
+            Write(20,*) r*cos(phi*dpi/180.0), &
+                        r*sin(phi*dpi/180.0), &
                         z
          enddo
       enddo
@@ -191,9 +197,9 @@ contains
             phi = k*(360.0/np)
             do j=1, nt
                z = pointValueOfSelectedQuantity(eigenVector, r, PHI, j)
-               Write(20,*) r*sin((theta(j))*pi/180.0)*cos(phi*pi/180.0), &
-                           r*sin((theta(j))*pi/180.0)*sin(phi*pi/180.0), &
-                           r*cos((theta(j))*pi/180.0), &
+               Write(20,*) r*sin((theta(j))*dpi/180.0)*cos(phi*dpi/180.0), &
+                           r*sin((theta(j))*dpi/180.0)*sin(phi*dpi/180.0), &
+                           r*cos((theta(j))*dpi/180.0), &
                            z
             enddo
          enddo
@@ -213,7 +219,7 @@ contains
       integer:: i
       integer:: l, m, n
 
-      PPHI = PHI*PI/180.D0
+      PPHI = PHI*dpi/180.D0
       !-- CALCULATION OF INNER AND OUTER RADIUS:
       RI = ETA/(1.D0-ETA)
 
@@ -230,7 +236,7 @@ contains
          l = eigenVector(i)%l
          m = eigenVector(i)%m
          n = eigenVector(i)%n
-         RFT = EPSM*l*(l+1)*PLMS(L,M,iTheta)*DSIN( N*PI*(R-RI) ) / R
+         RFT = EPSM*l*(l+1)*PLMS(L,M,iTheta)*DSIN( N*dpi*(R-RI) ) / R
 
          RFTR =  RFT * eigenVector(I)%realPart * DCOS( M*PPHI )
          RFTI = -RFT * eigenVector(I)%ImagPart * DSIN( M*PPHI )
@@ -251,7 +257,7 @@ contains
       integer:: i
       integer:: l, m, n
 
-      PPHI = PHI*PI/180.D0
+      PPHI = PHI*dpi/180.D0
       !-- CALCULATION OF INNER AND OUTER RADIUS:
       RI = ETA/(1.D0-ETA)
 
@@ -268,7 +274,7 @@ contains
          l = eigenVector(i)%l
          m = eigenVector(i)%m
          n = eigenVector(i)%n
-         FTT = EPSM*M*PLMS(L,M,iTHETA)*R*DSIN( N*PI*(R-RI) )
+         FTT = EPSM*M*PLMS(L,M,iTHETA)*R*DSIN( N*dpi*(R-RI) )
 
          FTTR = -FTT * eigenVector(I)%realPart * DSIN( M*PPHI )
          FTTI = -FTT * eigenVector(I)%imagPart * DCOS( M*PPHI )
@@ -279,8 +285,9 @@ contains
 
    !------------------------------------------------------------------------
    !>
-   SUBROUTINE computeModes()
+   SUBROUTINE computeModes(error)
       IMPLICIT none
+      integer, intent(out):: error
       integer:: nElements
       complex(8), allocatable:: ZEVEC(:), zew(:), ZEVAL(:,:)
       integer:: i, ni, li, lti, lpi, ld, ii
@@ -292,6 +299,8 @@ contains
       nElements = getEigenProblemSize()
       allocate( ZEVEC(NElements), zew(NElements), ZEVAL(NElements,NElements))
       allocate (eigenVector(nElements))
+      call findCriticalPar(error)
+      if (error.ne.0) return
       ! Recoompute critical state modes and eigenvectors
       call computeGrowthRateModes(sort=.TRUE., zew=zew, zeval=zeval)
       ! Most unstable mode will be the first
@@ -374,6 +383,39 @@ contains
       enddo
       
    END SUBROUTINE computeModes
+
+   !**********************************************************************
+   !> For the specified parameter, finds the global critical value
+   !! for all other parameters fixed. At the end, m0 is teh critical m
+   !! and the critical value of VariablePar is updated in the growth rate 
+   !! module.
+   subroutine findCriticalPar(error)
+      implicit none
+      integer, intent(out):: error
+      double precision:: ParMin, ParMax
+      double precision:: CriticalPar, origParVal
+      integer:: i
+
+      call saveParameterValue(origParVal)
+      ! Increase the interval, in case we did not find anything.
+      do i=0, 10
+         error = 0
+         ParMin = origParVal - 2.0d0**(i-2)*dabs(origParVal)
+         ParMax = origParVal + 2.0d0**(i-2)*dabs(origParVal)
+         Print*, origParVal, ParMin, ParMax
+         if (ParMin.gt.0.0d0) ParMin = 0.0d0
+         if (ParMax.lt.0.0d0) ParMax = 0.0d0
+         if (i.gt.9) then
+            Write(*,*) i,': Damn! 9 iterations and I could find nothing?'
+            ParMin = -1.0d20
+            ParMax = 1.0d20
+         endif
+
+         call minimizer(MaxGrowthRate, ParMin, ParMax, RELE ,ABSE, NSMAX, CriticalPar, error)
+         if (error.eq.0) exit
+      enddo
+      call setParameterValue(CriticalPar)
+   end subroutine
 
 end PROGRAM simplePlot
 ! vim: tabstop=3:softtabstop=3:shiftwidth=3:expandtab

@@ -1,8 +1,8 @@
 module GrowthRateMod
 #include "errorcodes.h"
+   use glo_constants
    implicit none
    private
-   double precision, parameter:: DPI=3.141592653589793D0
    !> Internally used parameters
    double precision:: Rt_i, Rc_i, Le_i, Pt_i, tau_i, Ra_i, alpha_i
    double precision:: ri, ro, eta_i
@@ -51,6 +51,8 @@ contains
       double precision:: Rt, Rc
       Rt = Ra*cos(alpha)
       Rc = Ra*sin(alpha)
+      Ra_i = Ra
+      alpha_i = alpha
       call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m, Symmetry, truncation)
    end subroutine
 
