@@ -7,6 +7,7 @@ program CriticalRaEff
    use parameters
    use GrowthRateMod
    use CritRaEff_io
+   use glo_constants
    implicit none
    type GlobalCrit
       double precision:: alpha
@@ -14,7 +15,6 @@ program CriticalRaEff
       double precision:: w
       integer:: m
    end type
-   double precision, parameter:: DPI=3.141592653589793D0
    integer, parameter:: NN = 3600
    character*60:: infile,outfile
    integer, parameter:: unitOut=16
