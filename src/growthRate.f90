@@ -191,11 +191,11 @@ contains
          case ('Ra')
             Ra_i = val
             Rt_i = Ra_i*cos(alpha_i)
-            Rc_i = Ra_i*sin(alpha_i)
+            Rc_i = Ra_i/Le_i*sin(alpha_i)
          case ('aa')
             alpha_i = val
             Rt_i = Ra_i*cos(alpha_i)
-            Rc_i = Ra_i*sin(alpha_i)
+            Rc_i = Ra_i/Le_i*sin(alpha_i)
          case ('Rt')
             Rt_i = val
          case ('Rc')
