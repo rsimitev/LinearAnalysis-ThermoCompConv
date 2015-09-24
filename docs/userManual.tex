@@ -103,7 +103,7 @@ native builds for *nix and Windows alike. Some features can be activated or
 deactivated at compile time by passing the appropriate ``-D'' option to cmake.
 Check the cmake documentation \citep{CMakeDox} for other build options.
 
-\subsection{Building the online documentation}
+\subsection{Building the on-line documentation}
 \begin{verbatim}
 $ mkdir BUILD
 $ cd BUILD
@@ -118,17 +118,24 @@ to:\\
 \begin{verbatim}
 $ mkdir BUILD
 $ cd BUILD
-$ cmake ..
+$ cmake -DCMAKE_INSTALL_PREFIX=.. ..
 $ make && make install
 \end{verbatim}
-After all run successfully, the file drs.exe should be in \verb|bin/|.
+After all run successfully, binary files should be in \verb|$TOPLEVEL/bin/|.
+
+\subsection{Generated files}
+
 
 \section{Running GLO}
 \subsection{Before running GLO}
 \label{s:runConfig}
 Each run needs to be configured. Configuration is passed on the standard input
-and obeys a format similar to the following.
-\begin{tiny}
+and obeys a format similar to the one shown in section~\ref{s:inputs}.
+
+\subsection{The input files}
+\label{s:inputs}
+\verb|glo| requires an input file formatted as a "key =  value" set of pairs.
+A typical input file looks like:
 \begin{verbatim}
 Symmetry = 2
 Calculation = 3
@@ -147,18 +154,45 @@ MaxIterations = 1000
 StepSize = -100 
 UpperLimit = 9.97e4
 \end{verbatim}
-\end{tiny}
 
-Calculation can assume integer values between -1 and 7 as described below:
+Any line started with '\#' or '*' is considered a comment.
+Valid key entries are described below.
+\begin{itemize}
+\item[Symmetry] accepts an integer describing the required equatorial symmetry for the system. Possible values are 0 for no symmetry; 1 for equatorial anti-symmetry and 2 for equatorial symmetry.
+\item[Calculation] accepts an integer describing which calculation should be carried out. See section~\ref{s:possibleCalcs} for a description.
+\item[VariablePar] accepts a string of at most 3 characters indicating which of the adimensional parameters should be varied in root finding calculations.
+\item[Rt] accepts the value of the thermal Rayleigh number.
+\item[tau] accepts the value of the Coriolis number.
+\item[Pt] accepts the value o the thermal Prandtl number.
+\item[eta] accepts the aspect ratio $r_i/r_o$. 
+\item[Le] accepts the value of the Lewis number.
+\item[Rc] accepts the value of the compositional Rayleigh number.
+\item[Truncation] is an integer describing the truncation. See section~\ref{s:truncation} for a description.
+\item[m0] is the azimuthal mode.
+\item[AbsParameterError] is the absolute error in the parameter when a root finding is performed.
+\item[RelativeGRError] is the relative growth rate error when a root finding is performed.
+\item[MaxIterations] is the maximum number of iterations to be passed to the root finder.
+\item[StepSize] is the step to use when other than the \verb|VariablePar| are varied.
+\item[UpperLimit] is the upper limit to use when other than the \verb|VariablePar| are varied.
+\end{itemize}
 
-\begin{tabular}{| m{0.1\textwidth} | p{0.8\textwidth}|}
-Value & Descrition \\ \hline
--1  &  {Varies the specified parameter and computes the growth rate for 
-other parameters fixed. The step size is taken to be the order of magnitude 
-of the value of the parameter (for example, if we are steping in Rt and Rt 
-is $5\times10^3$, then the step size is $10^3$). The step size is never 
-smaller than \verb|StepSize|.}\\
-\end{tabular}
+\subsection{Possible calculations}
+\label{s:possibleCalcs}
+Several types of calculation can be performed by using different values for the 
+\verb|Calculation| variable. Possible values are:
+\begin{itemize}
+\item{-1} Varies the thermal Rayleigh number and computes the growth rate for other parameters fixed.
+\item{0} Computes the critical Thermal Rayleigh number for the onset of convections for all other parameters fixed.
+\item{1} Writes the (complex) eigenvalues of the problem for fixed parameters. The real part of the eigenvalues is the frequency of oscillation of the mode. The imaginary part is the symmetric of the growth rate. Modes are sorted from highest to lowest growth rate.
+\item{2} Computes the critical thermal Rayleigh number as a function of tau for all other parameters fixed.
+\item{3} Computes the lowest critical thermal Rayleigh number of all m's as a function of tau for all other parameters fixed.
+\item{4} Computes the eigen vector Corresponding to the critical value of Rt with all other parameters fixed.
+\item{5} Computes the critical thermal Rayleigh number for a range of azimuthal wave-numbers m.
+\item{6} Varies the Lewis number and computes the critical thermal Rayleigh number for fixed other parameters. This subroutine changes the module variable "Le" during execution and does not restore it at the end.
+\item{7} Loops through the m's to find the critical Par and m\_c.
+\item{8} Loops through the m's to find the critical Rt=Rc and m\_c. 
+\end{itemize}
+
 
 \chapter{Theory}
 
@@ -194,7 +228,7 @@ follows the adiabat \citep{LabrossePoirier1997,DaviesGubbins2011} and alludes to
 the possibility that at least a fraction of the energy available to planetary
 dynamos is due to radiogenic heat release. \\ \hline
 \end{tabular}
-\caption{Possible temperature profiles, in K, hardcoded into GLO. First column
+\caption{Possible temperature profiles, in K, hard-coded into GLO. First column
 refers to the option values used in the code.}
 \label{t:t_profiles}
 \end{table}
@@ -211,12 +245,12 @@ thus closely following an adiabatic temperature profile
 \begin{figure}[htb]
 \centering
  \input{figs/TemperatureProfiles.tex}
- \caption{Possible temperature profiles, in K, hardcoded into GLO.}
+ \caption{Possible temperature profiles, in K, hard-coded into GLO.}
 \end{figure}
 
 The gravity field is described by that of a self gravitating body of constant
 density, $\vec g = - d \gamma \vec r$, where $rd$ is the length of the position
-vector with respect to the center of the sphere and $\gamma$ is a constant given
+vector with respect to the centre of the sphere and $\gamma$ is a constant given
 in $s^{-2}$. In common with most other simulations of Earth and planetary
 dynamos, we assume the Boussinesq approximation implying a constant density
 $\varrho_0$ except in the gravity term where the temperature dependence is taken
@@ -226,14 +260,10 @@ T)/\varrho_0 =${\sl const}.
 \section{The adimensional equations}
 GLO solves a set of adimensional equations that make use of the following set of
 scales. Lengths are measured in units of $d$ and times in units of $d^2 / \nu$.
-The temperature is measured in units ($T^*$) that depend on the radial profile:
-$T^* = \beta d \nu/\kappa$ for the case of the conduction profile (Opt.~0); and
-$T^* = \beta d^2 \nu/\kappa$ for the case of the adiabat (Opt.~1). Finally, the
-magnetic flux density is measured in units of $\nu ( \mu \varrho )^{1/2} /d$,
-with $\mu$, the magnetic permeability \citep{ArdesEtAl97}. The equations of
-motion for the velocity vector $\vec u$, the heat equation for the deviation
-$\Theta$ from the radial temperature profile, and the equation of induction for
-the magnetic flux density $\vec B$ are then given by:
+The temperature is measured in units of $T^* = \beta d^2 \nu/\kappa$, the 
+adiabat \citep{ArdesEtAl97}. The equations of
+motion for the velocity vector $\vec u$ and the heat equation for the deviation
+$\Theta$ from the radial temperature profile are then given by:
 \begin{subequations}
 \begin{gather}
 \label{e:nonDivergence}
@@ -243,10 +273,7 @@ the magnetic flux density $\vec B$ are then given by:
 \vec u = - \nabla \pi + R_T \Theta \vec{r} + \nabla^2 \vec u + \vec B \cdot
 \nabla \vec B, \\
 \label{e:temperature}
-\partial_t \Theta + \vec u \cdot \nabla (\Theta+T_S) = \frac{1}{P_T} \nabla^2 \Theta, \\
-\label{e:induction}
-\nabla^2 \vec B =  P_m(\partial_t \vec B + \vec u \cdot \nabla \vec B
--  \vec B \cdot \nabla \vec u),
+\partial_t \Theta + \vec u \cdot \nabla (\Theta+T_S) = \frac{1}{P_T} \nabla^2 \Theta.
 \end{gather}
 \end{subequations}
 where all gradient terms in the equation of motion have been combined into
@@ -285,6 +312,8 @@ The value $C^*$ is a scaling for the composition anomaly that can be
 chosen arbitrarily or, as is the case of the temperature, based on the profile
 $C_S$.
 
+
+
 \section{Description of the linearised system.}
 \label{s:problemSetup}
 We use a Galerkin method to find the critical thermal Rayleigh number and most
@@ -313,19 +342,19 @@ whereas the flow is taken to be stress free. Except when otherwise mentioned,
 the equations are solved for a spherical shell with an inner to outer radius
 ratio of $\eta=0.35$
 
-Taking the radial component of the curl and the radial componentof curls curl of
+Taking the radial component of the curl and the radial component of curls curl of
 \ref{eq:NavierStokes} we obtain, respectively, the equations for the toroidal
 ($T(\vec r,t)$) and poloidal ($S(\vec r,t)$) scalars of the flow.
 
 We assume that the system is at the onset of convection and so all quantities
 are small oscillations around a static state. Each scalar quantity is then
-assumed to obbei the following ansatz in time:
+assumed to obey the following ansatz in time:
 \begin{equation}
  X(\vec r, t) = \tilde X(\vec r,\omega) e^{it(\omega-iGR)},
 \end{equation}
-where $\omega$ is the frequency of oscillation and $GR$ is a grouth rate. The
+where $\omega$ is the frequency of oscillation and $GR$ is a growth rate. The
 system will be stable, that is, any oscillation will decay, if $GR$ is less than
-or equal to zero. Any instability will grow exponentially over time otherwhise.
+or equal to zero. Any instability will grow exponentially over time otherwise.
 The four scalar equations are then
 \begin{subequations}
 \begin{gather}
@@ -342,8 +371,8 @@ The four scalar equations are then
 
 Each scalar quantity can now be expanded in terms of spherical harmonics for the
 angular part. The Galerkin method consists in expanding the radial part of the
-scalar quantities in terms of functions that obbey the speciffic boundary
-conditions we whish to impose.
+scalar quantities in terms of functions that obey the specific boundary
+conditions we wish to impose.
 
 Once this is done, we can represent the system above as an algebraic equation:
 \begin{equation}
@@ -395,43 +424,17 @@ with $m$ fixed, $n$ varying faster and $l$ varying slower.
 }
 
 We explore the effects of the adimensional parameters on the onset of convection
-of the system as a whole and on speciffic azimuthal modes.
+of the system as a whole and on specific azimuthal modes.
 
 \section{Boundary conditions}
 \label{s:boundaryConditions}
+In the present version of the code boundary conditions are hard-coded.
+The flow obeys, free slip, non penetration conditions and the temperature and
+composition anomalies are set to zero at the boundary.
+Temperature and compositional profiles are set to be nearly adiabatic with 
+uniformly distributed sources.
 
-\subsection{Boundary conditions on the flow}
-Besides obeying a non penetration condition, at each boundary the velocity
-field obeys one of the following conditions:
-\begin{itemize}
-\item Free slip (0);
-\item No slip (1).
-\end{itemize}
-
-\subsection{Boundary conditions on the temperature}
-At each boundary, the temperature obeys one of the following conditions:
-\begin{itemize}
- \item Fixed/constant temperature (0);
- \item Fixed/constant heat flux (1).
-\end{itemize}
-
-\subsection{Boundary conditions on the magnetic field}
-At each of the boundaries, the magnetic field obeys one of the following
-conditions:
-\begin{itemize}
- \item Vacuum (0);
- \item Pseudo-vacuum (1);
-\end{itemize}
-
-\subsection{Boundary conditions on the composition}
-At each boundary, the composition obeys one of the following conditions:
-\begin{enumerate}
- \item Fixed/constant composition (0);
- \item Fixed/constant chemical flux (1).
-\end{enumerate}
-
-
-\chapter{Discretization and numerical methods}
+\chapter{Discretisation and numerical methods}
 
 \section{Poloidal/toroidal decomposition}
 Being solenoidal vector fields  $\vec u$ and $\vec B$ can be represented
@@ -446,7 +449,7 @@ uniquely in terms of poloidal and toroidal components,
 \end{subequations}
 Notice that the decomposition is different for the flow and the magnetic field.
 This difference in decomposition justifies the difference in implementation of
-the laplacians, spectral-to-real and real-to-spectral transformations in the
+the Laplacians, spectral-to-real and real-to-spectral transformations in the
 radial direction. The difference in implementation of the flow decomposition has
 its justification in that values of the flow coefficients under this expansion
 are better numerically behaved \citep{Tilgner1999}.
@@ -461,7 +464,7 @@ We use $4\pi$ normalised spherical harmonics, defined as :
 \begin{equation}
  Y_\ell^m( \theta , \varphi ) =  \sqrt{{(2\ell+1) }{(\ell-m)!\over (\ell+m)!}} \, P_\ell^m ( \cos{\theta} )\, e^{i m \varphi },
 \end{equation}
-where $P_\ell^m ( \cos{\theta} )$ are the unnormalized Associated Legendre Polynomial
+where $P_\ell^m ( \cos{\theta} )$ are the un-normalized Associated Legendre Polynomial
 and
 \begin{equation}
  \int Y_\ell^m( \theta , \varphi ) {Y^*}_\ell^m( \theta , \varphi ) \mbox{d}\Omega = 4\pi.
@@ -486,7 +489,7 @@ are the normalised ALP, which we use throughout the code to construct the spheri
 In spherical geometry, we can define three types of spectrum: a spectrum in
 terms of azimuthal wave number $m$, or {\em m-spectrum}, ${\cal R}_m$; a
 spectrum in terms of the spherical harmonic degree $l$, or {\em l-spectrum},
-${\cal R}_l$; and a spectrum in terms of the Chevichev order $n$, or
+${\cal R}_l$; and a spectrum in terms of the Chebychev order $n$, or
 {\em n-spectrum}, ${\cal R}_n$.
 
 For a scalar field, like the temperature or the composition, these are defined
@@ -497,51 +500,6 @@ as:
 {\cal R}_n & = \sum_{m=0}^{Np_s/2}\sum_{l=m}^{Nt_s}
 \end{align}
 
-\chapter{Input/Output}
-
-\section{Inputs}
-\label{s:inputs}
-\verb|glo| requires an input file formatted as a "key =  value" set of pairs.
-A typical input file looks like:
-\begin{verbatim}
-Symmetry = 2
-Calculation = 3
-VariablePar = Rt
-Rt = 3.0e6 
-tau = 1.0e5 
-Pt = 1.0 
-eta = 0.35 
-Le = 0.3 
-Rc = 1.0e2
-Truncation = 10 
-m0 = 19
-AbsParameterError = 1.00E-08 
-RelativeGRError = 1.00E-03 
-MaxIterations = 1000
-StepSize = -100 
-UpperLimit = 9.97e4
-\end{verbatim}
-
-Any line started with '\#' or '*' is considered a comment.
-Valid key entries are described below.
-\begin{itemize}
-\item[Symmetry] accepts an integer describibg the required equatorial symmetry for the system. Possible values are 0 for no symmetry; 1 for equatorial anti-symmetry and 2 for equatorial symmetry.
-\item[Calculation] accepts an integer describing whic calculation should be carried out. See section~\ref{s:possibleCalcs} for a description.
-\item[VariablePar] accepts a string of at most 3 characters indicating which of the adimensional parameters should be varied in root finding calculations.
-\item[Rt] accepts the value of the thermal Rayleigh number.
-\item[tau] accepts the value of the Coriolis number.
-\item[Pt] accepts the value o the themal Prandtl number.
-\item[eta] accepts the aspect ratio $r_i/r_o$. 
-\item[Le] accepts the value of the Lewis number.
-\item[Rc] accepts the value of the compositional Rayleigh number.
-\item[Truncation] is an integer describing the truncation. See section~\ref{s:truncation} for a description.
-\item[m0] is the azimuthal mode.
-\item[AbsParameterError] is the absolute error in the parameter when a root finding is performed.
-\item[RelativeGRError] is the relative growth rate error when a root finding is performed.
-\item[MaxIterations] is the maximum number of iterations to be passed to the root finder.
-\item[StepSize] is the step to use when other than the \verb|VariablePar| are varied.
-\item[UpperLimit] is the upper limit to use when other than the \verb|VariablePar| are varied.
-\end{itemize}
 
 
 \appendix
@@ -559,6 +517,8 @@ corresponds to the same mode as eigenvalue x at run y+1.
 The mode tracker is a tool that helps reorder the eigen values for each set of
 parameters such that continuity is ensured.
 
+\section{Plotting}
+\subsection{}
 \bibliography{userManual}
 \bibliographystyle{abbrvnat}
 
