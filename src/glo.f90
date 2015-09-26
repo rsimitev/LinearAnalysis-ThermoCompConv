@@ -261,12 +261,13 @@ contains
          call GrowthRateUpdatePar(m=m0)
          ! Increase the interval, in case we did not find anything.
          do i=0, 10
-            ParMin = origParVal - 2**(i-2)*dabs(origParVal)
-            ParMax = origParVal + 2**(i-2)*dabs(origParVal)
+            info=0
+            ParMin = origParVal - 2.0**(i-2)*dabs(origParVal)
+            ParMax = origParVal + 2.0**(i-2)*dabs(origParVal)
             if (ParMin.gt.0.0d0) ParMin = 0.0d0
             if (ParMax.lt.0.0d0) ParMax = 0.0d0
             if (i.gt.9) then
-               Write(*,*) i,': Damn! 6 iterations and I could find nothing?'
+               Write(*,*) i,': Damn! 9 iterations and I could find nothing?'
                ParMin = -1.0d20
                ParMax = 1.0d20
             endif
