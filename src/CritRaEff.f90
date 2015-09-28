@@ -151,6 +151,7 @@ contains
          Write(*,*) '[',date,'-',time,']', ' alpha = ', alpha(i), CriticalRa
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
+         if (mod(i,5)==0 ) call writeCriticalCurveSingleM(alpha, crit, m0)
       enddo
       info = 0
       CriticalRa = CriticalRaAlpha0
@@ -176,6 +177,7 @@ contains
          Write(*,*) '[',date,'-',time,']', ' alpha = ', alpha(i), CriticalRa
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
+         if (mod(i,5)==0 ) call writeCriticalCurveSingleM(alpha, crit, m0)
       enddo
    end subroutine
 
