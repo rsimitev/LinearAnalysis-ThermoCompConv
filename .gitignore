@@ -15,3 +15,13 @@ test
 TEST
 tmp
 .kate*
+userManual.aux
+userManual.bbl
+userManual.blg
+userManual.log
+userManual.out
+userManual.pdf
+userManual.synctex.gz
+userManual.tex.backup
+userManual.toc
+
