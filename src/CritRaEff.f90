@@ -15,7 +15,7 @@ program CriticalRaEff
       double precision:: w
       integer:: m
    end type
-   integer, parameter:: NN = 3600
+   integer, parameter:: NN = 900  ! This is one point every 0.4 degrees.
    character*60:: infile,outfile
    integer, parameter:: unitOut=16
    double precision:: alphas(NN)
@@ -99,7 +99,7 @@ contains
       integer:: i, N, HalfN
       integer:: info, counter
 
-      N     = size(alphas,1)
+      N     = size(alpha,1)
       HalfN = N/2
       Write(*,*) N, HalfN
       info  = 0
@@ -207,7 +207,7 @@ contains
          call GrowthRateUpdateParAlpha(m=m)
          Write(*,*) 'Computing critical value for m =', m
          if(wasPreviouslyComputed(m)) then
-            call readCriticalCurveSingleM(crit_new,m)
+            call readCriticalCurveSingleM(alpha,crit_new,m)
          else
             call computeCriticalCurveM(alpha, crit_new)
             call writeCriticalCurveSingleM(alpha, crit_new, m)
@@ -242,7 +242,7 @@ contains
       call GrowthRateUpdateParAlpha(m=m0)
       Write(*,*) 'Computing critical value for m =', m0
       if(wasPreviouslyComputed(m0)) then
-         call readCriticalCurveSingleM(crit_new,m0)
+         call readCriticalCurveSingleM(alpha,crit_new,m0)
       else
          call computeCriticalCurveM(alpha, crit_new)
          call writeCriticalCurveSingleM(alpha, crit_new, m0)
@@ -303,29 +303,30 @@ contains
       double precision, intent(in):: alpha(:)
       double precision, allocatable:: aa2(:), crit2(:,:), trans(:,:)
       integer, intent(in):: m
-      double precision:: aa, GR,OM
+      double precision:: a1, a2, GR, OM
       character(len=3):: num
       integer:: N, N2, i
       integer, parameter:: unitm=999
+
       N = size(crit,1)
       Write(num,'(I3.3)') m
       open(unit=unitm,file=trim(outfile)//'.'//trim(num), status='OLD')
       ! read the first entry and check that the dalpha is the same
-      read(unitm,*) aa, GR, OM
-      if (aa.ne.alpha(1)) then
-         N2 = 2*dpi/(-aa)
+      read(unitm,*) a1, GR, OM
+      read(unitm,*) a2, GR, OM
+      if (a2.ne.alpha(2)) then
+         N2 = int(2*dpi/(a2-a1))
       else
          N2 = N
       endif
+      Write(*,*) N, N2
+      rewind(unitm)
       ! Allocate buffer arrays with the appropriate size.
       allocate(aa2(N2))
       allocate(crit2(N2,2))
       ! Store the first entry.
-      aa2(1) = aa
-      crit2(1,1) = GR
-      crit2(1,2) = OM
       ! Read the rest
-      do i=2, N2
+      do i=1, N2
          read(unitm,*) aa2(i), crit2(i,1), crit2(i,2)
       enddo
       close(unitm)
@@ -338,43 +339,52 @@ contains
          call createTrans(alpha,aa2,trans)
          crit(:,1) = matmul(trans(:,:),crit2(:,1))
          crit(:,2) = matmul(trans(:,:),crit2(:,2))
+         deallocate(trans)
       endif
-      deallocate(aa2,crit2, trans)
+      deallocate(aa2,crit2)
+      Write(num,'(I3.3)') m
+      open(unit=unitm,file=trim(outfile)//'-debug.'//trim(num), status='UNKNOWN')
+      do i=1, N
+          Write(unitm,*) alpha(i), crit(i,1), crit(i,2)
+      enddo
+      close(unitm)
    end subroutine
    
    !**********************************************************************
    !> Creates the transformation matrix that converts from 
    !! one resolution to the other. At the moment a simple linear 
    !! interpolation between nearest neighbours is used.
-   subroutine createTrans(aa,aa2,trans)
+   subroutine createTrans(aaOut,aaIn,trans)
       implicit none
-      double precision:: aa(:), aa2(:), trans(:,:)
-      integer:: N, N2, i, j
-      N  = size(aa,1)
-      N2 = size(aa2,1)
+      double precision, intent(in):: aaOut(:), aaIn(:)
+      double precision, intent(out):: trans(:,:)
+      integer:: N, M, i, j
+
+      N = size(aaOut,1)
+      M = size(aaIn,1)
       trans = 0.0d0
       ! Take care of the initial point
-      if (aa(1).lt.aa2(1)) then
+      if (aaOut(1).lt.aaIn(1)) then
          trans(1,1) = 1.0d0
       else
-         trans(1,1)   =  (aa(1) - aa2(1+1))/(aa2(1)-aa2(1+1))
-         trans(1,1+1) = -(aa(1) - aa2(1)  )/(aa2(1)-aa2(1+1))
+         trans(1,1)   =  (aaOut(1) - aaIn(1+1))/(aaIn(1)-aaIn(1+1))
+         trans(1,1+1) = -(aaOut(1) - aaIn(1)  )/(aaIn(1)-aaIn(1+1))
       endif
       ! Use a linear interpolation where necessary.
       do i=2, N-1
-         do j=1, N2-1
-            if( (aa(i).gt.aa2(j)) .and. (aa(i).lt.aa2(j+1)) ) then
-               trans(i,j)   =  (aa(i) - aa2(j+1))/(aa2(j)-aa2(j+1))
-               trans(i,j+1) = -(aa(i) - aa2(j)  )/(aa2(j)-aa2(j+1))
+         do j=1, M-1
+            if( (aaOut(i).ge.aaIn(j)) .and. (aaOut(i).lt.aaIn(j+1)) ) then
+               trans(i,j)   =  (aaOut(i) - aaIn(j+1))/(aaIn(j)-aaIn(j+1))
+               trans(i,j+1) = -(aaOut(i) - aaIn(j)  )/(aaIn(j)-aaIn(j+1))
             endif
          enddo
       enddo
       ! take cae of the last point
-      if (aa(N).gt.aa2(N2)) then
+      if (aaOut(N).gt.aaIn(M)) then
          trans(1,1) = 1.0d0
       else
-         trans(N,N2-1) =  (aa(N) - aa2(N2)   )/(aa2(N2-1)-aa2(N2))
-         trans(N,N2  ) = -(aa(N) - aa2(N2-1) )/(aa2(N2-1)-aa2(N2))
+         trans(N,M-1) =  (aaOut(N) - aaIn(M)   )/(aaIn(M-1)-aaIn(M))
+         trans(N,M  ) = -(aaOut(N) - aaIn(M-1) )/(aaIn(M-1)-aaIn(M))
       endif
    end subroutine
    
