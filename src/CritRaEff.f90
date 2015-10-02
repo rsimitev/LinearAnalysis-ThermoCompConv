@@ -240,6 +240,10 @@ contains
          Write(*,*) 'Computing critical value for m =', m
          if(wasPreviouslyComputed(m)) then
             call readCriticalCurveSingleM(alpha,crit_new,m)
+            if (recompute) then
+               call computeCriticalCurveM(alpha, crit_new)
+               call writeCriticalCurveSingleM(alpha, crit_new, m)
+            endif
          else
             call computeCriticalCurveM(alpha, crit_new)
             call writeCriticalCurveSingleM(alpha, crit_new, m)
@@ -275,6 +279,10 @@ contains
       Write(*,*) 'Computing critical value for m =', m0
       if(wasPreviouslyComputed(m0)) then
          call readCriticalCurveSingleM(alpha,crit_new,m0)
+         if (recompute) then
+            call computeCriticalCurveM(alpha, crit_new)
+            call writeCriticalCurveSingleM(alpha, crit_new, m0)
+         endif
       else
          call computeCriticalCurveM(alpha, crit_new)
          call writeCriticalCurveSingleM(alpha, crit_new, m0)
