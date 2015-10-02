@@ -39,6 +39,7 @@ program CriticalRaEff
    endif
    print*,  trim(infile),' - ',trim(outfile)
 
+   ! Parse all other arguments and set flags
    call getarg(3,par)
    if (par.eq.'-h') then
       call usage()
@@ -49,6 +50,7 @@ program CriticalRaEff
       restart = .true.
    endif
    
+   ! Initialise
    call init(trim(infile))
    
    call createAlphas(alphas)
