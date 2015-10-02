@@ -22,6 +22,7 @@ program CriticalRaEff
    double precision:: alphas(NN)
    type(GlobalCrit):: crit(NN)
    logical:: recompute=.false.
+   logical:: restart=.false.
 
    !---------------------------------------------------------
    !  arg #1 - filename or usage ?
@@ -44,6 +45,8 @@ program CriticalRaEff
       stop
    elseif(par.eq.'-r') then
       recompute = .true.
+   elseif(par.eq.'-c') then
+      restart = .true.
    endif
    
    call init(trim(infile))
@@ -68,8 +71,11 @@ contains
       print*, 'CriticalRaEff -h'
       print*, '   Prints this message.'
       print*, ''
-      print*, 'CriticalRaEff <in file> <out file> [-r]'
+      print*, 'CriticalRaEff <in file> <out file> [-r|-c]'
       print*, '   Parameters must be used in this order.'
+      print*, '   -r ignores any previous calculation and recomputes everything.'
+      print*, '   -c tries to continue any previously started computation.'
+      print*, '   default is to compute nothing if  any previous result is found.'
    end subroutine
 
    !**********************************************************************
