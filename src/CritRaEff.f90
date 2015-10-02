@@ -128,11 +128,11 @@ contains
       crit(:,1) = huge(1.0d0)
       crit(:,2) = 0.0d0
 
+      ! At alpha=0 a critical Ra is certain to exist so,
+      ! change the interval, until we find it.
       RaMin = 0
       RaMax = 10*Ra
       call GrowthRateUpdateParAlpha(alpha=0.0d0)
-      ! At this point a critical Ra is certain to exist so,
-      ! increase the interval, until we find it.
       do
          gr1 = MaxGrowthRate(RaMin)
          gr2 = MaxGrowthRate(RaMax)
@@ -143,28 +143,57 @@ contains
             exit
          endif
       enddo
-      counter=0
       ! Now that we found an interval find the critical value for Ra.
-      call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
+      counter=0
+      CriticalRa = (RaMin+RaMax)*0.5
+      call computeSinglePoint(alpha, HalfN, CriticalRa, crit, counter)
       ! Cache this value for future use.
       CriticalRaAlpha0 = CriticalRa
       ! Compute the positive half of the alphas
-      do i=HalfN, N
+      counter=0
+      do i=HalfN+1, N
+         call computeSinglePoint(alpha, i, CriticalRa, crit, counter)
+         if (mod(i,5)==0 && counter.ne.3) call writeCriticalCurveSingleM(alpha, crit, m0)
+      enddo
+
+      ! and the negative half
+      counter=0
+      CriticalRa = CriticalRaAlpha0
+      do i=HalfN-1, 1, -1
+         call computeSinglePoint(alpha, i, CriticalRa, crit, counter)
+         if (mod(i,5)==0 && counter.ne.3) call writeCriticalCurveSingleM(alpha, crit, m0)
+      enddo
+   end subroutine
+
+   !**********************************************************************
+   !>
+   subroutine computeSinglePoint(alpha, i, CriticalRa, crit, counter)
+      implicit none
+      double precision, intent(in):: alpha(:)
+      integer, intent(in):: i
+      integer, intent(inout):: counter
+      double precision, intent(inout):: CriticalRa, crit(:,:)
+      logical, optional, intent(in):: reset
+      double precision:: RaMax, Ramin
+      integer:: info
+      info=0
+      
+      if (counter.ge.3) then
+         crit(i,1) = huge(1.0d0)
+         crit(i,2) = 0.0d0
+         return
+      else
          call GrowthRateUpdateParAlpha(Ra=CriticalRa, alpha=alpha(i))
          RaMin = 0.05d0*CriticalRa
          RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
          if (info.NE.0) then
-            ! We test 3 more points after we failed just in case we
-            ! hit an asymptote.
-            Write(*,*) 'counter = ', counter
-            if (counter==3) then
-               counter = 0
-               exit
-            else
+            if (counter.ne.3) then
                counter = counter + 1
                CriticalRa = (RaMin+RaMax)/2.0
-               cycle
+               crit(i,1) = huge(1.0d0)
+               crit(i,2) = 0.0d0
+               return
             endif
          else
             counter = 0
@@ -172,35 +201,9 @@ contains
          call logSinglePoint(alpha(i), CriticalRa)
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
-         if (mod(i,5)==0 ) call writeCriticalCurveSingleM(alpha, crit, m0)
-      enddo
-      info = 0
-      CriticalRa = CriticalRaAlpha0
-      ! and the negative half
-      do i=HalfN-1, 1, -1
-         call GrowthRateUpdateParAlpha(Ra=CriticalRa, alpha=alpha(i))
-         RaMin = 0.05d0*CriticalRa
-         RaMax = 100.d0*CriticalRa
-         call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
-         if (info.NE.0) then
-            Write(*,*) 'counter = ', counter
-            if (counter==3) then
-               exit
-            else
-               counter = counter + 1
-               CriticalRa = (RaMin+RaMax)/2.0
-               cycle
-            endif
-         else
-            counter = 0
-         endif
-         call logSinglePoint(alpha(i),CriticalRa)
-         crit(i,1) = CriticalRa
-         crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
-         if (mod(i,5)==0 ) call writeCriticalCurveSingleM(alpha, crit, m0)
-      enddo
+      endif
    end subroutine
-
+   
    !**********************************************************************
    !>
    subroutine logSinglePoint()
