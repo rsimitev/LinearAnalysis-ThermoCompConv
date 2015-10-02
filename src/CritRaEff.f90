@@ -42,7 +42,7 @@ program CriticalRaEff
    if (par.eq.'-h') then
       call usage()
       stop
-   elseif(par.eq.'-r')
+   elseif(par.eq.'-r') then
       recompute = .true.
    endif
    
@@ -153,7 +153,7 @@ contains
       counter=0
       do i=HalfN+1, N
          call computeSinglePoint(alpha, i, CriticalRa, crit, counter)
-         if (mod(i,5)==0 && counter.ne.3) call writeCriticalCurveSingleM(alpha, crit, m0)
+         if (mod(i,5)==0 .and. counter.ne.3) call writeCriticalCurveSingleM(alpha, crit, m0)
       enddo
 
       ! and the negative half
@@ -161,7 +161,7 @@ contains
       CriticalRa = CriticalRaAlpha0
       do i=HalfN-1, 1, -1
          call computeSinglePoint(alpha, i, CriticalRa, crit, counter)
-         if (mod(i,5)==0 && counter.ne.3) call writeCriticalCurveSingleM(alpha, crit, m0)
+         if (mod(i,5)==0 .and. counter.ne.3) call writeCriticalCurveSingleM(alpha, crit, m0)
       enddo
    end subroutine
 
@@ -173,7 +173,6 @@ contains
       integer, intent(in):: i
       integer, intent(inout):: counter
       double precision, intent(inout):: CriticalRa, crit(:,:)
-      logical, optional, intent(in):: reset
       double precision:: RaMax, Ramin
       integer:: info
       info=0
@@ -206,9 +205,9 @@ contains
    
    !**********************************************************************
    !>
-   subroutine logSinglePoint()
+   subroutine logSinglePoint(alpha, CriticalRa)
       implicit none
-      double precision, intent(in):: alpha. CriticalRa
+      double precision, intent(in):: alpha, CriticalRa
       character(8)  :: date
       character(10) :: time
 
