@@ -21,8 +21,8 @@ program CriticalRaEff
    double precision:: alphas(NN)
    type(GlobalCrit):: crit(NN)
 
-!---------------------------------------------------------
-!  arg #1 - filename or usage ?
+   !---------------------------------------------------------
+   !  arg #1 - filename or usage ?
    call getarg(1,infile)
    if (trim(infile).eq.'' .or. infile.eq.'-h') then
       call usage()
