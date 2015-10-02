@@ -24,13 +24,16 @@ program CriticalRaEff
 !---------------------------------------------------------
 !  arg #1 - filename or usage ?
    call getarg(1,infile)
-   if (infile.eq.' ' .or. infile.eq.'-h') then
-      print*, 'Usage : '
-      print*, 'CriticalRaEff <in file> <out file>'
+   if (trim(infile).eq.'' .or. infile.eq.'-h') then
+      call usage()
       stop
    endif
 
    call getarg(2,outfile)
+   if (trim(outfile).eq.'' .or. outfile.eq.'-h') then
+      call usage()
+      stop
+   endif
    print*,  trim(infile),' - ',trim(outfile)
 
    call init(trim(infile))
@@ -46,6 +49,18 @@ program CriticalRaEff
    end select
 
 contains
+
+   !**********************************************************************
+   !> Prints a usage message.
+   subroutine usage()
+      implicit none
+      print*, 'Usage : '
+      print*, 'CriticalRaEff -h'
+      print*, '   Prints this message.'
+      print*, ''
+      print*, 'CriticalRaEff <in file> <out file> [-r]'
+      print*, '   Parameters must be used in this order.'
+   end subroutine
 
    !**********************************************************************
    !> Initialises things.
