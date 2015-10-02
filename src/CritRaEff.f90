@@ -122,8 +122,8 @@ contains
    !! for all other parameters fixed.
    subroutine computeCriticalCurveM(aa, crit)
       implicit none
-      double precision, intent(out):: crit(:,:)
       double precision, intent(in):: aa(:)
+      double precision, intent(inout):: crit(:,:)
       double precision:: CriticalRa, CriticalRaAlpha0
       double precision:: RaMin, RaMax, gr1,gr2
       integer:: i, N, HalfN
@@ -132,9 +132,6 @@ contains
       N     = size(aa,1)
       HalfN = N/2
       Write(*,*) N, HalfN
-      info  = 0
-      crit(:,1) = huge(1.0d0)
-      crit(:,2) = 0.0d0
 
       ! At alpha=0 a critical Ra is certain to exist so,
       ! change the interval, until we find it.
