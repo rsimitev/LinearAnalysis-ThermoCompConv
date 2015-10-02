@@ -188,6 +188,10 @@ contains
          crit(i,2) = 0.0d0
          return
       else
+         ! if we are to restart the calclulation, use any previous result
+         ! that is not a huge number and return.
+         if (restart.and.crit(i,1).lt.huge(1.0d0)) return
+         ! Otherwhise, do the actual leg work.
          call GrowthRateUpdateParAlpha(Ra=CriticalRa, alpha=alpha(i))
          RaMin = 0.05d0*CriticalRa
          RaMax = 100.d0*CriticalRa
@@ -229,11 +233,9 @@ contains
       type(GlobalCrit), intent(out):: crit(:)
       double precision, allocatable:: crit_new(:,:)
       integer:: m, N, i
-      integer:: info
 
       N = size(alpha,1)
       allocate(crit_new(N,2))
-      info = 0
       crit_new(:,1) = huge(1.0d0)
       crit_new(:,2) = 0.0d0
       do i=1, N
@@ -248,7 +250,7 @@ contains
          Write(*,*) 'Computing critical value for m =', m
          if(wasPreviouslyComputed(m)) then
             call readCriticalCurveSingleM(alpha,crit_new,m)
-            if (recompute) then
+            if (recompute.or.restart) then
                call computeCriticalCurveM(alpha, crit_new)
                call writeCriticalCurveSingleM(alpha, crit_new, m)
             endif
