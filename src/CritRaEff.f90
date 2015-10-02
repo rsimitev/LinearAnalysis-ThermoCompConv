@@ -120,16 +120,16 @@ contains
    !**********************************************************************
    !> Computes the lowest critical effective Rayleigh number as a function of alpha
    !! for all other parameters fixed.
-   subroutine computeCriticalCurveM(alpha, crit)
+   subroutine computeCriticalCurveM(aa, crit)
       implicit none
-      double precision, intent(in):: alpha(:)
       double precision, intent(out):: crit(:,:)
+      double precision, intent(in):: aa(:)
       double precision:: CriticalRa, CriticalRaAlpha0
       double precision:: RaMin, RaMax, gr1,gr2
       integer:: i, N, HalfN
       integer:: info, counter
 
-      N     = size(alpha,1)
+      N     = size(aa,1)
       HalfN = N/2
       Write(*,*) N, HalfN
       info  = 0
@@ -154,22 +154,22 @@ contains
       ! Now that we found an interval find the critical value for Ra.
       counter=0
       CriticalRa = (RaMin+RaMax)*0.5
-      call computeSinglePoint(alpha, HalfN, CriticalRa, crit, counter)
+      call computeSinglePoint(aa, HalfN, CriticalRa, crit, counter)
       ! Cache this value for future use.
       CriticalRaAlpha0 = CriticalRa
       ! Compute the positive half of the alphas
       counter=0
       do i=HalfN+1, N
-         call computeSinglePoint(alpha, i, CriticalRa, crit, counter)
-         if (mod(i,5)==0 .and. counter.ne.3) call writeCriticalCurveSingleM(alpha, crit, m0)
+         call computeSinglePoint(aa, i, CriticalRa, crit, counter)
+         if (mod(i,5)==0 .and. counter.ne.3) call writeCriticalCurveSingleM(aa, crit, m0)
       enddo
 
       ! and the negative half
       counter=0
       CriticalRa = CriticalRaAlpha0
       do i=HalfN-1, 1, -1
-         call computeSinglePoint(alpha, i, CriticalRa, crit, counter)
-         if (mod(i,5)==0 .and. counter.ne.3) call writeCriticalCurveSingleM(alpha, crit, m0)
+         call computeSinglePoint(aa, i, CriticalRa, crit, counter)
+         if (mod(i,5)==0 .and. counter.ne.3) call writeCriticalCurveSingleM(aa, crit, m0)
       enddo
    end subroutine
 
