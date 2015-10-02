@@ -290,7 +290,7 @@ contains
       Write(*,*) 'Computing critical value for m =', mm
       if(wasPreviouslyComputed(mm)) then
          call readCriticalCurveSingleM(alpha,crit_new,mm)
-         if (recompute) then
+         if (recompute.or.restart) then
             call computeCriticalCurveM(alpha, crit_new)
             call writeCriticalCurveSingleM(alpha, crit_new, mm)
          endif
