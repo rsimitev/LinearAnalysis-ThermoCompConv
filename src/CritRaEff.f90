@@ -17,9 +17,11 @@ program CriticalRaEff
    end type
    integer, parameter:: NN = 900  ! This is one point every 0.4 degrees.
    character*60:: infile,outfile
+   character(len=2):: par
    integer, parameter:: unitOut=16
    double precision:: alphas(NN)
    type(GlobalCrit):: crit(NN)
+   logical:: recompute=.false.
 
    !---------------------------------------------------------
    !  arg #1 - filename or usage ?
@@ -36,6 +38,14 @@ program CriticalRaEff
    endif
    print*,  trim(infile),' - ',trim(outfile)
 
+   call getarg(3,par)
+   if (par.eq.'-h') then
+      call usage()
+      stop
+   elseif(par.eq.'-r')
+      recompute = .true.
+   endif
+   
    call init(trim(infile))
    
    call createAlphas(alphas)
