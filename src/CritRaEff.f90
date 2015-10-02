@@ -319,7 +319,6 @@ contains
       else
          N2 = N
       endif
-      Write(*,*) N, N2
       rewind(unitm)
       ! Allocate buffer arrays with the appropriate size.
       allocate(aa2(N2))
@@ -342,12 +341,6 @@ contains
          deallocate(trans)
       endif
       deallocate(aa2,crit2)
-      Write(num,'(I3.3)') m
-      open(unit=unitm,file=trim(outfile)//'-debug.'//trim(num), status='UNKNOWN')
-      do i=1, N
-          Write(unitm,*) alpha(i), crit(i,1), crit(i,2)
-      enddo
-      close(unitm)
    end subroutine
    
    !**********************************************************************
