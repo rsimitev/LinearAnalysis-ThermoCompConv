@@ -34,8 +34,7 @@ program CriticalRaEff
    print*,  trim(infile),' - ',trim(outfile)
 
    call init(trim(infile))
-   Print*, 'Out of init()'
-
+   
    call createAlphas(alphas)
    select case(LCALC)
       case(0)
