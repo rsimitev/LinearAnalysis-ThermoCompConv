@@ -114,8 +114,6 @@ contains
    !! for all other parameters fixed.
    subroutine computeCriticalCurveM(alpha, crit)
       implicit none
-      character(8)  :: date
-      character(10) :: time
       double precision, intent(in):: alpha(:)
       double precision, intent(out):: crit(:,:)
       double precision:: CriticalRa, CriticalRaAlpha0
@@ -171,8 +169,7 @@ contains
          else
             counter = 0
          endif
-         call date_and_time(DATE=date,TIME=time)
-         Write(*,*) '[',date,'-',time,']', ' alpha = ', alpha(i), CriticalRa
+         call logSinglePoint(alpha(i), CriticalRa)
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
          if (mod(i,5)==0 ) call writeCriticalCurveSingleM(alpha, crit, m0)
@@ -197,14 +194,25 @@ contains
          else
             counter = 0
          endif
-         call date_and_time(DATE=date,TIME=time)
-         Write(*,*) '[',date,'-',time,']', ' alpha = ', alpha(i), CriticalRa
+         call logSinglePoint(alpha(i),CriticalRa)
          crit(i,1) = CriticalRa
          crit(i,2) = dble(MaxGrowthRateCmplx(CriticalRa))
          if (mod(i,5)==0 ) call writeCriticalCurveSingleM(alpha, crit, m0)
       enddo
    end subroutine
 
+   !**********************************************************************
+   !>
+   subroutine logSinglePoint()
+      implicit none
+      double precision, intent(in):: alpha. CriticalRa
+      character(8)  :: date
+      character(10) :: time
+
+      call date_and_time(DATE=date,TIME=time)
+      Write(*,*) '[',date,'-',time,']', ' alpha = ', alpha, CriticalRa
+   end subroutine
+   
    !**********************************************************************
    !>
    subroutine computeCriticalCurve(alpha, crit)
