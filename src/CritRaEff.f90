@@ -57,7 +57,7 @@ program CriticalRaEff
    select case(LCALC)
       case(0)
          ! Single m
-         call computeCriticalCurveSingleM(alphas,crit)
+         call computeCriticalCurveSingleM(alphas,crit,m0)
       case(1)
          ! Global
          call computeCriticalCurve(alphas,crit)
@@ -274,11 +274,13 @@ contains
 
    !**********************************************************************
    !>
-   subroutine computeCriticalCurveSingleM(alpha, crit)
+   subroutine computeCriticalCurveSingleM(alpha, crit, mm)
       implicit none
       double precision, intent(in):: alpha(:)
       type(GlobalCrit), intent(out):: crit(:)
+      integer, intent(in):: mm
       double precision, allocatable:: crit_new(:,:)
+      
       integer:: N, i
       integer:: info
 
@@ -287,23 +289,23 @@ contains
       info  = 0
       crit_new(:,1) = huge(1.0d0)
       crit_new(:,2) = 0.0d0
-      call GrowthRateUpdateParAlpha(m=m0)
-      Write(*,*) 'Computing critical value for m =', m0
-      if(wasPreviouslyComputed(m0)) then
-         call readCriticalCurveSingleM(alpha,crit_new,m0)
+      call GrowthRateUpdateParAlpha(m=mm)
+      Write(*,*) 'Computing critical value for m =', mm
+      if(wasPreviouslyComputed(mm)) then
+         call readCriticalCurveSingleM(alpha,crit_new,mm)
          if (recompute) then
             call computeCriticalCurveM(alpha, crit_new)
-            call writeCriticalCurveSingleM(alpha, crit_new, m0)
+            call writeCriticalCurveSingleM(alpha, crit_new, mm)
          endif
       else
          call computeCriticalCurveM(alpha, crit_new)
-         call writeCriticalCurveSingleM(alpha, crit_new, m0)
+         call writeCriticalCurveSingleM(alpha, crit_new, mm)
       endif
       do i=1,N
          crit(i)%alpha = alpha(i)
          crit(i)%Ra = crit_new(i,1)
          crit(i)%w  = crit_new(i,2)
-         crit(i)%m  = m0
+         crit(i)%m  = mm
       enddo
       deallocate(crit_new)
    end subroutine
