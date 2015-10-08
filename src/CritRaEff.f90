@@ -187,9 +187,12 @@ contains
          crit(i,2) = 0.0d0
          return
       else
-         ! if we are to restart the calclulation, use any previous result
+         ! If we are to restart the calclulation, use any previous result
          ! that is not a huge number and return.
-         if (restart.and.crit(i,1).lt.huge(1.0d0)) return
+         ! Infact, because of the interpolation, the numbers at the transition
+         ! between computed and non computed may be smaller than huge(1.0d0) but
+         ! they will be at the very least the half ov it.
+         if (restart .and. (crit(i,1).lt.huge(1.0d0)/2.0d0)) return
          ! Otherwhise, do the actual leg work.
          call GrowthRateUpdateParAlpha(Ra=CriticalRa, alpha=alpha(i))
          RaMin = 0.05d0*CriticalRa
