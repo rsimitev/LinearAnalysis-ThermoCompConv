@@ -93,7 +93,7 @@ Ported to f95 by Luis Silva (lacsilva@gmail.com)
 \section{DEPENDENCIES}
 We use cmake version 2.6-patch 4 as the build system.
 For optimisation purposes, we ship our own copy of the required lapack
-subroutines and their dependencies. Speciffically, we depend on the subroutine
+subroutines and their dependencies. Specifically, we depend on the subroutine
 \verb|zggev| \url{http://www.netlib.org/lapack/explore-3.1.1-html/zggev.f.html}
 Online documentation can be built using doxygen $>=$ 1.6.1
 
@@ -126,16 +126,11 @@ After all run successfully, binary files should be in \verb|$TOPLEVEL/bin/|.
 \subsection{Generated files}
 
 
-\section{Running GLO}
+\section{GLO}
 \subsection{Before running GLO}
 \label{s:runConfig}
 Each run needs to be configured. Configuration is passed on the standard input
-and obeys a format similar to the one shown in section~\ref{s:inputs}.
-
-\subsection{The input files}
-\label{s:inputs}
-\verb|glo| requires an input file formatted as a "key =  value" set of pairs.
-A typical input file looks like:
+and obeys a format similar to the one shown:
 \begin{verbatim}
 Symmetry = 2
 Calculation = 3
@@ -176,6 +171,18 @@ Valid key entries are described below.
 \item[UpperLimit] is the upper limit to use when other than the \verb|VariablePar| are varied.
 \end{itemize}
 
+Possible values for \verb|VariablePar| are 'Rt', 'Rc', 'Ra', 'aa', 'tau', 'Pt', 
+'Le', 'eta' and 'm0'.
+
+Invoking the program is easy. Once compiled and installed to \verb|$PATH| just
+invoke it on the command line as
+\begin{verbatim}
+ $ glo <input> <output>
+\end{verbatim}
+where \verb|<input>| is the input file name and \verb|output| is the output file
+name.
+
+
 \subsection{Possible calculations}
 \label{s:possibleCalcs}
 Several types of calculation can be performed by using different values for the 
@@ -193,6 +200,67 @@ Several types of calculation can be performed by using different values for the
 \item{8} Loops through the m's to find the critical Rt=Rc and m\_c. 
 \end{itemize}
 
+\section{Running CritRaEff}
+The CritRaEff program is a program designed to compute the critical effective 
+Rayleigh number for all $\alpha$ between $-\pi$ and $\pi$. 
+\verb|CritRaEff| requires an input file formatted as a "key =  value" set of pairs.
+A typical input file looks like:
+\begin{verbatim}
+Symmetry = 2
+Calculation = 0
+Ra = 3.0e6
+aa = 0.0d0
+tau = 1.0e5 
+Pt = 1.0 
+eta = 0.35 
+Le = 0.3 
+Truncation = 10 
+m0 = 19
+AbsParameterError = 1.00E-08 
+RelativeGRError = 1.00E-03 
+MaxIterations = 1000
+StepSize = -100 
+UpperLimit = 9.97e4
+\end{verbatim}
+
+The meaning of these parameters is as stated above except for \verb|Calculation|.
+\verb|Calculation| can now only take the values 0 or 1 for single m or multiple 
+m computations, respectively.
+
+Invoking the program is easy. Once compiled and installed to \verb|$PATH| just
+invoke it on the command line as
+\begin{verbatim}
+ $ CritRaEff <input> <output> [-r|-c]
+\end{verbatim}
+where \verb|<input>| is the input file name and \verb|output| is the output file
+name. The optional parameters \verb|-r| and \verb|-c| allow to override or 
+continue previously started calculations, respectively.
+
+Calculations start from $\alpha=0$ in the direction of the positive $\alpha$. 
+Once no more values of $Ra_c$ can be found in this direction, the program 
+returns to $\alpha=0$ and continues the process in the direction of the 
+negative $\alpha$. The program saves intermediate results every 5 steps to 
+files named \verb|<output>.mmm|, where \verb|mmm| is a 3 digit integer equal to 
+\verb|m0|. 
+
+If \verb|Calculation| is equal to 0 then only the m specified by \verb|m0| is 
+computed and only a \verb|<output>.mmm| is produced.  If this file already 
+exists and neither \verb|-r| or \verb|-c| are passed then nothing is 
+done. 
+
+If \verb|Calculation| is equal to 1 then all the m's are calculated sequentially 
+between 1 and the value specified by \verb|m0|. For each m, a 
+\verb|<output>.mmm| is produced. If this file already exists and neither 
+\verb|-r| or \verb|-c| are passed then the file is read and no more calculations 
+are performed for that m. When all m's have been calculated or read, the minimum
+$Ra_c$ is chosen for each $\alpha$ and a file \verb|<output>| is produced.
+
+Restarting a calculation (using \verb|-c|, for ``continue'') will read 
+\verb|<output>.mmm| files, if existing, and recompute any entries for which 
+$Ra_c$ is higher than $10^{50}$.
+
+Overriding a calculation (using \verb|-r|, for ``replace'')  will read 
+\verb|<output>.mmm| files, if existing, and recompute all values.
 
 \chapter{Theory}
 
@@ -320,10 +388,10 @@ We use a Galerkin method to find the critical thermal Rayleigh number and most
 unstable mode for the onset of convection. The method is described in detail for
 the pure thermal case by \citep{ZhangBusse87}. In our case we added one more
 equation for the composition following the same decomposition. The composition
-is treated as a second temperature, capable of generating buoyncay and obeying
+is treated as a second temperature, capable of generating buoyancy and obeying
 the same static profile and boundary conditions.
 
-We make use of the following linearized equations:
+We make use of the following linearised equations:
 \begin{subequations}
 \label{eqs:linearizedConvection}
 \begin{gather}
@@ -416,12 +484,12 @@ Where squares represent non-null blocks.
 This matrix equation can then be solved for the eigenvalues $(i\omega +GR)$
 using standard methods.
 
-\warningbox{
-At this point in time, we do not take advantage of the fact that the matrix $A$
-is diagonal by blocks and the matrix $B$ has a quite a lot of zeros. We are
-still stuck with the original code design where all the values are interleaved
-with $m$ fixed, $n$ varying faster and $l$ varying slower.
-}
+% \warningbox{
+% At this point in time, we do not take advantage of the fact that the matrix $A$
+% is diagonal by blocks and the matrix $B$ has a quite a lot of zeros. We are
+% still stuck with the original code design where all the values are interleaved
+% with $m$ fixed, $n$ varying faster and $l$ varying slower.
+% }
 
 We explore the effects of the adimensional parameters on the onset of convection
 of the system as a whole and on specific azimuthal modes.
@@ -518,7 +586,21 @@ The mode tracker is a tool that helps reorder the eigen values for each set of
 parameters such that continuity is ensured.
 
 \section{Plotting}
-\subsection{}
+A plotting utility is also provided. This program computes the critical value
+of the parameter given by \verb|VariablePar| and saves either an equatorial 
+or meridional slice of the required quantity in openDX \verb|.general| format.
+
+Invoking the program is easy. On the comand line type:
+\begin{verbatim}
+ $ glo_compute_and_plot <in file> <domain> <quantity>
+\end{verbatim}
+where \verb|<domain>| can be one of 2D or 3D, and \verb|<quantity>| can be one 
+of: 'UR' for the radial flow or 'SL' for the equatorial stream function
+$1/r \partial v/\partial\phi$.
+
+Invoking the program without parameters will print its usage and do nothing 
+else.
+
 \bibliography{userManual}
 \bibliographystyle{abbrvnat}
 
