@@ -191,8 +191,9 @@ contains
          ! that is not a huge number and return.
          ! Infact, because of the interpolation, the numbers at the transition
          ! between computed and non computed may be smaller than huge(1.0d0) but
-         ! they will be at the very least the half ov it.
-         if (restart .and. (crit(i,1).lt.huge(1.0d0)/2.0d0)) return
+         ! they will be at the very least the half of it.
+         ! In fact, 1.0d50 should be high enough!
+         if ( restart .and. (crit(i,1).lt.1.0d50) ) return
          ! Otherwhise, do the actual leg work.
          call GrowthRateUpdateParAlpha(Ra=CriticalRa, alpha=alpha(i))
          RaMin = 0.05d0*CriticalRa
