@@ -174,14 +174,18 @@ contains
    !>
    subroutine computeSinglePoint(alpha, i, CriticalRa, crit, counter)
       implicit none
-      double precision, intent(in):: alpha(:)
-      integer, intent(in):: i
-      integer, intent(inout):: counter
-      double precision, intent(inout):: CriticalRa, crit(:,:)
+      double precision, intent(in):: alpha(:) !< List of the alphas
+      integer, intent(in):: i !< The index of alpha
+      integer, intent(inout):: counter !< Assume we failed if counter reaches 3.
+      !> The Critical Ra found.  Unmodified if we failed.
+      double precision, intent(inout):: CriticalRa
+      ! List of Rayleighs and respective omegas indexed as alpha.
+      double precision, intent(inout):: crit(:,:)
       double precision:: RaMax, Ramin
       integer:: info
       info=0
-      
+
+      ! Assume we failed if counter reaches 3.
       if (counter.ge.3) then
          crit(i,1) = huge(1.0d0)
          crit(i,2) = 0.0d0
