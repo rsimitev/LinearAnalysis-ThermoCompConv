@@ -264,8 +264,13 @@ contains
             info=0
             ParMin = origParVal - 2.0**(i-2)*dabs(origParVal)
             ParMax = origParVal + 2.0**(i-2)*dabs(origParVal)
-            if (ParMin.gt.0.0d0) ParMin = 0.0d0
-            if (ParMax.lt.0.0d0) ParMax = 0.0d0
+
+            ! Only Rt, Rc or alpha can have negative values.
+            if (trim(VariablePar).ne.'Rt'.or. &
+                trim(VariablePar).ne.'Rc'.or. &
+                trim(VariablePar).ne.'aa') then
+                  if (ParMin.lt.0.0d0) ParMin = 0.0d0
+            endif
             if (i.gt.9) then
                Write(*,*) i,': Damn! 9 iterations and I could find nothing?'
                ParMin = -1.0d20
