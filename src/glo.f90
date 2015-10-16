@@ -141,8 +141,13 @@ contains
         M0 = 1
       ENDIF
 
-      call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
       call setVariableParam(VariablePar)
+      select case (VariablePar)
+         case('Ra','aa')
+            call GrowthRateInitAlpha(Ra, alpha, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+         case default
+            call GrowthRateInit(Rt, Rc, Pt, Le, tau, eta, m0, Symmetry, Truncation)
+      end select
 
       ! ----OUTPUT:
       OPEN(unitOut,FILE=outputfile,STATUS='UNKNOWN')
@@ -283,7 +288,7 @@ contains
          ! Critical values are above the line for Rc and Rt
          ! But below the line for the other parameters
          select case (trim(VariablePar))
-            case('Rt','Rc')
+            case('Rt','Rc','Ra')
                if (aux < CriticalPar) then
                   CriticalPar = aux
                   CriticalM  = m0
