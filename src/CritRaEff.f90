@@ -203,13 +203,10 @@ contains
          RaMax = 100.d0*CriticalRa
          call minimizer(MaxGrowthRate, RaMin, RaMax, RELE ,ABSE, NSMAX, CriticalRa, info)
          if (info.NE.0) then
-            if (counter.ne.3) then
-               counter = counter + 1
-               CriticalRa = (RaMin+RaMax)/2.0
-               crit(i,1) = huge(1.0d0)
-               crit(i,2) = 0.0d0
-               return
-            endif
+            counter = counter + 1
+            crit(i,1) = huge(1.0d0)
+            crit(i,2) = 0.0d0
+            return
          else
             counter = 0
          endif
