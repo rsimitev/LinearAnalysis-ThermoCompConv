@@ -26,7 +26,7 @@ PROGRAM simplePlot
    call getarg(1,infile)
    if (trim(infile).eq.'' .or. trim(infile).eq.'-h') then
       print*, 'Usage : '
-      print*, 'glo_plot <in file> <domain> <quantity>'
+      print*, 'glo_plot <in file> <domain> [quantity]'
       print*, '  <domain> can be one of 2D or 3D.'
       print*, '  <quantity> can be one of:'
       print*, '      UR for the radial flow or'
