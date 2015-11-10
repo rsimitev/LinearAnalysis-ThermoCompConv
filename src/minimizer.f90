@@ -9,6 +9,8 @@
 !!    info   : on output: 0: convergence; 
 !!                        1: no convergence;
 !!                        2: no zero in the interval;
+!!                        3: overflow;
+!!                        4: NaN;
    SUBROUTINE minimizer (fn, Xmin, xmax, rdx, df, stepMax, X0, info)
       implicit none
       double precision, intent(in):: xmin, xmax, rdx, df
@@ -37,9 +39,24 @@
          X1 = Xmin
          X2 = Xmax
       endif
+      if (X1.ge.1.0d100.or.X2.ge.1.0d100) then
+         info = 3
+         X0 = huge(1.0d0)
+         return
+      endif
       F1 = FN (X1)
+      if (F1.ne.F1) then
+         info = 4
+         x0 = 0.0d0
+         return
+      endif
       F2 = FN (X2)
-      ! Write(*,*) 'In minimizer: ',X1, F1, X2, F2
+      if (F2.ne.F2) then
+         info = 4
+         x0 = 0.0d0
+         return
+      endif
+      ! Write(*,*) 'In minimizer: X1,F1, X2,F2',X1, F1, X2, F2
       N = 0
 !
       FF = F1 * F2
@@ -71,7 +88,18 @@
             dxdf = (x2-x1)/(f2-f1)
             x3 = x1 - f1 * dxdf
          endif
+         if (X3.ge.1.0d100) then
+            info = 3
+            X0 = huge(1.0d0)
+            return
+         endif
          F3 = FN (X3)
+         if (F3.ne.F3) then
+            info = 4
+            x0 = 0.0d0
+            return
+         endif
+         ! Write(*,*) 'In minimizer: X3,F3',X3, F3
          N = N + 1
          FF = F2 * F3
          ! Shift end points appropriately

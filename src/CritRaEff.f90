@@ -156,10 +156,10 @@ contains
       ! Cache this value for future use.
       CriticalRaAlpha0 = CriticalRa
       ! Compute the positive half of the alphas
-      counter=0
       do i=HalfN+1, N
          call computeSinglePoint(aa, i, CriticalRa, crit, counter)
-         if (mod(i,5)==0 .and. counter.ne.3) call writeCriticalCurveSingleM(aa, crit, mm)
+         call writeCriticalCurveSingleM(aa, crit, mm)
+         if (counter==3) exit
       enddo
 
       ! and the negative half
@@ -167,7 +167,8 @@ contains
       CriticalRa = CriticalRaAlpha0
       do i=HalfN-1, 1, -1
          call computeSinglePoint(aa, i, CriticalRa, crit, counter)
-         if (mod(i,5)==0 .and. counter.ne.3) call writeCriticalCurveSingleM(aa, crit, mm)
+         call writeCriticalCurveSingleM(aa, crit, mm)
+         if (counter==3) exit
       enddo
    end subroutine
 

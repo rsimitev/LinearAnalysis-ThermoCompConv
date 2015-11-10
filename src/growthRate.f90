@@ -303,6 +303,12 @@ contains
       integer:: i, j, k, info
 
       lzwork=3*NEigenmodes+1
+      ! Do not solve if Rt_i and Rc_i are negative.
+      if (Rt_i<0.0d0 .and. Rc_i<0.0d0) then
+         zew = huge(1.0d0)
+         if (present(zeval)) zeval=0.0d0
+         return
+      endif
       ! - MAT SETS THE complex(8) MATRICES ZA AND ZB SETTING OF MATRIX:
       CALL MAT(tau_i, Rt_i, Rc_i, Pt_i, Le_i, mm_i, Symmetry_i, ZA,ZB, NEigenmodes)
 
