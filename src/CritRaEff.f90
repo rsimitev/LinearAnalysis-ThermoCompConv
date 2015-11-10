@@ -120,9 +120,10 @@ contains
    !**********************************************************************
    !> Computes the lowest critical effective Rayleigh number as a function of alpha
    !! for all other parameters fixed.
-   subroutine computeCriticalCurveM(aa, crit)
+   subroutine computeCriticalCurveM(aa, crit, mm)
       implicit none
       double precision, intent(in):: aa(:)
+      integer, intent(in):: mm
       double precision, intent(inout):: crit(:,:)
       double precision:: CriticalRa, CriticalRaAlpha0
       double precision:: RaMin, RaMax, gr1,gr2
@@ -131,7 +132,6 @@ contains
 
       N     = size(aa,1)
       HalfN = N/2
-      Write(*,*) N, HalfN
 
       ! At alpha=0 a critical Ra is certain to exist so,
       ! change the interval, until we find it.
@@ -152,13 +152,14 @@ contains
       counter=0
       CriticalRa = (RaMin+RaMax)*0.5
       call computeSinglePoint(aa, HalfN, CriticalRa, crit, counter)
+      call writeCriticalCurveSingleM(aa, crit, mm)
       ! Cache this value for future use.
       CriticalRaAlpha0 = CriticalRa
       ! Compute the positive half of the alphas
       counter=0
       do i=HalfN+1, N
          call computeSinglePoint(aa, i, CriticalRa, crit, counter)
-         if (mod(i,5)==0 .and. counter.ne.3) call writeCriticalCurveSingleM(aa, crit, m0)
+         if (mod(i,5)==0 .and. counter.ne.3) call writeCriticalCurveSingleM(aa, crit, mm)
       enddo
 
       ! and the negative half
@@ -166,7 +167,7 @@ contains
       CriticalRa = CriticalRaAlpha0
       do i=HalfN-1, 1, -1
          call computeSinglePoint(aa, i, CriticalRa, crit, counter)
-         if (mod(i,5)==0 .and. counter.ne.3) call writeCriticalCurveSingleM(aa, crit, m0)
+         if (mod(i,5)==0 .and. counter.ne.3) call writeCriticalCurveSingleM(aa, crit, mm)
       enddo
    end subroutine
 
@@ -255,11 +256,11 @@ contains
          if(wasPreviouslyComputed(m)) then
             call readCriticalCurveSingleM(alpha,crit_new,m)
             if (recompute.or.restart) then
-               call computeCriticalCurveM(alpha, crit_new)
+               call computeCriticalCurveM(alpha, crit_new, m)
                call writeCriticalCurveSingleM(alpha, crit_new, m)
             endif
          else
-            call computeCriticalCurveM(alpha, crit_new)
+            call computeCriticalCurveM(alpha, crit_new, m)
             call writeCriticalCurveSingleM(alpha, crit_new, m)
          endif
          do i=1,N
@@ -294,13 +295,13 @@ contains
       call GrowthRateUpdateParAlpha(m=mm)
       Write(*,*) 'Computing critical value for m =', mm
       if(wasPreviouslyComputed(mm)) then
-         call readCriticalCurveSingleM(alpha,crit_new,mm)
+         call readCriticalCurveSingleM(alpha, crit_new, mm)
          if (recompute.or.restart) then
-            call computeCriticalCurveM(alpha, crit_new)
+            call computeCriticalCurveM(alpha, crit_new, mm)
             call writeCriticalCurveSingleM(alpha, crit_new, mm)
          endif
       else
-         call computeCriticalCurveM(alpha, crit_new)
+         call computeCriticalCurveM(alpha, crit_new, mm)
          call writeCriticalCurveSingleM(alpha, crit_new, mm)
       endif
       do i=1,N
