@@ -1,2 +1,17 @@
-This is a set of tools that allow to estimate the critical parameters for 
-the onset of convection in a rotating spherical shell.
+
+*** SPECTRAL CODE FOR LINEAR ANALYSIS OF THE ONSET OF THERMO-COMPOSITIONAL CONVECTION IN ROTATING SPHERICAL FLUID SHELLS ***
+
+Luis A. C. Silva and Radostin D. Simitev
+School of Mathematics and Statistics, University of Glasgow, Glasgow G12 8QQ, UK
+
+This is a set of codes for estimation of the critical parameters for the onset of thermo-compositional convection in rotating spherical fluid shells. The main numerical code solves a generalized eigenvalue problem obtained using a Galerkin spectral projection method originally published by Zhang and Busse (1987). Early versions of the code were written for the article of Ardes et al. (1997). Simitev modified the code to include a governing equation for the concentration. Silva ported the code to Fortran 95 and linked to open source libraries, wrote auxilliary scripting tools, updated the visualisation tools and prepared documentation.
+
+ACKNOWLEDGEMENT
+
+This work of Silva and Simitev was supported by the Leverhulme Trust [grant number RPG-2012-600].
+
+REFERENCES
+
+M. Ardes, F. H. Busse, and J. Wicht. Thermal convection in rotating spherical shells. Phys. Earth Plan. Int., 99:55 – 67, 1997. doi:10.1016/S0031-9201(96)03200-1.
+
+K.-K. Zhang and F. H. Busse. On the onset of convection in rotating spherical shells. Geophys. Astrophys. Fluid Dynamics, 39:119 –147, 1987. doi:10.1080/0309192870820880.
